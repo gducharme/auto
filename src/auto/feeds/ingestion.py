@@ -2,18 +2,20 @@ import sqlite3
 import feedparser
 from alembic.config import Config
 from alembic import command
-import os
+from pathlib import Path
 
 # Configuration
 FEED_URL = 'https://geoffreyducharme.substack.com/feed'
-DB_PATH = '../../substack.db'
+
+# Determine project root four directories above this file
+BASE_DIR = Path(__file__).resolve().parents[3]
+DB_PATH = str(BASE_DIR / 'substack.db')
+ALEMBIC_INI = BASE_DIR / 'alembic.ini'
 
 
 def init_db(db_path=DB_PATH):
     """Run database migrations to ensure the schema exists."""
-    here = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    ini_path = os.path.join(here, "alembic.ini")
-    alembic_cfg = Config(ini_path)
+    alembic_cfg = Config(str(ALEMBIC_INI))
     command.upgrade(alembic_cfg, "head")
 
 
