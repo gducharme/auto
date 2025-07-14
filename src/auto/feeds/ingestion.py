@@ -6,12 +6,12 @@ import os
 
 # Configuration
 FEED_URL = 'https://geoffreyducharme.substack.com/feed'
-DB_PATH = '../substack.db'
+DB_PATH = '../../substack.db'
 
 
 def init_db(db_path=DB_PATH):
     """Run database migrations to ensure the schema exists."""
-    alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+    alembic_cfg = Config(os.path.join(os.path.dirname(__file__), '..', '..', 'alembic.ini'))
     command.upgrade(alembic_cfg, "head")
 
 

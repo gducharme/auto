@@ -1,0 +1,16 @@
+[project]
+name = "auto"
+version = "0.1.0"
+dependencies = [
+  "SQLAlchemy>=2.0.32",
+  "alembic",
+  "feedparser",
+  "fastapi",
+  "uvicorn",
+  "python-dotenv",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
