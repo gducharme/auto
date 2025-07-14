@@ -10,3 +10,4 @@ virtualenv==20.31.2
 
 SQLAlchemy==2.0.29
 python-dotenv==1.0.1
+alembic==1.13.1

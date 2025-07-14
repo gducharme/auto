@@ -1,5 +1,8 @@
 import sqlite3
 import feedparser
+from alembic.config import Config
+from alembic import command
+import os
 
 # Configuration
 FEED_URL = 'https://geoffreyducharme.substack.com/feed'
@@ -7,22 +10,9 @@ DB_PATH = '../substack.db'
 
 
 def init_db(db_path=DB_PATH):
-    """
-    Initialize the SQLite database and create the posts table if it doesn't exist.
-    """
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS posts (
-            id TEXT PRIMARY KEY,
-            title TEXT,
-            link TEXT,
-            summary TEXT,
-            published TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    """Run database migrations to ensure the schema exists."""
+    alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+    command.upgrade(alembic_cfg, "head")
 
 
 def fetch_feed(feed_url=FEED_URL):
