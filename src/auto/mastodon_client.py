@@ -11,10 +11,13 @@ MASTODON_INSTANCE = os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
 ACCESS_TOKEN = os.getenv("MASTODON_TOKEN")
 
 
-def post_to_mastodon(status: str, visibility: str = "private"):
+def post_to_mastodon(status: str, visibility: str = "private") -> None:
     """Post a status to Mastodon."""
     masto = Mastodon(access_token=ACCESS_TOKEN, api_base_url=MASTODON_INSTANCE)
-    masto.toot(status, visibility=visibility)
+    # `toot` in Mastodon.py 2.x does not accept extra keyword arguments such as
+    # ``visibility``.  Use ``status_post`` instead, which exposes these
+    # parameters.
+    masto.status_post(status=status, visibility=visibility)
     print("Posted to Mastodon!")
 
 
