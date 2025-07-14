@@ -1,0 +1,6 @@
+SQLAlchemy>=2.0.32
+alembic
+feedparser
+fastapi
+uvicorn
+python-dotenv

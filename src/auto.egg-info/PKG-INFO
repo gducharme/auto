@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: auto
+Version: 0.1.0
+Requires-Dist: SQLAlchemy>=2.0.32
+Requires-Dist: alembic
+Requires-Dist: feedparser
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: python-dotenv
