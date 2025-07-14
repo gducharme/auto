@@ -11,7 +11,9 @@ DB_PATH = '../../substack.db'
 
 def init_db(db_path=DB_PATH):
     """Run database migrations to ensure the schema exists."""
-    alembic_cfg = Config(os.path.join(os.path.dirname(__file__), '..', '..', 'alembic.ini'))
+    here = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    ini_path = os.path.join(here, "alembic.ini")
+    alembic_cfg = Config(ini_path)
     command.upgrade(alembic_cfg, "head")
 
 
