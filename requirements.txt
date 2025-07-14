@@ -1,7 +1,6 @@
 alembic==1.16.4
 annotated-types==0.7.0
 anyio==4.9.0
--e git+ssh://git@github.com/gducharme/auto.git@161e6fcec4ca384e457ef8b0399fa72f7992b7e0#egg=auto
 blurhash==1.1.4
 certifi==2025.7.14
 charset-normalizer==3.4.2
