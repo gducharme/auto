@@ -1,6 +1,6 @@
 # main.py
 from fastapi import FastAPI, BackgroundTasks
-from feeds.ingestion import init_db, fetch_feed, save_entries
+from .feeds.ingestion import init_db, fetch_feed, save_entries
 from dotenv import load_dotenv
 import os
 
@@ -23,3 +23,4 @@ async def ingest(background_tasks: BackgroundTasks):
 def run_ingest():
     feed = fetch_feed()
     save_entries(feed)
+
