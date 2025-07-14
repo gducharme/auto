@@ -9,5 +9,5 @@ setuptools==80.4.0
 virtualenv==20.31.2
 
 SQLAlchemy==2.0.41
-alembic=1.16.4
+alembic==1.16.4
 python-dotenv==1.0.1
