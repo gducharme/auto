@@ -58,3 +58,39 @@ def list_posts(ctx):
         print(f"{post_id}\t{title}\t{published}")
 
 
+@task
+def schedule(ctx, post_id, time, network="mastodon"):
+    """Schedule a post for publishing."""
+    import re
+    from datetime import datetime, timedelta
+    from dateutil import parser
+    from auto.db import SessionLocal
+    from auto.models import PostStatus
+
+    if time.startswith("+"):
+        m = re.match(r"\+([0-9]+)([smhd])", time)
+        if not m:
+            raise ValueError("Invalid relative time format")
+        value, unit = m.groups()
+        delta = {
+            "s": timedelta(seconds=int(value)),
+            "m": timedelta(minutes=int(value)),
+            "h": timedelta(hours=int(value)),
+            "d": timedelta(days=int(value)),
+        }[unit]
+        scheduled_at = datetime.utcnow() + delta
+    else:
+        scheduled_at = parser.isoparse(time)
+
+    with SessionLocal() as session:
+        ps = session.get(PostStatus, {"post_id": post_id, "network": network})
+        if ps is None:
+            ps = PostStatus(post_id=post_id, network=network, scheduled_at=scheduled_at)
+            session.add(ps)
+        else:
+            ps.scheduled_at = scheduled_at
+            ps.status = "pending"
+        session.commit()
+    print(f"Scheduled {post_id} for {network} at {scheduled_at.isoformat()}")
+
+

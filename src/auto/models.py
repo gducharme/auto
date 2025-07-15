@@ -16,6 +16,11 @@ class PostStatus(Base):
 
     post_id = Column(String, ForeignKey("posts.id"), primary_key=True)
     network = Column(String, primary_key=True)
+    scheduled_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
     status = Column(String, nullable=False, server_default="pending")
     attempts = Column(Integer, nullable=False, server_default="0")
     last_error = Column(Text)
