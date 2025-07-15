@@ -57,33 +57,47 @@ async def run_scheduler():
         await asyncio.sleep(POLL_INTERVAL)
 
 
-_task = None
+class Scheduler:
+    """Manage the background scheduler task without using module-level globals."""
+
+    def __init__(self) -> None:
+        self._task: Optional[asyncio.Task] = None
+
+    async def start(self) -> Optional[asyncio.Task]:
+        """Start the background scheduler loop."""
+        if self._task is None or self._task.done():
+            from sqlalchemy import inspect
+
+            inspector = inspect(engine)
+            if not inspector.has_table("post_status"):
+                logger.warning("post_status table missing; scheduler not started")
+                return None
+            self._task = asyncio.create_task(run_scheduler())
+        return self._task
+
+    async def stop(self) -> None:
+        """Stop the background scheduler loop."""
+        if self._task:
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
+            self._task = None
+
+
+# provide a default scheduler instance for backwards compatibility
+default_scheduler = Scheduler()
 
 
 async def start() -> Optional[asyncio.Task]:
-    """Start the background scheduler loop."""
-    global _task
-    if _task is None or _task.done():
-        from sqlalchemy import inspect
-
-        inspector = inspect(engine)
-        if not inspector.has_table("post_status"):
-            logger.warning("post_status table missing; scheduler not started")
-            return None
-        _task = asyncio.create_task(run_scheduler())
-    return _task
+    """Start the default background scheduler loop."""
+    return await default_scheduler.start()
 
 
 async def stop() -> None:
-    """Stop the background scheduler loop."""
-    global _task
-    if _task:
-        _task.cancel()
-        try:
-            await _task
-        except asyncio.CancelledError:
-            pass
-        _task = None
+    """Stop the default background scheduler loop."""
+    await default_scheduler.stop()
 
 
 def main():
