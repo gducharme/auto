@@ -8,8 +8,9 @@ load_dotenv(os.path.join(project_root, ".env"))
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+
+from auto.db import engine as db_engine
 
 from alembic import context
 
@@ -68,27 +69,13 @@ def run_migrations_online() -> None:
     connectable = config.attributes.get("connection")
 
     if connectable is None:
-        connectable = engine_from_config(
-            config.get_section(config.config_ini_section, {}),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-        )
+        connectable = db_engine
 
-        with connectable.connect() as connection:
-            context.configure(
-                connection=connection, target_metadata=target_metadata
-            )
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
 
-            with context.begin_transaction():
-                context.run_migrations()
-    else:
-        with connectable.connect() as connection:
-            context.configure(
-                connection=connection, target_metadata=target_metadata
-            )
-
-            with context.begin_transaction():
-                context.run_migrations()
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 if context.is_offline_mode():
