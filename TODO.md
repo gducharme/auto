@@ -1,7 +1,6 @@
 # TODO
 
 ## High Priority
-- Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
 
 ## Medium Priority
 - Improve logging and error handling for ingestion and publishing tasks.
