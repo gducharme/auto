@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from bs4 import BeautifulSoup
 import requests
+from dateutil import parser
 from auto.feeds.ingestion import _parse_entry, fetch_feed
 
 
@@ -27,7 +28,8 @@ def test_parse_entry_from_soup():
         "http://example.com",
         "Summary",
         "Mon, 01 Jan 2000 00:00:00 +0000",
-        "",
+        parser.parse("Mon, 01 Jan 2000 00:00:00 +0000"),
+        None,
     )
 
 
@@ -47,7 +49,8 @@ def test_parse_entry_from_dummy_object():
         "http://dummy",
         "Body",
         "2025-01-01",
-        "2025-02-01",
+        parser.parse("2025-01-01"),
+        parser.parse("2025-02-01"),
     )
 
 
