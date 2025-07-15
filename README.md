@@ -9,6 +9,17 @@ The API itself is implemented with **FastAPI** and database migrations are
 handled via **Alembic**.  The project is intentionally tiny but demonstrates the
 basics needed for a multi‑publish workflow.
 
+## Environment variables
+
+Copy `.env.sample` to `.env` and adjust the values or export them manually.
+The following variables are used:
+
+- `SUBSTACK_FEED_URL` – RSS feed to ingest posts from.
+- `DATABASE_URL` – database connection string (defaults to SQLite).
+- `MASTODON_INSTANCE` – base URL of the Mastodon instance, default
+  `https://mastodon.social`.
+- `MASTODON_TOKEN` – access token for posting to Mastodon.
+
 ## Running the server
 
 Install dependencies and start the development server from the project root:
