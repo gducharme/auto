@@ -2,16 +2,17 @@
 from fastapi import FastAPI, BackgroundTasks
 from contextlib import asynccontextmanager
 from .feeds.ingestion import init_db, fetch_feed, save_entries
-from . import scheduler
+from . import scheduler, configure_logging
 from dotenv import load_dotenv
 import logging
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    load_dotenv()
+    configure_logging()
     init_db()
     await scheduler.start()
     try:
