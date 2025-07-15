@@ -54,6 +54,14 @@ post’s publish status per network is tracked in the `post_status` table.
 While minimal, the goal is to provide the scaffolding for mirroring your
 Substack content across multiple social sites with a single workflow.
 
+## Development
+
+Install the pre-commit hooks so formatting and linting run automatically:
+
+```bash
+pre-commit install
+```
+
 ## License
 
 Distributed under the [MIT License](LICENSE).
