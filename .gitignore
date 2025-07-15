@@ -5,6 +5,8 @@ __pycache__/
 .env
 # SQLite
 *.db
+# Packaging
+*.egg-info
 # Editor/IDE
 .vscode/
 .idea/

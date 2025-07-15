@@ -1,6 +1,0 @@
-SQLAlchemy>=2.0.32
-alembic
-fastapi
-uvicorn
-python-dotenv
-beautifulsoup4

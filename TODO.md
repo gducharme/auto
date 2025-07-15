@@ -4,7 +4,6 @@
 - Add automated tests for API endpoints and ingestion workflow.
 
 ## Medium Priority
-- Remove `auto.egg-info` from the repository and add `*.egg-info` to `.gitignore`.
 - Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
 - Improve logging and error handling for ingestion and publishing tasks.
 
