@@ -27,6 +27,7 @@ def test_parse_entry_from_soup():
         "http://example.com",
         "Summary",
         "Mon, 01 Jan 2000 00:00:00 +0000",
+        "",
     )
 
 
@@ -37,9 +38,17 @@ def test_parse_entry_from_dummy_object():
         link="http://dummy",
         summary="Body",
         published="2025-01-01",
+        updated="2025-02-01",
     )
     result = _parse_entry(dummy)
-    assert result == ("1", "Dummy", "http://dummy", "Body", "2025-01-01")
+    assert result == (
+        "1",
+        "Dummy",
+        "http://dummy",
+        "Body",
+        "2025-01-01",
+        "2025-02-01",
+    )
 
 
 def test_fetch_feed_returns_items(monkeypatch):
