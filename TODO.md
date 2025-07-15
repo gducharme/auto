@@ -11,7 +11,6 @@
 - Containerize the application with a Dockerfile.
 
 ## Code Smells
-- Environment variables like SUBSTACK_FEED_URL are read during module import, so changes after startup have no effect.
 - Database sessions are sometimes manually closed instead of using a context manager.
 - Logging configuration occurs in __init__.py during import, which can interfere with embedding in other applications.
 - scheduler.py stores global state in the `_task` variable which can lead to race conditions if start() is called multiple times.
