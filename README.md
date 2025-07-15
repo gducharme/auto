@@ -53,3 +53,7 @@ post’s publish status per network is tracked in the `post_status` table.
 
 While minimal, the goal is to provide the scaffolding for mirroring your
 Substack content across multiple social sites with a single workflow.
+
+## License
+
+Distributed under the [MIT License](LICENSE).
