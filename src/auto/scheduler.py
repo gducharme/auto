@@ -2,7 +2,9 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from .db import SessionLocal
+from typing import Optional
+
+from .db import SessionLocal, engine
 from .models import PostStatus, Post
 from .socials.mastodon_client import post_to_mastodon
 
@@ -52,6 +54,35 @@ async def run_scheduler():
     while True:
         await process_pending()
         await asyncio.sleep(POLL_INTERVAL)
+
+
+_task = None
+
+
+async def start() -> Optional[asyncio.Task]:
+    """Start the background scheduler loop."""
+    global _task
+    if _task is None or _task.done():
+        from sqlalchemy import inspect
+
+        inspector = inspect(engine)
+        if not inspector.has_table("post_status"):
+            logger.warning("post_status table missing; scheduler not started")
+            return None
+        _task = asyncio.create_task(run_scheduler())
+    return _task
+
+
+async def stop() -> None:
+    """Stop the background scheduler loop."""
+    global _task
+    if _task:
+        _task.cancel()
+        try:
+            await _task
+        except asyncio.CancelledError:
+            pass
+        _task = None
 
 
 def main():
