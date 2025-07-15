@@ -37,20 +37,43 @@ def fetch_feed(feed_url=FEED_URL):
     return soup.find_all("item")
 
 
-def save_entries(items, db_path=DB_PATH):
-    """
-    Save new entries from the feed into the database.
-    Avoid duplicates by primary key.
-    """
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
+def _parse_entry(item):
+    """Return common fields extracted from a feed entry.
 
-    for item in items:
+    The helper works with BeautifulSoup/feedparser elements as well as the
+    simple dummy objects used in unit tests.
+    """
+    if hasattr(item, "findtext"):
         guid = item.findtext("guid") or item.findtext("id") or item.findtext("link")
         title = item.findtext("title", "")
         link = item.findtext("link", "")
         summary = item.findtext("description", "")
         published = item.findtext("pubDate", "")
+    else:
+        guid = getattr(item, "id", getattr(item, "link", ""))
+        title = getattr(item, "title", "")
+        link = getattr(item, "link", "")
+        summary = getattr(item, "summary", "")
+        published = getattr(item, "published", "")
+
+    return guid, title, link, summary, published
+
+
+def save_entries(items, db_path=DB_PATH):
+    """Save new entries from the feed into the database.
+
+    The function accepts either an iterable of parsed ``<item>`` elements or a
+    feed object with an ``entries`` attribute.  Tests use a small dummy object so
+    we support both real feedparser/BeautifulSoup objects and simple stubs.
+    """
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # Allow passing a feed object with an ``entries`` attribute
+    items_iter = getattr(items, "entries", items)
+
+    for item in items_iter:
+        guid, title, link, summary, published = _parse_entry(item)
 
         try:
             c.execute(
