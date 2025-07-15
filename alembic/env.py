@@ -1,3 +1,11 @@
+import os
+from dotenv import load_dotenv
+
+# find the project root (one directory above alembic/)
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+# load the .env
+load_dotenv(os.path.join(project_root, ".env"))
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
