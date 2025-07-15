@@ -1,3 +1,4 @@
+import logging
 import requests
 from bs4 import BeautifulSoup
 from alembic.config import Config
@@ -10,6 +11,8 @@ from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
 
 from ..models import Post
+
+logger = logging.getLogger(__name__)
 
 # Configuration
 FEED_URL = 'https://geoffreyducharme.substack.com/feed'
@@ -40,13 +43,21 @@ def init_db(db_path=DB_PATH):
         if not db_path.startswith("sqlite"):
             url = f"sqlite:///{db_path}"
         alembic_cfg.set_main_option("sqlalchemy.url", url)
-    command.upgrade(alembic_cfg, "head")
+    try:
+        command.upgrade(alembic_cfg, "head")
+    except Exception as exc:
+        logger.error("Database initialization failed: %s", exc)
+        raise
 
 
 def fetch_feed(feed_url=FEED_URL):
     """Fetch and parse the RSS feed using BeautifulSoup."""
-    response = requests.get(feed_url, timeout=10)
-    response.raise_for_status()
+    try:
+        response = requests.get(feed_url, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error("Failed to fetch feed %s: %s", feed_url, exc)
+        raise
     soup = BeautifulSoup(response.content, "lxml")
     return soup.find_all("item")
 
@@ -91,10 +102,13 @@ def save_entries(items, db_path=DB_PATH):
         session.add(post)
         try:
             session.commit()
-            print(f"Saved post: {title}")
+            logger.info("Saved post: %s", title)
         except IntegrityError:
             session.rollback()
-            print(f"Skipping existing post: {title}")
+            logger.info("Skipping existing post: %s", title)
+        except Exception as exc:
+            session.rollback()
+            logger.error("Failed to save post %s: %s", title, exc)
 
     session.close()
 
