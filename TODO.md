@@ -3,8 +3,8 @@
 ## High Priority
 
 ## Medium Priority
+- Set up linting to run automatically on pre-commit.
 - Implement periodic/scheduled ingestion instead of manual triggering.
-- Set up CI to run tests and linting automatically.
 
 ## Low Priority
 - Expand social network support beyond Mastodon.
