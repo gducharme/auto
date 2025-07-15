@@ -12,3 +12,11 @@ repos:
     hooks:
       - id: black
         language_version: python3
+
+  - repo: local
+    hooks:
+      - id: alembic-check-heads
+        name: Check Alembic Heads
+        entry: python scripts/check_alembic_heads.py
+        language: system
+        pass_filenames: false
