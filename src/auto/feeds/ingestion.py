@@ -33,7 +33,7 @@ def fetch_feed(feed_url=FEED_URL):
     """
     response = requests.get(feed_url, timeout=10)
     response.raise_for_status()
-    soup = BeautifulSoup(response.content, "xml")
+    soup = BeautifulSoup(response.content, "lxml")
     return soup.find_all("item")
 
 
