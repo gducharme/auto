@@ -103,34 +103,26 @@ def fetch_feed(feed_url: Optional[str] = None):
     return soup.find_all("item")
 
 
+def _extract_text(item, name: str, default: str = ""):
+    """Return the value for ``name`` from a feed item regardless of its type."""
+    if callable(getattr(item, "findtext", None)):
+        return item.findtext(name, default)
+    if hasattr(item, "find"):
+        el = item.find(name)
+        return el.get_text() if el else default
+    return getattr(item, name, default)
+
+
 def _parse_entry(item):
     """Return parsed fields extracted from a feed entry."""
-    if callable(getattr(item, "findtext", None)):
-        guid = item.findtext("guid") or item.findtext("id") or item.findtext("link")
-        title = item.findtext("title", "")
-        link = item.findtext("link", "")
-        summary = item.findtext("description", "")
-        published = item.findtext("pubDate", "")
-        updated = item.findtext("updated") or item.findtext("updated_at", "")
-    elif hasattr(item, "find"):
+    get = lambda field, default="": _extract_text(item, field, default)
 
-        def _text(tag_name, default=""):
-            el = item.find(tag_name)
-            return el.get_text() if el else default
-
-        guid = _text("guid") or _text("id") or _text("link")
-        title = _text("title")
-        link = _text("link")
-        summary = _text("description")
-        published = _text("pubDate")
-        updated = _text("updated") or _text("updated_at")
-    else:
-        guid = getattr(item, "id", getattr(item, "link", ""))
-        title = getattr(item, "title", "")
-        link = getattr(item, "link", "")
-        summary = getattr(item, "summary", "")
-        published = getattr(item, "published", "")
-        updated = getattr(item, "updated", getattr(item, "updated_at", ""))
+    guid = get("guid") or get("id") or get("link")
+    title = get("title")
+    link = get("link")
+    summary = get("description") or get("summary")
+    published = get("pubDate") or get("published")
+    updated = get("updated") or get("updated_at")
 
     created_dt = None
     updated_dt = None
