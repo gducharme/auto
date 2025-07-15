@@ -72,7 +72,7 @@ def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
 
     try:
         # Use "heads" so multiple migration branches are applied
-        command.upgrade(alembic_cfg, "heads")
+        command.upgrade(alembic_cfg, "head")
     except Exception as exc:
         logger.error("Database initialization failed: %s", exc)
         raise
