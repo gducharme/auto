@@ -71,7 +71,6 @@ def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
         alembic_cfg.set_main_option("sqlalchemy.url", url)
 
     try:
-        # Use "heads" so multiple migration branches are applied
         command.upgrade(alembic_cfg, "head")
     except Exception as exc:
         logger.error("Database initialization failed: %s", exc)
@@ -91,7 +90,7 @@ def fetch_feed(feed_url=FEED_URL):
 
 
 def _parse_entry(item):
-    """Return common fields extracted from a feed entry."""
+    """Return parsed fields extracted from a feed entry."""
     if callable(getattr(item, "findtext", None)):
         guid = item.findtext("guid") or item.findtext("id") or item.findtext("link")
         title = item.findtext("title", "")
@@ -118,7 +117,20 @@ def _parse_entry(item):
         published = getattr(item, "published", "")
         updated = getattr(item, "updated", getattr(item, "updated_at", ""))
 
-    return guid, title, link, summary, published, updated
+    created_dt = None
+    updated_dt = None
+    if published:
+        try:
+            created_dt = parser.parse(published)
+        except Exception:
+            pass
+    if updated:
+        try:
+            updated_dt = parser.parse(updated)
+        except Exception:
+            pass
+
+    return guid, title, link, summary, published, created_dt, updated_dt
 
 
 def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
@@ -127,43 +139,32 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
 
     items_iter = getattr(items, "entries", items)
 
-    for item in items_iter:
-        guid, title, link, summary, published, updated = _parse_entry(item)
+    try:
+        with session.begin():
+            for item in items_iter:
+                guid, title, link, summary, published, created_dt, updated_dt = _parse_entry(item)
 
-        created_dt = None
-        updated_dt = None
-        if published:
-            try:
-                created_dt = parser.parse(published)
-            except Exception:
-                pass
-        if updated:
-            try:
-                updated_dt = parser.parse(updated)
-            except Exception:
-                pass
+                post = Post(
+                    id=guid,
+                    title=title,
+                    link=link,
+                    summary=summary,
+                    published=published,
+                    created_at=created_dt,
+                    updated_at=updated_dt,
+                )
 
-        post = Post(
-            id=guid,
-            title=title,
-            link=link,
-            summary=summary,
-            published=published,
-            created_at=created_dt,
-            updated_at=updated_dt,
-        )
-        session.add(post)
-        try:
-            session.commit()
-            logger.info("Saved post: %s", title)
-        except IntegrityError:
-            session.rollback()
-            logger.info("Skipping existing post: %s", title)
-        except Exception as exc:
-            session.rollback()
-            logger.error("Failed to save post %s: %s", title, exc)
-
-    session.close()
+                try:
+                    with session.begin_nested():
+                        session.add(post)
+                        session.flush()
+                    logger.info("Saved post: %s", title)
+                except IntegrityError:
+                    logger.info("Skipping existing post: %s", title)
+                except Exception as exc:
+                    logger.error("Failed to save post %s: %s", title, exc)
+    finally:
+        session.close()
 
 
 def main():
