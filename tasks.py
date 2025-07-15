@@ -106,3 +106,39 @@ def schedule(ctx, post_id, time, network=None):
     print(
         f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}"
     )
+
+
+@task
+def quick_post(ctx, network="mastodon"):
+    """Schedule the oldest unshared post for publishing."""
+    from sqlalchemy import select
+    from auto.db import SessionLocal
+    from auto.models import Post, PostStatus
+
+    exists_stmt = (
+        select(PostStatus.post_id)
+        .where(
+            PostStatus.post_id == Post.id,
+            PostStatus.network == network,
+            PostStatus.status == "published",
+        )
+        .exists()
+    )
+
+    stmt = select(Post).where(~exists_stmt).order_by(Post.published).limit(1)
+
+    with SessionLocal() as session:
+        post = session.execute(stmt).scalars().first()
+
+    if not post:
+        print("No unpublished posts found")
+        return
+
+    text = f"{post.title} {post.link}"
+    print(text)
+
+    if input("Publish? [y/N] ").strip().lower() != "y":
+        print("Aborted")
+        return
+
+    schedule(ctx, post_id=post.id, time="in 1m", network=network)
