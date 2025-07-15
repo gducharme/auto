@@ -21,6 +21,6 @@ async def ingest(background_tasks: BackgroundTasks):
     return {"status": "ingestion queued"}
 
 def run_ingest():
-    feed = fetch_feed()
-    save_entries(feed)
+    items = fetch_feed()
+    save_entries(items)
 

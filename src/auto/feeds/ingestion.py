@@ -1,5 +1,6 @@
 import sqlite3
-import feedparser
+import requests
+from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
 from pathlib import Path
@@ -21,12 +22,16 @@ def init_db(db_path=DB_PATH):
 
 def fetch_feed(feed_url=FEED_URL):
     """
-    Fetch and parse the RSS feed, returning the parsed feed object.
+    Fetch and parse the RSS feed using BeautifulSoup.
+    Returns a list of parsed <item> elements.
     """
-    return feedparser.parse(feed_url)
+    response = requests.get(feed_url, timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "xml")
+    return soup.find_all("item")
 
 
-def save_entries(feed, db_path=DB_PATH):
+def save_entries(items, db_path=DB_PATH):
     """
     Save new entries from the feed into the database.
     Avoid duplicates by primary key.
@@ -34,13 +39,12 @@ def save_entries(feed, db_path=DB_PATH):
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    for entry in feed.entries:
-        # Use entry.id if available, else fallback to link
-        guid = getattr(entry, 'id', entry.link)
-        title = entry.title
-        link = entry.link
-        summary = getattr(entry, 'summary', '')
-        published = getattr(entry, 'published', '')
+    for item in items:
+        guid = item.findtext("guid") or item.findtext("id") or item.findtext("link")
+        title = item.findtext("title", "")
+        link = item.findtext("link", "")
+        summary = item.findtext("description", "")
+        published = item.findtext("pubDate", "")
 
         try:
             c.execute(
@@ -58,8 +62,8 @@ def save_entries(feed, db_path=DB_PATH):
 
 def main():
     init_db()
-    feed = fetch_feed()
-    save_entries(feed)
+    items = fetch_feed()
+    save_entries(items)
 
 
 if __name__ == '__main__':
