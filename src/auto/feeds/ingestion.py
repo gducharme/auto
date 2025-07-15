@@ -43,12 +43,22 @@ def _parse_entry(item):
     The helper works with BeautifulSoup/feedparser elements as well as the
     simple dummy objects used in unit tests.
     """
-    if hasattr(item, "findtext"):
+    if callable(getattr(item, "findtext", None)):
         guid = item.findtext("guid") or item.findtext("id") or item.findtext("link")
         title = item.findtext("title", "")
         link = item.findtext("link", "")
         summary = item.findtext("description", "")
         published = item.findtext("pubDate", "")
+    elif hasattr(item, "find"):
+        def _text(tag_name, default=""):
+            el = item.find(tag_name)
+            return el.get_text() if el else default
+
+        guid = _text("guid") or _text("id") or _text("link")
+        title = _text("title")
+        link = _text("link")
+        summary = _text("description")
+        published = _text("pubDate")
     else:
         guid = getattr(item, "id", getattr(item, "link", ""))
         title = getattr(item, "title", "")
