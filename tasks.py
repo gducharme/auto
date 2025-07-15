@@ -10,7 +10,6 @@ def ingest(ctx, host="localhost", port=8000):
     url = f"http://{host}:{port}/ingest"
     ctx.run(f"curl -s -X POST {url}", echo=True)
 
-
 @task
 def uv(ctx, host="127.0.0.1", port=8000, reload=True):
     """Start the FastAPI server using uvicorn."""
@@ -21,3 +20,10 @@ def uv(ctx, host="127.0.0.1", port=8000, reload=True):
         echo=True,
     )
 
+@task
+def freeze(ctx):
+    """
+    Regenerate requirements.txt without editable installs.
+    Usage: invoke freeze
+    """
+    ctx.run("pip freeze --exclude-editable > requirements.txt", echo=True)

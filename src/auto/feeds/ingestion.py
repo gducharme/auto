@@ -17,6 +17,12 @@ ALEMBIC_INI = BASE_DIR / 'alembic.ini'
 def init_db(db_path=DB_PATH):
     """Run database migrations to ensure the schema exists."""
     alembic_cfg = Config(str(ALEMBIC_INI))
+    if db_path != DB_PATH:
+        # If using a custom path, override the database URL
+        url = db_path
+        if not db_path.startswith("sqlite"):
+            url = f"sqlite:///{db_path}"
+        alembic_cfg.set_main_option("sqlalchemy.url", url)
     command.upgrade(alembic_cfg, "head")
 
 
