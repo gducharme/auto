@@ -71,7 +71,7 @@ def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
         alembic_cfg.set_main_option("sqlalchemy.url", url)
 
     try:
-        command.upgrade(alembic_cfg, "head")
+        command.upgrade(alembic_cfg, "heads")
     except Exception as exc:
         logger.error("Database initialization failed: %s", exc)
         raise
