@@ -8,7 +8,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
-from ..db import SessionLocal
+from ..db import SessionLocal, DATABASE_URL
 
 from ..models import Post
 
@@ -19,15 +19,18 @@ FEED_URL = 'https://geoffreyducharme.substack.com/feed'
 
 # Determine project root four directories above this file
 BASE_DIR = Path(__file__).resolve().parents[3]
-DB_PATH = str(BASE_DIR / 'substack.db')
 ALEMBIC_INI = BASE_DIR / 'alembic.ini'
 
+# Default database URL from the main db module
+DEFAULT_DB_URL = DATABASE_URL
 
-def _session_for_path(db_path: str):
-    """Return a SQLAlchemy session for the given database path."""
-    if db_path == DB_PATH:
+
+def _session_for_url(db_url: str = DEFAULT_DB_URL):
+    """Return a SQLAlchemy session for the given database URL."""
+    if not db_url or db_url == DEFAULT_DB_URL:
         return SessionLocal()
-    url = db_path if db_path.startswith("sqlite") or "://" in db_path else f"sqlite:///{db_path}"
+
+    url = db_url if db_url.startswith("sqlite") or "://" in db_url else f"sqlite:///{db_url}"
     engine = create_engine(
         url,
         connect_args={"check_same_thread": False} if url.startswith("sqlite") else {},
@@ -35,13 +38,13 @@ def _session_for_path(db_path: str):
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)()
 
 
-def init_db(db_path=DB_PATH):
+def init_db(db_url=DEFAULT_DB_URL):
     """Run database migrations to ensure the schema exists."""
     alembic_cfg = Config(str(ALEMBIC_INI))
-    if db_path != DB_PATH:
-        url = db_path
-        if not db_path.startswith("sqlite"):
-            url = f"sqlite:///{db_path}"
+    if db_url != DEFAULT_DB_URL:
+        url = db_url
+        if not db_url.startswith("sqlite") and "://" not in db_url:
+            url = f"sqlite:///{db_url}"
         alembic_cfg.set_main_option("sqlalchemy.url", url)
     try:
         command.upgrade(alembic_cfg, "head")
@@ -90,9 +93,9 @@ def _parse_entry(item):
     return guid, title, link, summary, published
 
 
-def save_entries(items, db_path=DB_PATH):
+def save_entries(items, db_url=DEFAULT_DB_URL):
     """Save new entries from the feed into the database."""
-    session = _session_for_path(db_path)
+    session = _session_for_url(db_url)
 
     items_iter = getattr(items, "entries", items)
 
