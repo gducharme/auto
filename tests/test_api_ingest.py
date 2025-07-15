@@ -19,7 +19,9 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "fetch_feed", lambda url=None: parsed)
 
     db_path = tmp_path / "test.db"
-    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
 
     orig_init_db = ingestion.init_db
     orig_save_entries = ingestion.save_entries
@@ -40,9 +42,7 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
         assert resp.status_code == 200
 
     conn = sqlite3.connect(db_path)
-    rows = conn.execute(
-        "SELECT created_at, updated_at FROM posts"
-    ).fetchall()
+    rows = conn.execute("SELECT created_at, updated_at FROM posts").fetchall()
     conn.close()
 
     assert len(rows) == len(parsed)
@@ -50,20 +50,26 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
 
 
 def test_run_ingest_uses_env_variable(monkeypatch):
-    """run_ingest() should pass SUBSTACK_FEED_URL to fetch_feed."""
+    """run_ingest() should fetch the URL from SUBSTACK_FEED_URL."""
     monkeypatch.setenv("SUBSTACK_FEED_URL", "http://env.example/feed")
 
-    import importlib
     import auto.main as main_module
-    importlib.reload(main_module)
 
     called = {}
 
-    def fake_fetch(url):
-        called["url"] = url
-        return []
+    class DummyResponse:
+        def __init__(self):
+            self.content = b"<rss></rss>"
+            self.status_code = 200
 
-    monkeypatch.setattr(main_module, "fetch_feed", fake_fetch)
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout=10):
+        called["url"] = url
+        return DummyResponse()
+
+    monkeypatch.setattr("auto.feeds.ingestion.requests.get", fake_get)
     monkeypatch.setattr(main_module, "save_entries", lambda items: None)
 
     main_module.run_ingest()

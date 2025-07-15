@@ -1,6 +1,7 @@
 import logging
 import os
 import requests
+from typing import Optional
 from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
@@ -20,13 +21,18 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Configuration
-DEFAULT_FEED_URL = 'https://geoffreyducharme.substack.com/feed'
-FEED_URL = os.getenv('SUBSTACK_FEED_URL', DEFAULT_FEED_URL)
+DEFAULT_FEED_URL = "https://geoffreyducharme.substack.com/feed"
+
+
+def get_feed_url() -> str:
+    """Return the feed URL from ``SUBSTACK_FEED_URL`` or the default."""
+    return os.getenv("SUBSTACK_FEED_URL", DEFAULT_FEED_URL)
+
 
 # Determine project root four directories above this file
 BASE_DIR = Path(__file__).resolve().parents[3]
-DB_PATH = str(BASE_DIR / 'substack.db')
-ALEMBIC_INI = BASE_DIR / 'alembic.ini'
+DB_PATH = str(BASE_DIR / "substack.db")
+ALEMBIC_INI = BASE_DIR / "alembic.ini"
 
 
 def _session_for_path(db_path: str, *, engine=None, session_factory=None):
@@ -38,10 +44,16 @@ def _session_for_path(db_path: str, *, engine=None, session_factory=None):
         if db_path == DB_PATH:
             return SessionLocal()
 
-        url = db_path if db_path.startswith("sqlite") or "://" in db_path else f"sqlite:///{db_path}"
+        url = (
+            db_path
+            if db_path.startswith("sqlite") or "://" in db_path
+            else f"sqlite:///{db_path}"
+        )
         engine = create_engine(
             url,
-            connect_args={"check_same_thread": False} if url.startswith("sqlite") else {},
+            connect_args=(
+                {"check_same_thread": False} if url.startswith("sqlite") else {}
+            ),
         )
 
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -77,8 +89,10 @@ def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
         raise
 
 
-def fetch_feed(feed_url=FEED_URL):
+def fetch_feed(feed_url: Optional[str] = None):
     """Fetch and parse the RSS feed using BeautifulSoup."""
+    if feed_url is None:
+        feed_url = get_feed_url()
     try:
         response = requests.get(feed_url, timeout=10)
         response.raise_for_status()
@@ -99,6 +113,7 @@ def _parse_entry(item):
         published = item.findtext("pubDate", "")
         updated = item.findtext("updated") or item.findtext("updated_at", "")
     elif hasattr(item, "find"):
+
         def _text(tag_name, default=""):
             el = item.find(tag_name)
             return el.get_text() if el else default
@@ -142,7 +157,9 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     try:
         with session.begin():
             for item in items_iter:
-                guid, title, link, summary, published, created_dt, updated_dt = _parse_entry(item)
+                guid, title, link, summary, published, created_dt, updated_dt = (
+                    _parse_entry(item)
+                )
 
                 post = Post(
                     id=guid,
@@ -173,5 +190,5 @@ def main():
     save_entries(items)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
