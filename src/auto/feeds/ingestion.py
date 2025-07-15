@@ -47,7 +47,8 @@ def fetch_feed(feed_url=FEED_URL):
     """Fetch and parse the RSS feed using BeautifulSoup."""
     response = requests.get(feed_url, timeout=10)
     response.raise_for_status()
-    soup = BeautifulSoup(response.content, "lxml")
+    # Use the XML parser to avoid XMLParsedAsHTMLWarning
+    soup = BeautifulSoup(response.content, features="xml")
     return soup.find_all("item")
 
 
