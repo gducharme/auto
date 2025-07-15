@@ -1,13 +1,13 @@
 # TODO
 
 ## High Priority
-- Add automated tests for API endpoints and ingestion workflow.
+- Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
 
 ## Medium Priority
-- Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
 - Improve logging and error handling for ingestion and publishing tasks.
+- Implement periodic/scheduled ingestion instead of manual triggering.
+- Set up CI to run tests and linting automatically.
 
 ## Low Priority
-- Add a newline at the end of `tasks.py` for style consistency.
-- Implement periodic/scheduled ingestion instead of manual triggering.
 - Expand social network support beyond Mastodon.
+- Containerize the application with a Dockerfile.
