@@ -150,11 +150,9 @@ def _parse_entry(item):
 
 def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     """Save new entries from the feed into the database."""
-    session = _session_for_path(db_path, engine=engine, session_factory=session_factory)
-
     items_iter = getattr(items, "entries", items)
 
-    try:
+    with _session_for_path(db_path, engine=engine, session_factory=session_factory) as session:
         with session.begin():
             for item in items_iter:
                 guid, title, link, summary, published, created_dt, updated_dt = (
@@ -180,8 +178,6 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
                     logger.info("Skipping existing post: %s", title)
                 except Exception as exc:
                     logger.error("Failed to save post %s: %s", title, exc)
-    finally:
-        session.close()
 
 
 def main():
