@@ -115,7 +115,10 @@ def _extract_text(item, name: str, default: str = ""):
 
 def _parse_entry(item):
     """Return parsed fields extracted from a feed entry."""
-    get = lambda field, default="": _extract_text(item, field, default)
+
+    def get(field, default=""):
+        """Convenience wrapper around ``_extract_text`` for ``item``."""
+        return _extract_text(item, field, default)
 
     guid = get("guid") or get("id") or get("link")
     title = get("title")
