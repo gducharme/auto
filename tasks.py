@@ -59,38 +59,50 @@ def list_posts(ctx):
 
 
 @task
-def schedule(ctx, post_id, time, network="mastodon"):
-    """Schedule a post for publishing."""
+def schedule(ctx, post_id, time, network=None):
+    """Schedule a post for publishing.
+
+    ``time`` may be an absolute ISO timestamp or a relative string like
+    ``"in 1h"`` or ``"+30m"``. If ``--network`` is omitted the post is
+    scheduled for all known networks.
+    """
     import re
     from datetime import datetime, timedelta
     from dateutil import parser
     from auto.db import SessionLocal
     from auto.models import PostStatus
 
-    if time.startswith("+"):
-        m = re.match(r"\+([0-9]+)([smhd])", time)
-        if not m:
-            raise ValueError("Invalid relative time format")
-        value, unit = m.groups()
-        delta = {
-            "s": timedelta(seconds=int(value)),
-            "m": timedelta(minutes=int(value)),
-            "h": timedelta(hours=int(value)),
-            "d": timedelta(days=int(value)),
-        }[unit]
-        scheduled_at = datetime.utcnow() + delta
-    else:
-        scheduled_at = parser.isoparse(time)
+    def _parse_when(value: str) -> datetime:
+        value = value.strip().lower()
+        m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value)
+        if m:
+            amount, unit = m.groups()
+            delta = {
+                "s": timedelta(seconds=int(amount)),
+                "m": timedelta(minutes=int(amount)),
+                "h": timedelta(hours=int(amount)),
+                "d": timedelta(days=int(amount)),
+            }[unit]
+            return datetime.utcnow() + delta
+        return parser.isoparse(value)
+
+    scheduled_at = _parse_when(time)
+    networks = [network] if network else ["mastodon"]
 
     with SessionLocal() as session:
-        ps = session.get(PostStatus, {"post_id": post_id, "network": network})
-        if ps is None:
-            ps = PostStatus(post_id=post_id, network=network, scheduled_at=scheduled_at)
-            session.add(ps)
-        else:
-            ps.scheduled_at = scheduled_at
-            ps.status = "pending"
-        session.commit()
-    print(f"Scheduled {post_id} for {network} at {scheduled_at.isoformat()}")
+        for net in networks:
+            ps = session.get(PostStatus, {"post_id": post_id, "network": net})
+            if ps is None:
+                ps = PostStatus(
+                    post_id=post_id,
+                    network=net,
+                    scheduled_at=scheduled_at,
+                )
+                session.add(ps)
+            else:
+                ps.scheduled_at = scheduled_at
+                ps.status = "pending"
+            session.commit()
+    print(f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}")
 
 
