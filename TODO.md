@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Set up linting to run automatically on pre-commit.
 - Implement periodic/scheduled ingestion instead of manual triggering.
 
 ## Low Priority
