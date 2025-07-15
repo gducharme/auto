@@ -24,7 +24,11 @@ async def _publish(status: PostStatus, session):
         return
     try:
         if status.network == "mastodon":
-            await asyncio.to_thread(post_to_mastodon, f"{post.title} {post.link}")
+            await asyncio.to_thread(
+                post_to_mastodon,
+                f"{post.title} {post.link}",
+                visibility="unlisted",
+            )
         else:
             raise ValueError(f"Unsupported network {status.network}")
         status.status = "published"

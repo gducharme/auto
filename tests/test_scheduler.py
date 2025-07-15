@@ -38,7 +38,10 @@ def test_process_pending_publishes(tmp_path, monkeypatch):
         session.add(status)
         session.commit()
 
-    monkeypatch.setattr("auto.scheduler.post_to_mastodon", lambda text: DummyPoster.post(text))
+    monkeypatch.setattr(
+        "auto.scheduler.post_to_mastodon",
+        lambda text, visibility="unlisted": DummyPoster.post(text),
+    )
 
     asyncio.run(process_pending())
 
