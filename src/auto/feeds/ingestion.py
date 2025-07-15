@@ -1,9 +1,13 @@
-import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 import requests
 from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
 from pathlib import Path
+
+from ..models import Post
 
 # Configuration
 FEED_URL = 'https://geoffreyducharme.substack.com/feed'
@@ -70,33 +74,33 @@ def _parse_entry(item):
 
 
 def save_entries(items, db_path=DB_PATH):
-    """Save new entries from the feed into the database.
+    """Save new entries from the feed into the database using SQLAlchemy.
 
     The function accepts either an iterable of parsed ``<item>`` elements or a
     feed object with an ``entries`` attribute.  Tests use a small dummy object so
     we support both real feedparser/BeautifulSoup objects and simple stubs.
     """
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
+    url = db_path if db_path.startswith("sqlite") else f"sqlite:///{db_path}"
+    engine = create_engine(url, connect_args={"check_same_thread": False})
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
     # Allow passing a feed object with an ``entries`` attribute
     items_iter = getattr(items, "entries", items)
 
     for item in items_iter:
         guid, title, link, summary, published = _parse_entry(item)
-
+        post = Post(id=guid, title=title, link=link, summary=summary, published=published)
+        session.add(post)
         try:
-            c.execute(
-                'INSERT INTO posts (id, title, link, summary, published) VALUES (?, ?, ?, ?, ?)',
-                (guid, title, link, summary, published)
-            )
+            session.commit()
             print(f"Saved post: {title}")
-        except sqlite3.IntegrityError:
+        except IntegrityError:
+            session.rollback()
             # Duplicate entry, skip
             print(f"Skipping existing post: {title}")
 
-    conn.commit()
-    conn.close()
+    session.close()
 
 
 def main():

@@ -4,7 +4,6 @@
 - Add automated tests for API endpoints and ingestion workflow.
 
 ## Medium Priority
-- Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
 - Improve logging and error handling for ingestion and publishing tasks.
 
 ## Low Priority
