@@ -62,3 +62,31 @@ def test_fetch_feed_returns_items(monkeypatch):
     assert isinstance(items, list)
     assert all(item.name == "item" for item in items)
 
+
+def test_fetch_feed_uses_env_variable(monkeypatch):
+    """fetch_feed() should use SUBSTACK_FEED_URL when no URL is provided."""
+    monkeypatch.setenv("SUBSTACK_FEED_URL", "http://env.example/feed")
+    # reload module so FEED_URL picks up env var
+    import importlib
+    import auto.feeds.ingestion as ingestion_module
+    importlib.reload(ingestion_module)
+
+    called = {}
+
+    class DummyResponse:
+        def __init__(self):
+            self.content = b"<rss></rss>"
+            self.status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout=10):
+        called["url"] = url
+        return DummyResponse()
+
+    monkeypatch.setattr(ingestion_module.requests, "get", fake_get)
+
+    ingestion_module.fetch_feed()
+    assert called.get("url") == "http://env.example/feed"
+
