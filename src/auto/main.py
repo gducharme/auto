@@ -2,6 +2,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from contextlib import asynccontextmanager
 from .feeds.ingestion import init_db, fetch_feed, save_entries
+from . import scheduler
 from dotenv import load_dotenv
 import logging
 import os
@@ -15,7 +16,11 @@ DB_URL   = os.getenv("DATABASE_URL")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    yield
+    await scheduler.start()
+    try:
+        yield
+    finally:
+        await scheduler.stop()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -27,7 +32,7 @@ async def ingest(background_tasks: BackgroundTasks):
 
 def run_ingest():
     try:
-        items = fetch_feed()
+        items = fetch_feed(FEED_URL)
         save_entries(items)
     except Exception as exc:
         logger.error("Ingestion failed: %s", exc)
