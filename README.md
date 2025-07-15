@@ -14,7 +14,8 @@ basics needed for a multi‑publish workflow.
 Copy `.env.sample` to `.env` and adjust the values or export them manually.
 The following variables are used:
 
-- `SUBSTACK_FEED_URL` – RSS feed to ingest posts from.
+- `SUBSTACK_FEED_URL` – RSS feed to ingest posts from. Defaults to
+  `https://geoffreyducharme.substack.com/feed` if unset.
 - `DATABASE_URL` – database connection string (defaults to SQLite).
 - `MASTODON_INSTANCE` – base URL of the Mastodon instance, default
   `https://mastodon.social`.

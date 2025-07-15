@@ -1,4 +1,5 @@
 import logging
+import os
 import requests
 from bs4 import BeautifulSoup
 from alembic.config import Config
@@ -12,10 +13,14 @@ from ..db import SessionLocal
 
 from ..models import Post
 
+from dotenv import load_dotenv
+
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Configuration
-FEED_URL = 'https://geoffreyducharme.substack.com/feed'
+DEFAULT_FEED_URL = 'https://geoffreyducharme.substack.com/feed'
+FEED_URL = os.getenv('SUBSTACK_FEED_URL', DEFAULT_FEED_URL)
 
 # Determine project root four directories above this file
 BASE_DIR = Path(__file__).resolve().parents[3]
