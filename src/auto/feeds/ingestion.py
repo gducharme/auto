@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
+from dateutil import parser
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -96,6 +97,7 @@ def _parse_entry(item):
         link = item.findtext("link", "")
         summary = item.findtext("description", "")
         published = item.findtext("pubDate", "")
+        updated = item.findtext("updated") or item.findtext("updated_at", "")
     elif hasattr(item, "find"):
         def _text(tag_name, default=""):
             el = item.find(tag_name)
@@ -106,14 +108,16 @@ def _parse_entry(item):
         link = _text("link")
         summary = _text("description")
         published = _text("pubDate")
+        updated = _text("updated") or _text("updated_at")
     else:
         guid = getattr(item, "id", getattr(item, "link", ""))
         title = getattr(item, "title", "")
         link = getattr(item, "link", "")
         summary = getattr(item, "summary", "")
         published = getattr(item, "published", "")
+        updated = getattr(item, "updated", getattr(item, "updated_at", ""))
 
-    return guid, title, link, summary, published
+    return guid, title, link, summary, published, updated
 
 
 def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
@@ -123,8 +127,30 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     items_iter = getattr(items, "entries", items)
 
     for item in items_iter:
-        guid, title, link, summary, published = _parse_entry(item)
-        post = Post(id=guid, title=title, link=link, summary=summary, published=published)
+        guid, title, link, summary, published, updated = _parse_entry(item)
+
+        created_dt = None
+        updated_dt = None
+        if published:
+            try:
+                created_dt = parser.parse(published)
+            except Exception:
+                pass
+        if updated:
+            try:
+                updated_dt = parser.parse(updated)
+            except Exception:
+                pass
+
+        post = Post(
+            id=guid,
+            title=title,
+            link=link,
+            summary=summary,
+            published=published,
+            created_at=created_dt,
+            updated_at=updated_dt,
+        )
         session.add(post)
         try:
             session.commit()

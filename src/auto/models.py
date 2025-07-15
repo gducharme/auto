@@ -10,6 +10,8 @@ class Post(Base):
     link = Column(String, nullable=False)
     summary = Column(Text)
     published = Column(String)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
 
 class PostStatus(Base):
     __tablename__ = "post_status"

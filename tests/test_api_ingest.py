@@ -40,7 +40,10 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
         assert resp.status_code == 200
 
     conn = sqlite3.connect(db_path)
-    row_count = conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0]
+    rows = conn.execute(
+        "SELECT created_at, updated_at FROM posts"
+    ).fetchall()
     conn.close()
 
-    assert row_count == len(parsed)
+    assert len(rows) == len(parsed)
+    assert all(r[0] is not None for r in rows)
