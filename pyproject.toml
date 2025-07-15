@@ -8,6 +8,7 @@ dependencies = [
   "uvicorn",
   "python-dotenv",
   "beautifulsoup4",
+  "lxml",
 ]
 
 [project.optional-dependencies]
