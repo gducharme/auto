@@ -32,7 +32,7 @@ async def ingest(background_tasks: BackgroundTasks):
 
 def run_ingest():
     try:
-        items = fetch_feed()
+        items = fetch_feed(FEED_URL)
         save_entries(items)
     except Exception as exc:
         logger.error("Ingestion failed: %s", exc)
