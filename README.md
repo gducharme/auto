@@ -22,7 +22,7 @@ The following variables are used:
 
 ## Running the server
 
-Install dependencies and start the development server from the project root:
+Install dependencies (which include **lxml** for XML parsing) and start the development server from the project root:
 
 ```bash
 pip install -r requirements.txt
