@@ -1,7 +1,6 @@
 # TODO
 
 ## High Priority
-- Document required environment variables (e.g. `SUBSTACK_FEED_URL`, `DATABASE_URL`, `MASTODON_TOKEN`) in README and `.env.sample`.
 - Add automated tests for API endpoints and ingestion workflow.
 
 ## Medium Priority
