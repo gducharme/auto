@@ -1,11 +1,16 @@
 from mastodon import Mastodon
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 import logging
 import os
 
-# Load environment variables from the project root .env file
-BASE_DIR = Path(__file__).resolve().parents[2]
+# Resolve the repository root so we can load the correct .env file
+dotenv_path = find_dotenv()
+BASE_DIR = (
+    Path(dotenv_path).resolve().parent
+    if dotenv_path
+    else Path(__file__).resolve().parents[3]
+)
 load_dotenv(BASE_DIR / ".env")
 
 MASTODON_INSTANCE = os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
