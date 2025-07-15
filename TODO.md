@@ -1,0 +1,15 @@
+# TODO
+
+## High Priority
+- Document required environment variables (e.g. `SUBSTACK_FEED_URL`, `DATABASE_URL`, `MASTODON_TOKEN`) in README and `.env.sample`.
+- Add automated tests for API endpoints and ingestion workflow.
+
+## Medium Priority
+- Remove `auto.egg-info` from the repository and add `*.egg-info` to `.gitignore`.
+- Refactor database code to use SQLAlchemy models instead of raw `sqlite3` statements.
+- Improve logging and error handling for ingestion and publishing tasks.
+
+## Low Priority
+- Add a newline at the end of `tasks.py` for style consistency.
+- Implement periodic/scheduled ingestion instead of manual triggering.
+- Expand social network support beyond Mastodon.
