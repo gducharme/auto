@@ -28,26 +28,47 @@ DB_PATH = str(BASE_DIR / 'substack.db')
 ALEMBIC_INI = BASE_DIR / 'alembic.ini'
 
 
-def _session_for_path(db_path: str):
-    """Return a SQLAlchemy session for the given database path."""
-    if db_path == DB_PATH:
-        return SessionLocal()
-    url = db_path if db_path.startswith("sqlite") or "://" in db_path else f"sqlite:///{db_path}"
-    engine = create_engine(
-        url,
-        connect_args={"check_same_thread": False} if url.startswith("sqlite") else {},
-    )
-    return sessionmaker(autocommit=False, autoflush=False, bind=engine)()
+def _session_for_path(db_path: str, *, engine=None, session_factory=None):
+    """Return a SQLAlchemy session for the given database path or engine."""
+    if session_factory is not None:
+        return session_factory()
+
+    if engine is None:
+        if db_path == DB_PATH:
+            return SessionLocal()
+
+        url = db_path if db_path.startswith("sqlite") or "://" in db_path else f"sqlite:///{db_path}"
+        engine = create_engine(
+            url,
+            connect_args={"check_same_thread": False} if url.startswith("sqlite") else {},
+        )
+
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return Session()
 
 
-def init_db(db_path=DB_PATH):
+def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
     """Run database migrations to ensure the schema exists."""
     alembic_cfg = Config(str(ALEMBIC_INI))
-    if db_path != DB_PATH:
+
+    bind = engine
+    if bind is None and session_factory is not None:
+        if isinstance(session_factory, sessionmaker):
+            bind = session_factory.kw.get("bind")
+        else:
+            try:
+                bind = session_factory().get_bind()
+            finally:
+                pass
+
+    if bind is not None:
+        alembic_cfg.attributes["connection"] = bind
+    elif db_path != DB_PATH:
         url = db_path
         if not db_path.startswith("sqlite"):
             url = f"sqlite:///{db_path}"
         alembic_cfg.set_main_option("sqlalchemy.url", url)
+
     try:
         command.upgrade(alembic_cfg, "head")
     except Exception as exc:
@@ -95,9 +116,9 @@ def _parse_entry(item):
     return guid, title, link, summary, published
 
 
-def save_entries(items, db_path=DB_PATH):
+def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     """Save new entries from the feed into the database."""
-    session = _session_for_path(db_path)
+    session = _session_for_path(db_path, engine=engine, session_factory=session_factory)
 
     items_iter = getattr(items, "entries", items)
 
