@@ -4,6 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from sqlalchemy import create_engine
 from auto.feeds.ingestion import init_db, save_entries
 
 class DummyEntry:
@@ -21,7 +22,8 @@ class DummyFeed:
 
 def test_save_entries_inserts_and_ignores_duplicates(tmp_path):
     db_path = tmp_path / "test.db"
-    init_db(str(db_path))
+    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    init_db(str(db_path), engine=engine)
 
     feed = DummyFeed([
         DummyEntry("1", "First", "http://example.com/1"),
@@ -29,9 +31,9 @@ def test_save_entries_inserts_and_ignores_duplicates(tmp_path):
     ])
 
     # First insertion
-    save_entries(feed, str(db_path))
+    save_entries(feed, str(db_path), engine=engine)
     # Duplicate run should not insert additional rows
-    save_entries(feed, str(db_path))
+    save_entries(feed, str(db_path), engine=engine)
 
     conn = sqlite3.connect(db_path)
     cur = conn.execute("SELECT id, title FROM posts ORDER BY id")
