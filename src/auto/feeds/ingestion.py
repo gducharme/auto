@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
+from ..db import SessionLocal
 
 from ..models import Post
 
@@ -21,8 +22,13 @@ ALEMBIC_INI = BASE_DIR / 'alembic.ini'
 
 def _session_for_path(db_path: str):
     """Return a SQLAlchemy session for the given database path."""
+    if db_path == DB_PATH:
+        return SessionLocal()
     url = db_path if db_path.startswith("sqlite") or "://" in db_path else f"sqlite:///{db_path}"
-    engine = create_engine(url, connect_args={"check_same_thread": False} if url.startswith("sqlite") else {})
+    engine = create_engine(
+        url,
+        connect_args={"check_same_thread": False} if url.startswith("sqlite") else {},
+    )
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)()
 
 
