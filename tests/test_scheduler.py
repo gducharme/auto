@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -30,7 +30,11 @@ def test_process_pending_publishes(tmp_path, monkeypatch):
     with session_factory() as session:
         post = Post(id="1", title="Title", link="http://example", summary="", published="")
         session.add(post)
-        status = PostStatus(post_id="1", network="mastodon", scheduled_at=datetime.utcnow() - timedelta(seconds=1))
+        status = PostStatus(
+            post_id="1",
+            network="mastodon",
+            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=1),
+        )
         session.add(status)
         session.commit()
 

@@ -85,7 +85,7 @@ def fetch_feed(feed_url=FEED_URL):
     except requests.RequestException as exc:
         logger.error("Failed to fetch feed %s: %s", feed_url, exc)
         raise
-    soup = BeautifulSoup(response.content, "lxml")
+    soup = BeautifulSoup(response.content, "xml")
     return soup.find_all("item")
 
 
