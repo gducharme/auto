@@ -27,3 +27,34 @@ def freeze(ctx):
     Usage: invoke freeze
     """
     ctx.run("pip freeze --exclude-editable > requirements.txt", echo=True)
+
+
+@task
+def list_posts(ctx):
+    """List stored posts with their ID and publish status."""
+    from sqlalchemy import select, exists, case
+    from auto.db import SessionLocal
+    from auto.models import Post, PostStatus
+
+    exists_stmt = (
+        select(PostStatus.post_id)
+        .where(PostStatus.post_id == Post.id, PostStatus.status == "published")
+        .exists()
+    )
+
+    stmt = (
+        select(
+            Post.id,
+            Post.title,
+            case((exists_stmt, "published"), else_="pending").label("published"),
+        )
+        .order_by(Post.published.desc())
+    )
+
+    with SessionLocal() as session:
+        rows = session.execute(stmt).all()
+
+    for post_id, title, published in rows:
+        print(f"{post_id}\t{title}\t{published}")
+
+
