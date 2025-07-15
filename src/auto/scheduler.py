@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from .db import SessionLocal, engine
@@ -39,7 +39,8 @@ async def _publish(status: PostStatus, session):
         await asyncio.sleep(POST_DELAY)
 
 async def process_pending():
-    now = datetime.utcnow()
+    # use timezone-aware UTC datetime then drop tz info for DB comparison
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     with SessionLocal() as session:
         statuses = (
             session.query(PostStatus)
