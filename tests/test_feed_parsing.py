@@ -5,7 +5,6 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from bs4 import BeautifulSoup
-import requests
 from dateutil import parser
 from auto.feeds.ingestion import _parse_entry, fetch_feed
 

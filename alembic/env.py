@@ -1,18 +1,13 @@
 import os
 from dotenv import load_dotenv
+from alembic import context
+from logging.config import fileConfig
+from auto.db import engine as db_engine
 
 # find the project root (one directory above alembic/)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 # load the .env
 load_dotenv(os.path.join(project_root, ".env"))
-
-from logging.config import fileConfig
-
-from sqlalchemy import pool
-
-from auto.db import engine as db_engine
-
-from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

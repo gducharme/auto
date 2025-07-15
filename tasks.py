@@ -1,6 +1,7 @@
 # tasks.py
 from invoke import task
 
+
 @task
 def ingest(ctx, host="localhost", port=8000):
     """
@@ -9,6 +10,7 @@ def ingest(ctx, host="localhost", port=8000):
     """
     url = f"http://{host}:{port}/ingest"
     ctx.run(f"curl -s -X POST {url}", echo=True)
+
 
 @task
 def uv(ctx, host="127.0.0.1", port=8000, reload=True):
@@ -19,6 +21,7 @@ def uv(ctx, host="127.0.0.1", port=8000, reload=True):
         pty=True,
         echo=True,
     )
+
 
 @task
 def freeze(ctx):
@@ -32,7 +35,7 @@ def freeze(ctx):
 @task
 def list_posts(ctx):
     """List stored posts with their ID and publish status."""
-    from sqlalchemy import select, exists, case
+    from sqlalchemy import select, case
     from auto.db import SessionLocal
     from auto.models import Post, PostStatus
 
@@ -42,14 +45,11 @@ def list_posts(ctx):
         .exists()
     )
 
-    stmt = (
-        select(
-            Post.id,
-            Post.title,
-            case((exists_stmt, "published"), else_="pending").label("published"),
-        )
-        .order_by(Post.published.desc())
-    )
+    stmt = select(
+        Post.id,
+        Post.title,
+        case((exists_stmt, "published"), else_="pending").label("published"),
+    ).order_by(Post.published.desc())
 
     with SessionLocal() as session:
         rows = session.execute(stmt).all()
@@ -103,6 +103,6 @@ def schedule(ctx, post_id, time, network=None):
                 ps.scheduled_at = scheduled_at
                 ps.status = "pending"
             session.commit()
-    print(f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}")
-
-
+    print(
+        f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}"
+    )
