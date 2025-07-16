@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from sqlalchemy import create_engine
 import pytest
+import time
 
 SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
@@ -39,7 +40,10 @@ def _check_dependencies() -> None:
 
 
 def pytest_configure(config):
+    start = time.perf_counter()
     _check_dependencies()
+    elapsed = time.perf_counter() - start
+    print(f"dependency check: {elapsed:.2f}s")
 
 
 @pytest.fixture
