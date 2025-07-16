@@ -4,6 +4,8 @@ import re
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+from auto.automation.safari import SafariController
 from dateutil import parser
 
 
@@ -35,12 +37,6 @@ def _get_medium_magic_link() -> str | None:
 
 def _fill_safari_tab(url: str, selector: str, text: str) -> str:
     """Open Safari to ``url`` and fill ``selector`` with ``text``."""
-    script = Path(__file__).resolve().parents[1] / "scripts" / "safari_fill.scpt"
-    result = subprocess.run(
-        ["osascript", str(script), url, selector, text],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr)
-    return result.stdout.strip()
+    controller = SafariController()
+    controller.open(url)
+    return controller.fill(selector, text)

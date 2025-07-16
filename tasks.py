@@ -3,7 +3,8 @@ import os
 from invoke import task
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
-from tasks.helpers import _get_medium_magic_link, _fill_safari_tab, _parse_when
+from tasks.helpers import _get_medium_magic_link, _parse_when
+from auto.automation.safari import SafariController
 
 
 @task
@@ -193,7 +194,9 @@ def medium_magic_link(ctx):
 @task
 def safari_fill(ctx, url, selector, text):
     """Open or activate a Safari tab and type text into the given field."""
-    result = _fill_safari_tab(url, selector, text)
+    controller = SafariController()
+    controller.open(url)
+    result = controller.fill(selector, text)
     if result:
         print(result)
 
