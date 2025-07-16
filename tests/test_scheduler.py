@@ -37,6 +37,8 @@ def test_process_pending_publishes(test_db_engine, monkeypatch):
         lambda text, visibility="unlisted": DummyPoster.post(text),
     )
 
+    monkeypatch.setenv("POST_DELAY", "0")
+
     asyncio.run(process_pending())
 
     with session_factory() as session:
@@ -69,6 +71,8 @@ def test_process_pending_retries_error(test_db_engine, monkeypatch):
         "auto.scheduler.post_to_mastodon",
         lambda text, visibility="unlisted": DummyPoster.post(text),
     )
+
+    monkeypatch.setenv("POST_DELAY", "0")
 
     asyncio.run(process_pending())
 
@@ -103,6 +107,8 @@ def test_process_pending_ignores_exceeded_attempts(test_db_engine, monkeypatch):
         "auto.scheduler.post_to_mastodon",
         lambda text, visibility="unlisted": DummyPoster.post(text),
     )
+
+    monkeypatch.setenv("POST_DELAY", "0")
 
     asyncio.run(process_pending())
 
@@ -140,6 +146,8 @@ def test_process_pending_uses_preview(test_db_engine, monkeypatch):
         DummyPoster.post(text)
 
     monkeypatch.setattr("auto.scheduler.post_to_mastodon", fake_post)
+
+    monkeypatch.setenv("POST_DELAY", "0")
 
     asyncio.run(process_pending())
 
