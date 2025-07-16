@@ -67,7 +67,7 @@ def schedule(ctx, post_id, time, network=None):
     scheduled for all known networks.
     """
     import re
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     from dateutil import parser
     from auto.db import SessionLocal
     from auto.models import PostStatus
@@ -83,7 +83,7 @@ def schedule(ctx, post_id, time, network=None):
                 "h": timedelta(hours=int(amount)),
                 "d": timedelta(days=int(amount)),
             }[unit]
-            return datetime.utcnow() + delta
+            return datetime.now(timezone.utc) + delta
         return parser.isoparse(value)
 
     scheduled_at = _parse_when(time)
