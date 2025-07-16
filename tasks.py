@@ -215,8 +215,11 @@ def medium_magic_link(ctx):
         print("Magic link not found")
 
 
-def _fill_safari_tab(url: str, selector: str, text: str) -> None:
-    """Open Safari to ``url`` and fill ``selector`` with ``text``."""
+def _fill_safari_tab(url: str, selector: str, text: str) -> str:
+    """Open Safari to ``url`` and fill ``selector`` with ``text``.
+
+    Returns the JavaScript status string from the AppleScript.
+    """
     import subprocess
     from pathlib import Path
 
@@ -228,9 +231,12 @@ def _fill_safari_tab(url: str, selector: str, text: str) -> None:
     )
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
+    return result.stdout.strip()
 
 
 @task
 def safari_fill(ctx, url, selector, text):
     """Open or activate a Safari tab and type text into the given field."""
-    _fill_safari_tab(url, selector, text)
+    result = _fill_safari_tab(url, selector, text)
+    if result:
+        print(result)
