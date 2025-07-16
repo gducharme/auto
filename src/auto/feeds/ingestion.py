@@ -16,8 +16,6 @@ from ..db import SessionLocal
 from ..models import Post
 
 from dotenv import load_dotenv
-
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Configuration
@@ -176,6 +174,7 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
 
 
 def main():
+    load_dotenv()
     init_db()
     items = fetch_feed()
     save_entries(items)
