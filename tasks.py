@@ -87,6 +87,8 @@ def schedule(ctx, post_id, time, network=None):
         return parser.isoparse(value)
 
     scheduled_at = _parse_when(time)
+    if scheduled_at.tzinfo is not None:
+        scheduled_at = scheduled_at.astimezone(timezone.utc).replace(tzinfo=None)
     networks = [network] if network else ["mastodon"]
 
     with SessionLocal() as session:
