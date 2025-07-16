@@ -187,3 +187,29 @@ def chat(
     prompt = message or default_question
     response = dspy.chat(prompt)
     print(response)
+
+
+def _get_medium_magic_link():
+    """Return the latest Medium magic link via Apple Mail if present."""
+    import subprocess
+    import re
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parent / "scripts" / "fetch_medium_link.scpt"
+    result = subprocess.run(["osascript", str(script)], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+
+    match = re.search(r"https://medium\.com/magic/\S+", result.stdout)
+    return match.group(0) if match else None
+
+
+@task
+def medium_magic_link(ctx):
+    """Check Apple Mail once for a Medium magic link and print the result."""
+
+    link = _get_medium_magic_link()
+    if link:
+        print(f"Found magic link: {link}")
+    else:
+        print("Magic link not found")
