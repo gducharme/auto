@@ -21,6 +21,9 @@ The following variables are used:
   `https://mastodon.social`.
 - `MASTODON_TOKEN` – access token for posting to Mastodon.
 - `MAX_ATTEMPTS` – maximum number of publish attempts before giving up.
+- `SCHEDULER_POLL_INTERVAL` – how often the scheduler checks for posts, in
+  seconds.
+- `POST_DELAY` – delay between individual publish attempts in seconds.
 
 ## Running the server
 
