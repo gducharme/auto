@@ -9,6 +9,7 @@ dependencies = [
   "python-dotenv",
   "beautifulsoup4",
   "lxml",
+  "selenium",
 ]
 
 [project.optional-dependencies]

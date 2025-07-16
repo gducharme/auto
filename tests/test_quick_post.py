@@ -8,10 +8,10 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 import tasks  # noqa: E402
-from sqlalchemy import create_engine
-from auto.feeds.ingestion import init_db
-from auto.db import SessionLocal
-from auto.models import Post, PostStatus
+from sqlalchemy import create_engine  # noqa: E402
+from auto.feeds.ingestion import init_db  # noqa: E402
+from auto.db import SessionLocal  # noqa: E402
+from auto.models import Post, PostStatus  # noqa: E402
 
 
 def setup_db(tmp_path, monkeypatch):
