@@ -36,7 +36,8 @@ class SafariController:
 
     def run_js(self, code: str) -> str:
         """Execute JavaScript ``code`` in the current tab."""
-        return self._run("run_js", code)
+        result = self._run("run_js", code)
+        return result if result else "OK"
 
     def close_tab(self) -> str:
         """Close the current Safari tab."""
