@@ -125,12 +125,7 @@ def quick_post(ctx, network="mastodon"):
         .exists()
     )
 
-    stmt = (
-        select(Post)
-        .where(~exists_stmt)
-        .order_by(Post.created_at)
-        .limit(1)
-    )
+    stmt = select(Post).where(~exists_stmt).order_by(Post.created_at).limit(1)
 
     with SessionLocal() as session:
         post = session.execute(stmt).scalars().first()
@@ -167,3 +162,28 @@ def trending_tags(ctx, limit=10, instance=None, token=None):
     for tag in tags:
         name = tag["name"] if isinstance(tag, dict) else getattr(tag, "name", str(tag))
         print(name)
+
+
+@task
+def chat(
+    ctx,
+    message=None,
+    model="gemma-3-27b-it-qat",
+    api_base="http://localhost:1234/v1",
+    model_type="chat",
+):
+    """Send a chat message to a local LLM via dspy."""
+    import dspy
+
+    lm = dspy.LM(
+        model=model,
+        api_base=api_base,
+        api_key="",
+        model_type=model_type,
+    )
+    dspy.configure(lm=lm)
+
+    default_question = "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
+    prompt = message or default_question
+    response = dspy.chat(prompt)
+    print(response)
