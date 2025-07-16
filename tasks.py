@@ -70,7 +70,7 @@ def schedule(ctx, post_id, time, network=None):
     from datetime import datetime, timedelta, timezone
     from dateutil import parser
     from auto.db import SessionLocal
-    from auto.models import PostStatus
+    from auto.models import Post, PostStatus
 
     def _parse_when(value: str) -> datetime:
         value = value.strip().lower()
@@ -92,6 +92,9 @@ def schedule(ctx, post_id, time, network=None):
     networks = [network] if network else ["mastodon"]
 
     with SessionLocal() as session:
+        if session.get(Post, post_id) is None:
+            print(f"Post {post_id} not found")
+            return
         for net in networks:
             ps = session.get(PostStatus, {"post_id": post_id, "network": net})
             if ps is None:

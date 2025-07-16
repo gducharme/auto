@@ -15,9 +15,6 @@
 ## DRY
 
 ## BUGS
-- ``schedule`` does not verify that the post ID exists before inserting a
-  ``PostStatus`` record.  An invalid ID triggers a database integrity error
-  instead of a clear message. 【F:tasks.py†L92-L105】
 - The ``/ingest`` endpoint always returns success even if ``run_ingest`` fails
   to fetch or parse the feed, hiding ingestion errors from the caller.
   【F:src/auto/main.py†L27-L39】
