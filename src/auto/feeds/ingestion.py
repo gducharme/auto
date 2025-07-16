@@ -8,7 +8,6 @@ from alembic import command
 from dateutil import parser
 from pathlib import Path
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
@@ -16,8 +15,6 @@ from ..db import SessionLocal
 from ..models import Post
 
 from dotenv import load_dotenv
-
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Configuration
@@ -26,6 +23,7 @@ DEFAULT_FEED_URL = "https://geoffreyducharme.substack.com/feed"
 
 def get_feed_url() -> str:
     """Return the feed URL from ``SUBSTACK_FEED_URL`` or the default."""
+    load_dotenv()
     return os.getenv("SUBSTACK_FEED_URL", DEFAULT_FEED_URL)
 
 
@@ -41,20 +39,7 @@ def _session_for_path(db_path: str, *, engine=None, session_factory=None):
         return session_factory()
 
     if engine is None:
-        if db_path == DB_PATH:
-            return SessionLocal()
-
-        url = (
-            db_path
-            if db_path.startswith("sqlite") or "://" in db_path
-            else f"sqlite:///{db_path}"
-        )
-        engine = create_engine(
-            url,
-            connect_args=(
-                {"check_same_thread": False} if url.startswith("sqlite") else {}
-            ),
-        )
+        return SessionLocal()
 
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     return Session()
