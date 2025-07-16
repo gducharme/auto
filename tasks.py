@@ -213,3 +213,24 @@ def medium_magic_link(ctx):
         print(f"Found magic link: {link}")
     else:
         print("Magic link not found")
+
+
+def _fill_safari_tab(url: str, selector: str, text: str) -> None:
+    """Open Safari to ``url`` and fill ``selector`` with ``text``."""
+    import subprocess
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parent / "scripts" / "safari_fill.scpt"
+    result = subprocess.run(
+        ["osascript", str(script), url, selector, text],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+
+
+@task
+def safari_fill(ctx, url, selector, text):
+    """Open or activate a Safari tab and type text into the given field."""
+    _fill_safari_tab(url, selector, text)
