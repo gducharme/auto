@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from .main import run_ingest
+from .feeds.ingestion import run_ingest_async
 from .config import get_ingest_interval
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 async def _ingest_loop():
     while True:
         try:
-            await asyncio.to_thread(run_ingest)
+            await run_ingest_async()
         except Exception as exc:
             logger.error("Scheduled ingestion failed: %s", exc)
         await asyncio.sleep(get_ingest_interval())

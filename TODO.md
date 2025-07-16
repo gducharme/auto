@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Consider asynchronous HTTP clients for feed ingestion and posting to improve throughput.
 - Expose Prometheus metrics for published and failed posts to aid health
   monitoring.
 

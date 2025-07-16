@@ -54,10 +54,10 @@ def test_parse_entry_from_dummy_object():
 def test_fetch_feed_returns_items(monkeypatch):
     sample_xml = Path(__file__).with_name("sample_feed.xml").read_bytes()
 
-    def fake_get(url, timeout=10):
+    async def fake_get(self, url):
         return DummyResponse(sample_xml)
 
-    monkeypatch.setattr("requests.get", fake_get)
+    monkeypatch.setattr("auto.feeds.ingestion.httpx.AsyncClient.get", fake_get)
 
     items = fetch_feed("http://example.com/feed")
     assert isinstance(items, list)
@@ -70,11 +70,11 @@ def test_fetch_feed_uses_env_variable(monkeypatch):
 
     called = {}
 
-    def fake_get(url, timeout=10):
+    async def fake_get(self, url):
         called["url"] = url
         return DummyResponse()
 
-    monkeypatch.setattr("auto.feeds.ingestion.requests.get", fake_get)
+    monkeypatch.setattr("auto.feeds.ingestion.httpx.AsyncClient.get", fake_get)
 
     from auto.feeds import ingestion as ingestion_module
 

@@ -1,6 +1,8 @@
+import asyncio
 import logging
-import requests
 from typing import Optional
+
+import httpx
 from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
@@ -64,18 +66,24 @@ def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
         raise
 
 
-def fetch_feed(feed_url: Optional[str] = None):
-    """Fetch and parse the RSS feed using BeautifulSoup."""
+async def fetch_feed_async(feed_url: Optional[str] = None):
+    """Fetch and parse the RSS feed asynchronously."""
     if feed_url is None:
         feed_url = get_feed_url()
     try:
-        response = requests.get(feed_url, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException as exc:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(feed_url)
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
         logger.error("Failed to fetch feed %s: %s", feed_url, exc)
         raise
     soup = BeautifulSoup(response.content, "xml")
     return soup.find_all("item")
+
+
+def fetch_feed(feed_url: Optional[str] = None):
+    """Synchronous wrapper around :func:`fetch_feed_async`."""
+    return asyncio.run(fetch_feed_async(feed_url))
 
 
 def _extract_text(item, name: str, default: str = ""):
@@ -152,20 +160,24 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
                     logger.error("Failed to save post %s: %s", title, exc)
 
 
-def run_ingest():
-    """Fetch the configured feed and store any new entries."""
+async def run_ingest_async() -> None:
+    """Fetch the configured feed and store any new entries asynchronously."""
     try:
-        items = fetch_feed()
+        items = await fetch_feed_async()
         save_entries(items)
     except Exception as exc:
         logger.error("Ingestion failed: %s", exc)
         raise
 
 
+def run_ingest() -> None:
+    """Synchronous wrapper around :func:`run_ingest_async`."""
+    asyncio.run(run_ingest_async())
+
+
 def main():
     init_db()
-    items = fetch_feed()
-    save_entries(items)
+    asyncio.run(run_ingest_async())
 
 
 if __name__ == "__main__":

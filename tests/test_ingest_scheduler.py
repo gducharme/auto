@@ -7,10 +7,10 @@ import auto.main as main
 def test_ingest_scheduler_runs(monkeypatch):
     called = {"count": 0}
 
-    def fake_run_ingest():
+    async def fake_run_ingest():
         called["count"] += 1
 
-    monkeypatch.setattr(ingest_scheduler, "run_ingest", fake_run_ingest)
+    monkeypatch.setattr(ingest_scheduler, "run_ingest_async", fake_run_ingest)
     monkeypatch.setenv("INGEST_INTERVAL", "0")
 
     scheduler = ingest_scheduler.IngestScheduler()
