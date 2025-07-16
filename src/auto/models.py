@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, text
 
@@ -22,7 +22,7 @@ class Post(Base):
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
@@ -43,7 +43,7 @@ class PostStatus(Base):
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
@@ -57,5 +57,5 @@ class PostPreview(Base):
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
