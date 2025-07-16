@@ -6,7 +6,7 @@ from auto.models import Post, PostStatus, PostPreview
 
 def test_updated_at_refreshes(test_db_engine):
 
-    earlier = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
+    earlier = datetime.now(timezone.utc) - timedelta(days=1)
 
     with SessionLocal() as session:
         post = Post(
@@ -19,7 +19,7 @@ def test_updated_at_refreshes(test_db_engine):
         status = PostStatus(
             post_id="1",
             network="mastodon",
-            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            scheduled_at=datetime.now(timezone.utc),
             updated_at=earlier,
         )
         preview = PostPreview(

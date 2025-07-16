@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Standardize timezone handling with aware datetime objects throughout the app.
 - Consider asynchronous HTTP clients for feed ingestion and posting to improve throughput.
 - Expose Prometheus metrics for published and failed posts to aid health
   monitoring.

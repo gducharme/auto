@@ -26,8 +26,7 @@ def test_process_pending_publishes(test_db_engine, monkeypatch):
         status = PostStatus(
             post_id="1",
             network="mastodon",
-            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None)
-            - timedelta(seconds=1),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         session.add(status)
         session.commit()
@@ -61,8 +60,7 @@ def test_process_pending_retries_error(test_db_engine, monkeypatch):
             network="mastodon",
             status="error",
             attempts=1,
-            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None)
-            - timedelta(seconds=1),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         session.add(status)
         session.commit()
@@ -97,8 +95,7 @@ def test_process_pending_ignores_exceeded_attempts(test_db_engine, monkeypatch):
             network="mastodon",
             status="error",
             attempts=3,
-            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None)
-            - timedelta(seconds=1),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         session.add(status)
         session.commit()
@@ -132,8 +129,7 @@ def test_process_pending_uses_preview(test_db_engine, monkeypatch):
         status = PostStatus(
             post_id="1",
             network="mastodon",
-            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None)
-            - timedelta(seconds=1),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         preview = PostPreview(
             post_id="1", network="mastodon", content="Look {{ post.title }} {{ post.link }}"

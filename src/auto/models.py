@@ -14,15 +14,15 @@ class Post(Base):
     summary = Column(Text)
     published = Column(String)
     created_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
 
@@ -32,7 +32,7 @@ class PostStatus(Base):
     post_id = Column(String, ForeignKey("posts.id"), primary_key=True)
     network = Column(String, primary_key=True)
     scheduled_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
@@ -40,10 +40,10 @@ class PostStatus(Base):
     attempts = Column(Integer, nullable=False, server_default="0")
     last_error = Column(Text)
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
 
@@ -54,8 +54,8 @@ class PostPreview(Base):
     network = Column(String, primary_key=True)
     content = Column(Text, nullable=False)
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
