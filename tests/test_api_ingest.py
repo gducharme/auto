@@ -63,3 +63,15 @@ def test_run_ingest_uses_env_variable(monkeypatch):
 
     ingest_module.run_ingest()
     assert called.get("url") == "http://env.example/feed"
+
+
+def test_ingest_endpoint_propagates_errors(monkeypatch):
+    def fail_ingest():
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(main, "run_ingest", fail_ingest)
+
+    with TestClient(main.app) as client:
+        resp = client.post("/ingest")
+        assert resp.status_code == 500
+        assert resp.json()["detail"] == "ingestion failed"
