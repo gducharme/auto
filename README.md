@@ -91,6 +91,17 @@ Install the pre-commit hooks so formatting and linting run automatically:
 pre-commit install
 ```
 
+## Running tests
+
+Run the unit test suite with `pytest`. Integration tests are skipped by
+default because they require real credentials and network access. To run
+them, set `MEDIUM_EMAIL` and `MEDIUM_PASSWORD` and pass the `integration`
+marker:
+
+```bash
+pytest -m integration
+```
+
 ## License
 
 Distributed under the [MIT License](LICENSE).
