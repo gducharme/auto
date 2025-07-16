@@ -1,6 +1,5 @@
 from mastodon import Mastodon
 from dotenv import load_dotenv, find_dotenv
-from pathlib import Path
 import logging
 import os
 
@@ -24,8 +23,26 @@ def get_mastodon_token() -> str | None:
     load_dotenv(BASE_DIR / ".env")
     return os.getenv("MASTODON_TOKEN")
 
-
 logger = logging.getLogger(__name__)
+
+
+def _load_env() -> None:
+    """Load environment variables from the nearest ``.env`` file."""
+    dotenv_path = find_dotenv()
+    if dotenv_path:
+        load_dotenv(dotenv_path)
+
+
+def get_instance() -> str:
+    """Return the Mastodon instance URL."""
+    _load_env()
+    return os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
+
+
+def get_access_token() -> str:
+    """Return the Mastodon access token."""
+    _load_env()
+    return os.getenv("MASTODON_TOKEN")
 
 
 def post_to_mastodon(status: str, visibility: str = "private") -> None:

@@ -2,12 +2,6 @@
 
 ## High Priority
 
-- Move all environment variable access in ``feeds/ingestion.py`` and
-  ``socials/mastodon_client.py`` into helper functions so new values are picked
-  up without restarting.
-- Reuse ``db.get_engine()`` from ``db.py`` instead of creating new engines in
-  the ingestion helpers.
-
 ## Medium Priority
 - Implement periodic/scheduled ingestion instead of manual triggering.
 - Expose Prometheus metrics for published and failed posts to aid health

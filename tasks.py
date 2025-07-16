@@ -240,3 +240,95 @@ def safari_fill(ctx, url, selector, text):
     result = _fill_safari_tab(url, selector, text)
     if result:
         print(result)
+
+
+@task
+def list_previews(ctx):
+    """List stored post previews."""
+    from sqlalchemy import select
+    from auto.db import SessionLocal
+    from auto.models import PostPreview
+
+    stmt = select(PostPreview.post_id, PostPreview.network, PostPreview.content)
+    with SessionLocal() as session:
+        rows = session.execute(stmt).all()
+
+    for post_id, network, content in rows:
+        snippet = content.replace("\n", " ")[:60]
+        print(f"{post_id}\t{network}\t{snippet}")
+
+
+@task
+def generate_preview(
+    ctx,
+    post_id,
+    network="mastodon",
+    use_llm=False,
+    model="gemma-3-27b-it-qat",
+    api_base="http://localhost:1234/v1",
+    model_type="chat",
+):
+    """Generate or update a preview template for a scheduled post."""
+    from auto.db import SessionLocal
+    from auto.models import Post, PostStatus, PostPreview
+    import dspy
+
+    with SessionLocal() as session:
+        status = session.get(PostStatus, {"post_id": post_id, "network": network})
+        if status is None:
+            print(f"Post {post_id} is not scheduled for {network}")
+            return
+        post = session.get(Post, post_id)
+        if post is None:
+            print(f"Post {post_id} not found")
+            return
+        preview = session.get(PostPreview, {"post_id": post_id, "network": network})
+
+        if use_llm:
+            try:
+                lm = dspy.LM(
+                    model=model, api_base=api_base, api_key="", model_type=model_type
+                )
+                dspy.configure(lm=lm)
+                prompt = (
+                    f"Create a short template for sharing the post titled '{post.title}'. "
+                    "Use {{ post.link }} as a placeholder for the link."
+                )
+                content = dspy.chat(prompt).strip()
+            except Exception as exc:
+                print(f"LLM failed: {exc}; using default template")
+                content = f"{post.title} {{ post.link }}"
+        else:
+            content = f"{post.title} {{ post.link }}"
+
+        if preview is None:
+            preview = PostPreview(post_id=post_id, network=network, content=content)
+            session.add(preview)
+        else:
+            preview.content = content
+        session.commit()
+    print("Preview saved")
+
+
+@task
+def edit_preview(ctx, post_id, network="mastodon"):
+    """Interactively edit a post preview."""
+    import click
+    from auto.db import SessionLocal
+    from auto.models import PostPreview
+
+    with SessionLocal() as session:
+        preview = session.get(PostPreview, {"post_id": post_id, "network": network})
+        existing = preview.content if preview else ""
+        new = click.edit(existing)
+        if new is None:
+            print("No changes made")
+            return
+        new = new.rstrip("\n")
+        if preview is None:
+            preview = PostPreview(post_id=post_id, network=network, content=new)
+            session.add(preview)
+        else:
+            preview.content = new
+        session.commit()
+    print("Preview updated")
