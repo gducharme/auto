@@ -15,7 +15,6 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
     parsed = BeautifulSoup(sample_xml, "xml").find_all("item")
 
     monkeypatch.setattr(ingestion, "fetch_feed", lambda url=None: parsed)
-    monkeypatch.setattr(main, "fetch_feed", lambda url=None: parsed)
 
     db_path = tmp_path / "test.db"
     engine = create_engine(
@@ -33,7 +32,6 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ingestion, "init_db", init_db_patch)
     monkeypatch.setattr(ingestion, "save_entries", save_entries_patch)
-    monkeypatch.setattr(main, "save_entries", save_entries_patch)
     monkeypatch.setattr(main, "init_db", init_db_patch)
 
     with TestClient(main.app) as client:
@@ -52,7 +50,7 @@ def test_run_ingest_uses_env_variable(monkeypatch):
     """run_ingest() should fetch the URL from SUBSTACK_FEED_URL."""
     monkeypatch.setenv("SUBSTACK_FEED_URL", "http://env.example/feed")
 
-    import auto.main as main_module
+    import auto.feeds.ingestion as ingest_module
 
     called = {}
 
@@ -61,7 +59,7 @@ def test_run_ingest_uses_env_variable(monkeypatch):
         return DummyResponse()
 
     monkeypatch.setattr("auto.feeds.ingestion.requests.get", fake_get)
-    monkeypatch.setattr(main_module, "save_entries", lambda items: None)
+    monkeypatch.setattr(ingest_module, "save_entries", lambda items: None)
 
-    main_module.run_ingest()
+    ingest_module.run_ingest()
     assert called.get("url") == "http://env.example/feed"

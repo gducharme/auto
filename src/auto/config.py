@@ -42,6 +42,12 @@ def get_poll_interval() -> int:
     return int(os.getenv("SCHEDULER_POLL_INTERVAL", "5"))
 
 
+def get_ingest_interval() -> int:
+    """Return the delay in seconds between automatic feed ingestions."""
+    load_env()
+    return int(os.getenv("INGEST_INTERVAL", "600"))
+
+
 def get_post_delay() -> float:
     load_env()
     return float(os.getenv("POST_DELAY", "1"))

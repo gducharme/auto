@@ -25,6 +25,8 @@ The following variables are used:
 - `MAX_ATTEMPTS` – maximum number of publish attempts before giving up.
 - `SCHEDULER_POLL_INTERVAL` – seconds between scheduler iterations,
   default `5`.
+- `INGEST_INTERVAL` – seconds between automatic feed ingestions,
+  default `600`.
 - `POST_DELAY` – pause after each publish attempt, default `1` second.
 - `LOG_LEVEL` – log verbosity used by `configure_logging()`, default `INFO`.
 
@@ -56,13 +58,15 @@ python -m auto.scheduler
 
 ## Ingesting Substack posts
 
-Once the server is running you can trigger an ingestion job:
+The application automatically ingests the configured RSS feed on a
+schedule controlled by `INGEST_INTERVAL`. You can also trigger a run
+manually:
 
 ```bash
 invoke ingest
 ```
 
-This fetches the configured Substack RSS feed and saves any new posts into the
+Both methods fetch the configured RSS feed and store any new posts in the
 database.
 
 ## Posting to social networks
