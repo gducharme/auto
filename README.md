@@ -93,7 +93,13 @@ pre-commit install
 
 ## Running tests
 
-Run the unit test suite with `pytest`. Integration tests are skipped by
+Before running tests, install the project dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then run the unit test suite with `pytest`. Integration tests are skipped by
 default because they require real credentials and network access. To run
 them, set `MEDIUM_EMAIL` and `MEDIUM_PASSWORD` and pass the `integration`
 marker:
