@@ -10,8 +10,20 @@ from .socials.mastodon_client import post_to_mastodon
 
 logger = logging.getLogger(__name__)
 
-POLL_INTERVAL = int(os.getenv("SCHEDULER_POLL_INTERVAL", "5"))
-POST_DELAY = float(os.getenv("POST_DELAY", "1"))
+
+def get_poll_interval() -> int:
+    """Return the scheduler poll interval in seconds."""
+    return int(os.getenv("SCHEDULER_POLL_INTERVAL", "5"))
+
+
+def get_post_delay() -> float:
+    """Return the delay between publish attempts."""
+    return float(os.getenv("POST_DELAY", "1"))
+
+
+def get_max_attempts() -> int:
+    """Return the maximum publish attempts."""
+    return int(os.getenv("MAX_ATTEMPTS", "3"))
 
 async def _publish(status: PostStatus, session):
     post = session.get(Post, status.post_id)
@@ -40,15 +52,21 @@ async def _publish(status: PostStatus, session):
     finally:
         status.attempts += 1
         session.commit()
-        await asyncio.sleep(POST_DELAY)
+        await asyncio.sleep(get_post_delay())
 
-async def process_pending():
+async def process_pending(max_attempts: Optional[int] = None):
     # use timezone-aware UTC datetime then drop tz info for DB comparison
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if max_attempts is None:
+        max_attempts = get_max_attempts()
     with SessionLocal() as session:
         statuses = (
             session.query(PostStatus)
-            .filter(PostStatus.status == "pending", PostStatus.scheduled_at <= now)
+            .filter(
+                PostStatus.status == "pending",
+                PostStatus.scheduled_at <= now,
+                PostStatus.attempts < max_attempts,
+            )
             .order_by(PostStatus.scheduled_at)
             .all()
         )
@@ -58,7 +76,7 @@ async def process_pending():
 async def run_scheduler():
     while True:
         await process_pending()
-        await asyncio.sleep(POLL_INTERVAL)
+        await asyncio.sleep(get_poll_interval())
 
 
 class Scheduler:
