@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_
 
 from .db import SessionLocal, get_engine
 from .models import PostStatus, Post, PostPreview
-from .socials.mastodon_client import post_to_mastodon
+from .socials.mastodon_client import post_to_mastodon_async
 from .config import get_poll_interval, get_post_delay, get_max_attempts
 
 logger = logging.getLogger(__name__)
@@ -36,11 +36,7 @@ async def _publish(status: PostStatus, session):
                 text = Template(preview.content).render(post=post)
             else:
                 text = f"{post.title} {post.link}"
-            await asyncio.to_thread(
-                post_to_mastodon,
-                text,
-                visibility="unlisted",
-            )
+            await post_to_mastodon_async(text, visibility="unlisted")
         else:
             raise ValueError(f"Unsupported network {status.network}")
         status.status = "published"

@@ -14,7 +14,10 @@ def test_ingest_endpoint(tmp_path, monkeypatch):
     sample_xml = Path(__file__).with_name("sample_feed.xml").read_bytes()
     parsed = BeautifulSoup(sample_xml, "xml").find_all("item")
 
-    monkeypatch.setattr(ingestion, "fetch_feed", lambda url=None: parsed)
+    async def fake_fetch_feed(url=None):
+        return parsed
+
+    monkeypatch.setattr(ingestion, "fetch_feed_async", fake_fetch_feed)
 
     db_path = tmp_path / "test.db"
     engine = create_engine(
@@ -54,11 +57,11 @@ def test_run_ingest_uses_env_variable(monkeypatch):
 
     called = {}
 
-    def fake_get(url, timeout=10):
+    async def fake_get(self, url):
         called["url"] = url
         return DummyResponse()
 
-    monkeypatch.setattr("auto.feeds.ingestion.requests.get", fake_get)
+    monkeypatch.setattr("auto.feeds.ingestion.httpx.AsyncClient.get", fake_get)
     monkeypatch.setattr(ingest_module, "save_entries", lambda items: None)
 
     ingest_module.run_ingest()

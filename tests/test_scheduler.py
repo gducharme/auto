@@ -31,9 +31,12 @@ def test_process_pending_publishes(test_db_engine, monkeypatch):
         session.add(status)
         session.commit()
 
+    async def fake_post(text, visibility="unlisted"):
+        DummyPoster.post(text)
+
     monkeypatch.setattr(
-        "auto.scheduler.post_to_mastodon",
-        lambda text, visibility="unlisted": DummyPoster.post(text),
+        "auto.scheduler.post_to_mastodon_async",
+        fake_post,
     )
 
     monkeypatch.setenv("POST_DELAY", "0")
@@ -65,9 +68,12 @@ def test_process_pending_retries_error(test_db_engine, monkeypatch):
         session.add(status)
         session.commit()
 
+    async def fake_post(text, visibility="unlisted"):
+        DummyPoster.post(text)
+
     monkeypatch.setattr(
-        "auto.scheduler.post_to_mastodon",
-        lambda text, visibility="unlisted": DummyPoster.post(text),
+        "auto.scheduler.post_to_mastodon_async",
+        fake_post,
     )
 
     monkeypatch.setenv("POST_DELAY", "0")
@@ -100,9 +106,12 @@ def test_process_pending_ignores_exceeded_attempts(test_db_engine, monkeypatch):
         session.add(status)
         session.commit()
 
+    async def fake_post(text, visibility="unlisted"):
+        DummyPoster.post(text)
+
     monkeypatch.setattr(
-        "auto.scheduler.post_to_mastodon",
-        lambda text, visibility="unlisted": DummyPoster.post(text),
+        "auto.scheduler.post_to_mastodon_async",
+        fake_post,
     )
 
     monkeypatch.setenv("POST_DELAY", "0")
@@ -137,11 +146,11 @@ def test_process_pending_uses_preview(test_db_engine, monkeypatch):
         session.add_all([status, preview])
         session.commit()
 
-    def fake_post(text, visibility="unlisted"):
+    async def fake_post(text, visibility="unlisted"):
         captured["text"] = text
         DummyPoster.post(text)
 
-    monkeypatch.setattr("auto.scheduler.post_to_mastodon", fake_post)
+    monkeypatch.setattr("auto.scheduler.post_to_mastodon_async", fake_post)
 
     monkeypatch.setenv("POST_DELAY", "0")
 
