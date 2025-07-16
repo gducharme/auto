@@ -1,19 +1,37 @@
+"""Database utilities for creating engines and sessions."""
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # loads DATABASE_URL
+_engine = None
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./substack.db")
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=(
-        {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-    ),
-)
+def get_database_url() -> str:
+    """Return the database URL from ``DATABASE_URL`` or the default."""
+    load_dotenv()
+    return os.getenv("DATABASE_URL", "sqlite:///./substack.db")
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_engine():
+    """Return a cached SQLAlchemy engine instance."""
+    global _engine
+    if _engine is None:
+        url = get_database_url()
+        _engine = create_engine(
+            url,
+            connect_args=(
+                {"check_same_thread": False} if url.startswith("sqlite") else {}
+            ),
+        )
+    return _engine
+
+
+def SessionLocal():
+    """Return a new session bound to the engine from :func:`get_engine`."""
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return Session()
+
 
 Base = declarative_base()

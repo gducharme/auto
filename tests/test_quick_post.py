@@ -14,16 +14,18 @@ from auto.db import SessionLocal
 from auto.models import Post, PostStatus
 
 
-def setup_db(tmp_path):
+def setup_db(tmp_path, monkeypatch):
     db_path = tmp_path / "test.db"
-    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
     init_db(str(db_path), engine=engine)
-    SessionLocal.configure(bind=engine)
+    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
     return engine
 
 
 def test_quick_post_schedules(monkeypatch, tmp_path):
-    setup_db(tmp_path)
+    setup_db(tmp_path, monkeypatch)
     with SessionLocal() as session:
         session.add(
             Post(
@@ -48,7 +50,7 @@ def test_quick_post_schedules(monkeypatch, tmp_path):
         session.add(PostStatus(post_id="1", network="mastodon", status="published"))
         session.commit()
 
-    monkeypatch.setattr("builtins.input", lambda prompt='': 'y')
+    monkeypatch.setattr("builtins.input", lambda prompt="": "y")
 
     tasks.quick_post(Context())
 
@@ -59,7 +61,7 @@ def test_quick_post_schedules(monkeypatch, tmp_path):
 
 
 def test_quick_post_abort(monkeypatch, tmp_path):
-    setup_db(tmp_path)
+    setup_db(tmp_path, monkeypatch)
     with SessionLocal() as session:
         session.add(
             Post(
@@ -73,7 +75,7 @@ def test_quick_post_abort(monkeypatch, tmp_path):
         )
         session.commit()
 
-    monkeypatch.setattr("builtins.input", lambda prompt='': 'n')
+    monkeypatch.setattr("builtins.input", lambda prompt="": "n")
 
     tasks.quick_post(Context())
 
