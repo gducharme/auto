@@ -29,6 +29,14 @@ on run argv
             set current tab of window 1 to newTab
         end if
         delay 1
-        do JavaScript "var el=document.querySelector('" & cssSelector & "');if(el){el.focus();el.value='" & textValue & "';}" in current tab of window 1
+        set js to "var el=document.querySelector('" & cssSelector & "');" & ¬
+            "if(!el){'NOT_FOUND';}" & ¬
+            "else{try{" & ¬
+            "el.focus();el.value='" & textValue & "';" & ¬
+            "var e=new Event('input',{bubbles:true});el.dispatchEvent(e);" & ¬
+            "el.value=='" & textValue & "'?'OK':'NOT_EDITABLE';}" & ¬
+            "catch(err){'ERROR:' + err.message;}}"
+        set resultText to do JavaScript js in current tab of window 1
+        return resultText
     end tell
 end run
