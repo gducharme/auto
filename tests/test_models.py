@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine
 
@@ -20,7 +20,7 @@ def test_updated_at_refreshes(tmp_path, monkeypatch):
 
     monkeypatch.setattr("auto.db.get_engine", lambda: engine)
 
-    earlier = datetime.utcnow() - timedelta(days=1)
+    earlier = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
 
     with SessionLocal() as session:
         post = Post(
@@ -33,7 +33,7 @@ def test_updated_at_refreshes(tmp_path, monkeypatch):
         status = PostStatus(
             post_id="1",
             network="mastodon",
-            scheduled_at=datetime.utcnow(),
+            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None),
             updated_at=earlier,
         )
         preview = PostPreview(
