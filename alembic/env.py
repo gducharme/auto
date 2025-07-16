@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from alembic import context
 from logging.config import fileConfig
-from auto.db import engine as db_engine
+from auto.db import get_engine
 
 # find the project root (one directory above alembic/)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -64,7 +64,7 @@ def run_migrations_online() -> None:
     connectable = config.attributes.get("connection")
 
     if connectable is None:
-        connectable = db_engine
+        connectable = get_engine()
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

@@ -6,7 +6,7 @@ from typing import Optional
 
 from sqlalchemy import and_, or_
 
-from .db import SessionLocal, engine
+from .db import SessionLocal, get_engine
 from .models import PostStatus, Post
 from .socials.mastodon_client import post_to_mastodon
 
@@ -26,6 +26,7 @@ def get_post_delay() -> float:
 def get_max_attempts() -> int:
     """Return the maximum publish attempts."""
     return int(os.getenv("MAX_ATTEMPTS", "3"))
+
 
 async def _publish(status: PostStatus, session):
     post = session.get(Post, status.post_id)
@@ -56,6 +57,7 @@ async def _publish(status: PostStatus, session):
         session.commit()
         await asyncio.sleep(get_post_delay())
 
+
 async def process_pending(max_attempts: Optional[int] = None):
     # use timezone-aware UTC datetime then drop tz info for DB comparison
     now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -80,6 +82,7 @@ async def process_pending(max_attempts: Optional[int] = None):
         for status in statuses:
             await _publish(status, session)
 
+
 async def run_scheduler():
     while True:
         await process_pending()
@@ -97,7 +100,7 @@ class Scheduler:
         if self._task is None or self._task.done():
             from sqlalchemy import inspect
 
-            inspector = inspect(engine)
+            inspector = inspect(get_engine())
             if not inspector.has_table("post_status"):
                 logger.warning("post_status table missing; scheduler not started")
                 return None
@@ -131,6 +134,7 @@ async def stop() -> None:
 
 def main():
     asyncio.run(run_scheduler())
+
 
 if __name__ == "__main__":
     main()
