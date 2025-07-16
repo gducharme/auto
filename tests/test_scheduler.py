@@ -19,6 +19,7 @@ class DummyPoster:
 
 
 def test_process_pending_publishes(tmp_path, monkeypatch):
+    DummyPoster.called = False
     db_path = tmp_path / "test.db"
     engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
     init_db(str(db_path), engine=engine)
@@ -49,3 +50,79 @@ def test_process_pending_publishes(tmp_path, monkeypatch):
         ps = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
         assert ps.status == "published"
     assert DummyPoster.called
+
+
+def test_process_pending_retries_error(tmp_path, monkeypatch):
+    DummyPoster.called = False
+    db_path = tmp_path / "test.db"
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
+    init_db(str(db_path), engine=engine)
+
+    session_factory = SessionLocal
+    session_factory.configure(bind=engine)
+
+    with session_factory() as session:
+        post = Post(id="1", title="Title", link="http://example", summary="", published="")
+        session.add(post)
+        status = PostStatus(
+            post_id="1",
+            network="mastodon",
+            status="error",
+            attempts=1,
+            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=1),
+        )
+        session.add(status)
+        session.commit()
+
+    monkeypatch.setattr(
+        "auto.scheduler.post_to_mastodon",
+        lambda text, visibility="unlisted": DummyPoster.post(text),
+    )
+
+    asyncio.run(process_pending())
+
+    with session_factory() as session:
+        ps = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
+        assert ps.status == "published"
+        assert ps.attempts == 2
+    assert DummyPoster.called
+
+
+def test_process_pending_ignores_exceeded_attempts(tmp_path, monkeypatch):
+    DummyPoster.called = False
+    db_path = tmp_path / "test.db"
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
+    init_db(str(db_path), engine=engine)
+
+    session_factory = SessionLocal
+    session_factory.configure(bind=engine)
+
+    with session_factory() as session:
+        post = Post(id="1", title="Title", link="http://example", summary="", published="")
+        session.add(post)
+        status = PostStatus(
+            post_id="1",
+            network="mastodon",
+            status="error",
+            attempts=3,
+            scheduled_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=1),
+        )
+        session.add(status)
+        session.commit()
+
+    monkeypatch.setattr(
+        "auto.scheduler.post_to_mastodon",
+        lambda text, visibility="unlisted": DummyPoster.post(text),
+    )
+
+    asyncio.run(process_pending())
+
+    with session_factory() as session:
+        ps = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
+        assert ps.status == "error"
+        assert ps.attempts == 3
+    assert not DummyPoster.called
