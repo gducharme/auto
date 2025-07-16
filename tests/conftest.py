@@ -1,4 +1,5 @@
-import pkg_resources
+from importlib import metadata
+from packaging.requirements import Requirement
 from pathlib import Path
 import pytest
 
@@ -10,10 +11,16 @@ def _check_dependencies() -> None:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+        req = Requirement(line)
+        if req.marker and not req.marker.evaluate():
+            continue
         try:
-            pkg_resources.require(line)
-        except Exception:
+            installed = metadata.version(req.name)
+        except metadata.PackageNotFoundError:
             missing.append(line)
+        else:
+            if req.specifier and installed not in req.specifier:
+                missing.append(line)
     if missing:
         pytest.exit(
             "Missing dependencies: "
