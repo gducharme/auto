@@ -34,7 +34,6 @@ on run argv
             "if(!promptDiv){console.error('⚠️ No element found with id prompt-textarea');return;}" & ¬
             "promptDiv.textContent=text;" & ¬
             "promptDiv.dispatchEvent(new Event('input'));" & ¬
-            "setTimeout(()=>{" & ¬
             "console.log('📥 prompt-textarea now contains:',promptDiv.textContent);" & ¬
             "const candidates=document.querySelectorAll('div.flex.items-center.justify-center');" & ¬
             "console.log('🔍 Found',candidates.length,'candidates:',candidates);" & ¬
@@ -47,8 +46,7 @@ on run argv
             "console.log('✅ Clicked the Code button!');" & ¬
             "}else{" & ¬
             "console.warn('❌ No matching Code button found—check the debug log above.');" & ¬
-            "},500);" & ¬
-            "}"
+            "}}"
         set js to jsFunction & " setPromptAndClickCode('" & textValue & "'); 'OK';"
         set resultText to do JavaScript js in current tab of window 1
         return resultText
