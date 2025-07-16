@@ -1,5 +1,4 @@
 import logging
-import os
 import requests
 from typing import Optional
 from bs4 import BeautifulSoup
@@ -13,18 +12,9 @@ from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
 
 from ..models import Post
-
-from dotenv import load_dotenv
+from ..config import load_env, get_feed_url
 logger = logging.getLogger(__name__)
 
-# Configuration
-DEFAULT_FEED_URL = "https://geoffreyducharme.substack.com/feed"
-
-
-def get_feed_url() -> str:
-    """Return the feed URL from ``SUBSTACK_FEED_URL`` or the default."""
-    load_dotenv()
-    return os.getenv("SUBSTACK_FEED_URL", DEFAULT_FEED_URL)
 
 
 # Determine project root four directories above this file
@@ -161,7 +151,7 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
 
 
 def main():
-    load_dotenv()
+    load_env()
     init_db()
     items = fetch_feed()
     save_entries(items)

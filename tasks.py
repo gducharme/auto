@@ -147,14 +147,13 @@ def quick_post(ctx, network="mastodon"):
 @task
 def trending_tags(ctx, limit=10, instance=None, token=None):
     """Display trending tags from Mastodon."""
-    import os
-    from dotenv import load_dotenv, find_dotenv
     from mastodon import Mastodon
+    from auto.config import load_env, get_mastodon_instance, get_mastodon_token
 
-    load_dotenv(find_dotenv())
+    load_env()
 
-    instance = instance or os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
-    token = token or os.getenv("MASTODON_TOKEN")
+    instance = instance or get_mastodon_instance()
+    token = token or get_mastodon_token()
 
     masto = Mastodon(access_token=token, api_base_url=instance)
     tags = masto.trending_tags(limit=limit)

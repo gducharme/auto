@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -11,23 +10,11 @@ from sqlalchemy import and_, or_
 from .db import SessionLocal, get_engine
 from .models import PostStatus, Post, PostPreview
 from .socials.mastodon_client import post_to_mastodon
+from .config import get_poll_interval, get_post_delay, get_max_attempts
 
 logger = logging.getLogger(__name__)
 
 
-def get_poll_interval() -> int:
-    """Return the scheduler poll interval in seconds."""
-    return int(os.getenv("SCHEDULER_POLL_INTERVAL", "5"))
-
-
-def get_post_delay() -> float:
-    """Return the delay between publish attempts."""
-    return float(os.getenv("POST_DELAY", "1"))
-
-
-def get_max_attempts() -> int:
-    """Return the maximum publish attempts."""
-    return int(os.getenv("MAX_ATTEMPTS", "3"))
 
 
 async def _publish(status: PostStatus, session):

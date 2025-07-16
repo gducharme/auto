@@ -2,16 +2,12 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-import os
-from dotenv import load_dotenv
+
+from .config import get_database_url
 
 _engine = None
 
 
-def get_database_url() -> str:
-    """Return the database URL from ``DATABASE_URL`` or the default."""
-    load_dotenv()
-    return os.getenv("DATABASE_URL", "sqlite:///./substack.db")
 
 
 def get_engine():

@@ -1,16 +1,17 @@
-import os
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+
+from ..config import get_medium_email, get_medium_password
 
 logger = logging.getLogger(__name__)
 
 
 def _get_credentials():
     """Return Medium login credentials from the environment."""
-    email = os.getenv("MEDIUM_EMAIL")
-    password = os.getenv("MEDIUM_PASSWORD")
+    email = get_medium_email()
+    password = get_medium_password()
     if not email or not password:
         raise ValueError("MEDIUM_EMAIL and MEDIUM_PASSWORD must be set")
     return email, password
