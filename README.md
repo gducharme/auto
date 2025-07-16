@@ -75,6 +75,19 @@ post’s publish status per network is tracked in the `post_status` table.
 While minimal, the goal is to provide the scaffolding for mirroring your
 Substack content across multiple social sites with a single workflow.
 
+## Managing previews
+
+Previews are small templates used when posting to other networks. They can be listed, generated or edited with Invoke tasks:
+
+```bash
+invoke list-previews
+invoke generate-preview --post-id <id> --network mastodon
+invoke edit-preview --post-id <id> --network mastodon
+```
+
+`generate-preview` uses a local LLM when available and falls back to a simple template. Previews are only created when the post has been scheduled.
+
+
 ## Health checks
 
 The scheduler checks for the presence of the `post_status` table when it
