@@ -56,8 +56,8 @@ async def _publish(status: PostStatus, session):
 
 
 async def process_pending(max_attempts: Optional[int] = None):
-    # use timezone-aware UTC datetime then drop tz info for DB comparison
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    # use timezone-aware UTC datetime for all comparisons
+    now = datetime.now(timezone.utc)
     if max_attempts is None:
         max_attempts = get_max_attempts()
     with SessionLocal() as session:
