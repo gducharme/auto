@@ -1,4 +1,7 @@
 from auto.automation.safari import SafariController
+import pytest
+import sys
+import shutil
 
 
 def _fake_run(calls):
@@ -59,3 +62,21 @@ def test_close_tab(monkeypatch):
     controller.close_tab()
     expected = ["osascript", str(controller.script), "close_tab"]
     assert calls == [expected]
+
+
+@pytest.mark.integration
+def test_startpage_search():
+    """Open Startpage and submit a search via Safari."""
+    if sys.platform != "darwin" or shutil.which("osascript") is None:
+        pytest.skip("Safari integration requires macOS and osascript")
+
+    controller = SafariController()
+    assert controller.open("https://www.startpage.com") == "OK"
+    assert controller.fill("#q", "what is the best season to fish in NC?") == "OK"
+    assert (
+        controller.run_js(
+            "var b=document.querySelector('button[type='submit']');if(b)b.click();"
+        )
+        == "OK"
+    )
+    assert controller.close_tab() == "OK"
