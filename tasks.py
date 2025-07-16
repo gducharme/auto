@@ -142,3 +142,23 @@ def quick_post(ctx, network="mastodon"):
         return
 
     schedule(ctx, post_id=post.id, time="in 1m", network=network)
+
+
+@task
+def trending_tags(ctx, limit=10, instance=None, token=None):
+    """Display trending tags from Mastodon."""
+    import os
+    from dotenv import load_dotenv, find_dotenv
+    from mastodon import Mastodon
+
+    load_dotenv(find_dotenv())
+
+    instance = instance or os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
+    token = token or os.getenv("MASTODON_TOKEN")
+
+    masto = Mastodon(access_token=token, api_base_url=instance)
+    tags = masto.trending_tags(limit=limit)
+
+    for tag in tags:
+        name = tag["name"] if isinstance(tag, dict) else getattr(tag, "name", str(tag))
+        print(name)
