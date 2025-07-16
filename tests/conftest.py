@@ -1,7 +1,15 @@
 from importlib import metadata
 from packaging.requirements import Requirement
 from pathlib import Path
+import sys
+from sqlalchemy import create_engine
 import pytest
+
+SRC = Path(__file__).resolve().parents[1] / "src"
+sys.path.insert(0, str(SRC))
+
+from auto.feeds.ingestion import init_db
+from auto.db import SessionLocal
 
 
 def _check_dependencies() -> None:
@@ -32,3 +40,23 @@ def _check_dependencies() -> None:
 
 def pytest_configure(config):
     _check_dependencies()
+
+
+@pytest.fixture
+def test_db_engine(tmp_path, monkeypatch):
+    """Return an initialized temporary SQLite engine for tests."""
+    db_file = tmp_path / "test.db"
+    engine = create_engine(
+        f"sqlite:///{db_file}", connect_args={"check_same_thread": False}
+    )
+    init_db(str(db_file), engine=engine)
+    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def session(test_db_engine):
+    """Provide an active SessionLocal bound to the test engine."""
+    with SessionLocal() as session:
+        yield session
