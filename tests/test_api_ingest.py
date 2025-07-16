@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 from fastapi.testclient import TestClient
 from bs4 import BeautifulSoup
+from tests.helpers import DummyResponse
 
 
 import auto.main as main
@@ -54,14 +55,6 @@ def test_run_ingest_uses_env_variable(monkeypatch):
     import auto.main as main_module
 
     called = {}
-
-    class DummyResponse:
-        def __init__(self):
-            self.content = b"<rss></rss>"
-            self.status_code = 200
-
-        def raise_for_status(self):
-            pass
 
     def fake_get(url, timeout=10):
         called["url"] = url

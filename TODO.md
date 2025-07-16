@@ -14,7 +14,6 @@
 ## Code Smells
 
 ## DRY
-- ``DummyResponse`` classes for mocking ``requests.get`` appear in multiple test files. Factor them into a common helper.
 
 ## BUGS
 - ``schedule`` allows timezone‑aware datetimes for relative values, but the
