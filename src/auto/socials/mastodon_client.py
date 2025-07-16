@@ -1,5 +1,6 @@
 from mastodon import Mastodon
 from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
 import logging
 import os
 
