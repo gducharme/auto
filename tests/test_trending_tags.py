@@ -1,10 +1,4 @@
-import sys
-from pathlib import Path
 from invoke import Context
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT))
 
 import tasks  # noqa: E402
 import mastodon  # noqa: E402
