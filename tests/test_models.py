@@ -2,23 +2,13 @@ import sys
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import create_engine
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from auto.feeds.ingestion import init_db
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, PostPreview
 
 
-def test_updated_at_refreshes(tmp_path, monkeypatch):
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
+def test_updated_at_refreshes(test_db_engine):
 
     earlier = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
 

@@ -5,8 +5,6 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from sqlalchemy import create_engine
-from auto.feeds.ingestion import init_db
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, PostPreview
 from auto.scheduler import process_pending
@@ -20,17 +18,9 @@ class DummyPoster:
         cls.called = True
 
 
-def test_process_pending_publishes(tmp_path, monkeypatch):
+def test_process_pending_publishes(test_db_engine, monkeypatch):
     DummyPoster.called = False
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-
     session_factory = SessionLocal
-    # override engine used by SessionLocal
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
 
     with session_factory() as session:
         post = Post(
@@ -59,16 +49,9 @@ def test_process_pending_publishes(tmp_path, monkeypatch):
     assert DummyPoster.called
 
 
-def test_process_pending_retries_error(tmp_path, monkeypatch):
+def test_process_pending_retries_error(test_db_engine, monkeypatch):
     DummyPoster.called = False
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-
     session_factory = SessionLocal
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
 
     with session_factory() as session:
         post = Post(
@@ -100,16 +83,9 @@ def test_process_pending_retries_error(tmp_path, monkeypatch):
     assert DummyPoster.called
 
 
-def test_process_pending_ignores_exceeded_attempts(tmp_path, monkeypatch):
+def test_process_pending_ignores_exceeded_attempts(test_db_engine, monkeypatch):
     DummyPoster.called = False
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-
     session_factory = SessionLocal
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
 
     with session_factory() as session:
         post = Post(
@@ -141,17 +117,10 @@ def test_process_pending_ignores_exceeded_attempts(tmp_path, monkeypatch):
     assert not DummyPoster.called
 
 
-def test_process_pending_uses_preview(tmp_path, monkeypatch):
+def test_process_pending_uses_preview(test_db_engine, monkeypatch):
     DummyPoster.called = False
     captured = {}
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-
     session_factory = SessionLocal
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
 
     with session_factory() as session:
         post = Post(

@@ -8,24 +8,11 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 import tasks  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from auto.feeds.ingestion import init_db  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402
 from auto.models import Post, PostStatus  # noqa: E402
 
 
-def setup_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test.db"
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
-    init_db(str(db_path), engine=engine)
-    monkeypatch.setattr("auto.db.get_engine", lambda: engine)
-    return engine
-
-
-def test_quick_post_schedules(monkeypatch, tmp_path):
-    setup_db(tmp_path, monkeypatch)
+def test_quick_post_schedules(monkeypatch, test_db_engine):
     with SessionLocal() as session:
         session.add(
             Post(
@@ -60,8 +47,7 @@ def test_quick_post_schedules(monkeypatch, tmp_path):
         assert ps.status == "pending"
 
 
-def test_quick_post_abort(monkeypatch, tmp_path):
-    setup_db(tmp_path, monkeypatch)
+def test_quick_post_abort(monkeypatch, test_db_engine):
     with SessionLocal() as session:
         session.add(
             Post(
