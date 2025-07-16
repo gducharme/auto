@@ -4,10 +4,12 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
+from jinja2 import Template
+
 from sqlalchemy import and_, or_
 
 from .db import SessionLocal, get_engine
-from .models import PostStatus, Post
+from .models import PostStatus, Post, PostPreview
 from .socials.mastodon_client import post_to_mastodon
 
 logger = logging.getLogger(__name__)
@@ -39,9 +41,17 @@ async def _publish(status: PostStatus, session):
         return
     try:
         if status.network == "mastodon":
+            preview = session.get(
+                PostPreview,
+                {"post_id": status.post_id, "network": status.network},
+            )
+            if preview:
+                text = Template(preview.content).render(post=post)
+            else:
+                text = f"{post.title} {post.link}"
             await asyncio.to_thread(
                 post_to_mastodon,
-                f"{post.title} {post.link}",
+                text,
                 visibility="unlisted",
             )
         else:
