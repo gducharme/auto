@@ -151,7 +151,6 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
 
 
 def main():
-    load_env()
     init_db()
     items = fetch_feed()
     save_entries(items)

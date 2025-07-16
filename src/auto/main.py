@@ -3,7 +3,6 @@ from fastapi import FastAPI, BackgroundTasks
 from contextlib import asynccontextmanager
 from .feeds.ingestion import init_db, fetch_feed, save_entries
 from . import scheduler, configure_logging
-from .config import load_env
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_env()
     configure_logging()
     init_db()
     await scheduler.start()

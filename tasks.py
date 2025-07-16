@@ -148,9 +148,7 @@ def quick_post(ctx, network="mastodon"):
 def trending_tags(ctx, limit=10, instance=None, token=None):
     """Display trending tags from Mastodon."""
     from mastodon import Mastodon
-    from auto.config import load_env, get_mastodon_instance, get_mastodon_token
-
-    load_env()
+    from auto.config import get_mastodon_instance, get_mastodon_token
 
     instance = instance or get_mastodon_instance()
     token = token or get_mastodon_token()
