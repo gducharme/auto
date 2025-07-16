@@ -4,6 +4,8 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import and_, or_
+
 from .db import SessionLocal, engine
 from .models import PostStatus, Post
 from .socials.mastodon_client import post_to_mastodon
@@ -63,9 +65,14 @@ async def process_pending(max_attempts: Optional[int] = None):
         statuses = (
             session.query(PostStatus)
             .filter(
-                PostStatus.status == "pending",
                 PostStatus.scheduled_at <= now,
-                PostStatus.attempts < max_attempts,
+                or_(
+                    PostStatus.status == "pending",
+                    and_(
+                        PostStatus.status == "error",
+                        PostStatus.attempts < max_attempts,
+                    ),
+                ),
             )
             .order_by(PostStatus.scheduled_at)
             .all()
