@@ -1,5 +1,9 @@
 # tasks.py
+import os
 from invoke import task
+
+__path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
+from tasks.helpers import _get_medium_magic_link, _fill_safari_tab, _parse_when
 
 
 @task
@@ -66,25 +70,9 @@ def schedule(ctx, post_id, time, network=None):
     ``"in 1h"`` or ``"+30m"``. If ``--network`` is omitted the post is
     scheduled for all known networks.
     """
-    import re
-    from datetime import datetime, timedelta, timezone
-    from dateutil import parser
+    from datetime import timezone
     from auto.db import SessionLocal
     from auto.models import Post, PostStatus
-
-    def _parse_when(value: str) -> datetime:
-        value = value.strip().lower()
-        m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value)
-        if m:
-            amount, unit = m.groups()
-            delta = {
-                "s": timedelta(seconds=int(amount)),
-                "m": timedelta(minutes=int(amount)),
-                "h": timedelta(hours=int(amount)),
-                "d": timedelta(days=int(amount)),
-            }[unit]
-            return datetime.now(timezone.utc) + delta
-        return parser.isoparse(value)
 
     scheduled_at = _parse_when(time)
     if scheduled_at.tzinfo is not None:
@@ -191,21 +179,6 @@ def chat(
     print(response)
 
 
-def _get_medium_magic_link():
-    """Return the latest Medium magic link via Apple Mail if present."""
-    import subprocess
-    import re
-    from pathlib import Path
-
-    script = Path(__file__).resolve().parent / "scripts" / "fetch_medium_link.scpt"
-    result = subprocess.run(["osascript", str(script)], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr)
-
-    match = re.search(r"https://medium\.com/(?:m/[^\s]+|magic/\S+)", result.stdout)
-    return match.group(0) if match else None
-
-
 @task
 def medium_magic_link(ctx):
     """Check Apple Mail once for a Medium magic link and print the result."""
@@ -215,25 +188,6 @@ def medium_magic_link(ctx):
         print(f"Found magic link: {link}")
     else:
         print("Magic link not found")
-
-
-def _fill_safari_tab(url: str, selector: str, text: str) -> str:
-    """Open Safari to ``url`` and fill ``selector`` with ``text``.
-
-    Returns the JavaScript status string from the AppleScript.
-    """
-    import subprocess
-    from pathlib import Path
-
-    script = Path(__file__).resolve().parent / "scripts" / "safari_fill.scpt"
-    result = subprocess.run(
-        ["osascript", str(script), url, selector, text],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr)
-    return result.stdout.strip()
 
 
 @task
