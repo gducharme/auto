@@ -29,13 +29,25 @@ on run argv
             set current tab of window 1 to newTab
         end if
         delay 1
-        set js to "var el=document.querySelector('" & cssSelector & "');" & ¬
-            "if(!el){'NOT_FOUND';}" & ¬
-            "else{try{" & ¬
-            "el.focus();el.value='" & textValue & "';" & ¬
-            "var e=new Event('input',{bubbles:true});el.dispatchEvent(e);" & ¬
-            "el.value=='" & textValue & "'?'OK':'NOT_EDITABLE';}" & ¬
-            "catch(err){'ERROR:' + err.message;}}"
+        set jsFunction to "function setPromptAndClickCode(text){" & ¬
+            "const promptDiv=document.getElementById('prompt-textarea');" & ¬
+            "if(!promptDiv){console.error('⚠️ No element found with id prompt-textarea');return;}" & ¬
+            "promptDiv.textContent=text;" & ¬
+            "promptDiv.dispatchEvent(new Event('input'));" & ¬
+            "console.log('📥 prompt-textarea now contains:',promptDiv.textContent);" & ¬
+            "const candidates=document.querySelectorAll('div.flex.items-center.justify-center');" & ¬
+            "console.log('🔍 Found',candidates.length,'candidates:',candidates);" & ¬
+            "const codeButton=Array.from(candidates).find(el=>{" & ¬
+            "const t=el.innerText.trim();" & ¬
+            "console.log('   • candidate text:',JSON.stringify(t));" & ¬
+            "return t==='Code';});" & ¬
+            "if(codeButton){" & ¬
+            "codeButton.click();" & ¬
+            "console.log('✅ Clicked the Code button!');" & ¬
+            "}else{" & ¬
+            "console.warn('❌ No matching Code button found—check the debug log above.');" & ¬
+            "}}"
+        set js to jsFunction & " setPromptAndClickCode('" & textValue & "'); 'OK';"
         set resultText to do JavaScript js in current tab of window 1
         return resultText
     end tell
