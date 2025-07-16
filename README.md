@@ -20,6 +20,8 @@ The following variables are used:
 - `MASTODON_INSTANCE` – base URL of the Mastodon instance, default
   `https://mastodon.social`.
 - `MASTODON_TOKEN` – access token for posting to Mastodon.
+- `MEDIUM_EMAIL` – email address used to sign in to Medium.
+- `MEDIUM_PASSWORD` – password for the Medium account.
 - `MAX_ATTEMPTS` – maximum number of publish attempts before giving up.
 - `SCHEDULER_POLL_INTERVAL` – seconds between scheduler iterations,
   default `5`.

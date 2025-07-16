@@ -49,3 +49,4 @@ virtualenv==20.31.2
 wheel==0.45.1
 pre-commit==4.2.0
 dspy==2.6.27
+selenium>=4.0.0
