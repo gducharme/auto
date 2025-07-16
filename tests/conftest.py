@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from sqlalchemy import create_engine
 import pytest
+import time
 
 SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
@@ -49,7 +50,10 @@ def test_db_engine(tmp_path, monkeypatch):
     engine = create_engine(
         f"sqlite:///{db_file}", connect_args={"check_same_thread": False}
     )
+    t0 = time.perf_counter()
     init_db(str(db_file), engine=engine)
+    elapsed = time.perf_counter() - t0
+    print(f"DB setup took {elapsed:.3f}s")
     monkeypatch.setattr("auto.db.get_engine", lambda: engine)
     yield engine
     engine.dispose()
