@@ -21,6 +21,13 @@ The following variables are used:
   `https://mastodon.social`.
 - `MASTODON_TOKEN` – access token for posting to Mastodon.
 - `MAX_ATTEMPTS` – maximum number of publish attempts before giving up.
+- `SCHEDULER_POLL_INTERVAL` – seconds between scheduler iterations,
+  default `5`.
+- `POST_DELAY` – pause after each publish attempt, default `1` second.
+- `LOG_LEVEL` – log verbosity used by `configure_logging()`, default `INFO`.
+
+Log output is sent to stdout when `configure_logging()` is called at
+startup.  Adjust `LOG_LEVEL` to control the amount of detail.
 
 ## Running the server
 
@@ -33,6 +40,17 @@ invoke uv
 
 Running from the project root ensures Alembic can locate `alembic.ini` and
 migrations.
+
+## Scheduler
+
+The background scheduler is started automatically during application
+startup.  The FastAPI lifespan in `src/auto/main.py` calls
+`scheduler.start()` which continuously invokes `process_pending` to
+publish queued posts.  You can also run it on its own:
+
+```bash
+python -m auto.scheduler
+```
 
 ## Ingesting Substack posts
 
@@ -54,6 +72,14 @@ post’s publish status per network is tracked in the `post_status` table.
 
 While minimal, the goal is to provide the scaffolding for mirroring your
 Substack content across multiple social sites with a single workflow.
+
+## Health checks
+
+The scheduler checks for the presence of the `post_status` table when it
+starts.  Ensure this table exists and watch the logs for any publishing
+errors.  Production deployments should also expose metrics such as
+Prometheus counters for successful and failed posts to provide better
+visibility.
 
 ## Development
 
