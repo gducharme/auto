@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from bs4 import BeautifulSoup
 from dateutil import parser
 from auto.feeds.ingestion import _parse_entry, fetch_feed
+from tests.helpers import DummyResponse
 
 
 def test_parse_entry_from_soup():
@@ -53,14 +54,6 @@ def test_parse_entry_from_dummy_object():
 def test_fetch_feed_returns_items(monkeypatch):
     sample_xml = Path(__file__).with_name("sample_feed.xml").read_bytes()
 
-    class DummyResponse:
-        def __init__(self, content):
-            self.content = content
-            self.status_code = 200
-
-        def raise_for_status(self):
-            pass
-
     def fake_get(url, timeout=10):
         return DummyResponse(sample_xml)
 
@@ -76,14 +69,6 @@ def test_fetch_feed_uses_env_variable(monkeypatch):
     monkeypatch.setenv("SUBSTACK_FEED_URL", "http://env.example/feed")
 
     called = {}
-
-    class DummyResponse:
-        def __init__(self):
-            self.content = b"<rss></rss>"
-            self.status_code = 200
-
-        def raise_for_status(self):
-            pass
 
     def fake_get(url, timeout=10):
         called["url"] = url

@@ -14,7 +14,6 @@
 ## Code Smells
 
 ## DRY
-- ``DummyResponse`` classes for mocking ``requests.get`` appear in multiple test files. Factor them into a common helper.
 
 ## BUGS
 - ``schedule`` does not verify that the post ID exists before inserting a
