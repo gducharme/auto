@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, text
 
 from .db import Base
+
 
 class Post(Base):
     __tablename__ = "posts"
@@ -10,8 +13,18 @@ class Post(Base):
     link = Column(String, nullable=False)
     summary = Column(Text)
     published = Column(String)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=datetime.utcnow,
+    )
+
 
 class PostStatus(Base):
     __tablename__ = "post_status"
@@ -30,6 +43,7 @@ class PostStatus(Base):
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=datetime.utcnow,
     )
 
 
@@ -43,4 +57,5 @@ class PostPreview(Base):
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=datetime.utcnow,
     )
