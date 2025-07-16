@@ -20,6 +20,7 @@ The following variables are used:
 - `MASTODON_INSTANCE` – base URL of the Mastodon instance, default
   `https://mastodon.social`.
 - `MASTODON_TOKEN` – access token for posting to Mastodon.
+- `MAX_ATTEMPTS` – maximum number of publish attempts before giving up.
 
 ## Running the server
 
