@@ -12,9 +12,9 @@ from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
 
 from ..models import Post
-from ..config import load_env, get_feed_url
-logger = logging.getLogger(__name__)
+from ..config import get_feed_url
 
+logger = logging.getLogger(__name__)
 
 
 # Determine project root four directories above this file
@@ -122,7 +122,9 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     """Save new entries from the feed into the database."""
     items_iter = getattr(items, "entries", items)
 
-    with _session_for_path(db_path, engine=engine, session_factory=session_factory) as session:
+    with _session_for_path(
+        db_path, engine=engine, session_factory=session_factory
+    ) as session:
         with session.begin():
             for item in items_iter:
                 guid, title, link, summary, published, created_dt, updated_dt = (
@@ -157,6 +159,7 @@ def run_ingest():
         save_entries(items)
     except Exception as exc:
         logger.error("Ingestion failed: %s", exc)
+        raise
 
 
 def main():

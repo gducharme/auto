@@ -16,9 +16,6 @@
 ## DRY
 
 ## BUGS
-- The ``/ingest`` endpoint always returns success even if ``run_ingest`` fails
-  to fetch or parse the feed, hiding ingestion errors from the caller.
-  【F:src/auto/main.py†L27-L39】
 
 ## RECS
 - Add a CLI wrapper for common tasks like listing posts or scheduling to reduce reliance on Invoke.
