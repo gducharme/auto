@@ -150,6 +150,15 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
                     logger.error("Failed to save post %s: %s", title, exc)
 
 
+def run_ingest():
+    """Fetch the configured feed and store any new entries."""
+    try:
+        items = fetch_feed()
+        save_entries(items)
+    except Exception as exc:
+        logger.error("Ingestion failed: %s", exc)
+
+
 def main():
     init_db()
     items = fetch_feed()

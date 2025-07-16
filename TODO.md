@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Implement periodic/scheduled ingestion instead of manual triggering.
 - Expose Prometheus metrics for published and failed posts to aid health
   monitoring.
 
