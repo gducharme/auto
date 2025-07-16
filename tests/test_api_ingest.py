@@ -1,10 +1,8 @@
 import sqlite3
-import sys
 from pathlib import Path
 from fastapi.testclient import TestClient
 from bs4 import BeautifulSoup
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import auto.main as main
 from sqlalchemy import create_engine

@@ -1,11 +1,5 @@
-import sys
 from datetime import datetime
-from pathlib import Path
 from invoke import Context
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT))
 
 import tasks  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402

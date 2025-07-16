@@ -6,8 +6,10 @@ from sqlalchemy import create_engine
 import pytest
 import time
 
-SRC = Path(__file__).resolve().parents[1] / "src"
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(ROOT))
 
 from auto.feeds.ingestion import init_db
 from auto.db import SessionLocal
