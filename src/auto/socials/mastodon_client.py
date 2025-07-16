@@ -1,28 +1,34 @@
 from mastodon import Mastodon
 from dotenv import load_dotenv, find_dotenv
-from pathlib import Path
 import logging
 import os
 
-# Resolve the repository root so we can load the correct .env file
-dotenv_path = find_dotenv()
-BASE_DIR = (
-    Path(dotenv_path).resolve().parent
-    if dotenv_path
-    else Path(__file__).resolve().parents[3]
-)
-load_dotenv(BASE_DIR / ".env")
-
-MASTODON_INSTANCE = os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
-ACCESS_TOKEN = os.getenv("MASTODON_TOKEN")
-
 logger = logging.getLogger(__name__)
+
+
+def _load_env() -> None:
+    """Load environment variables from the nearest ``.env`` file."""
+    dotenv_path = find_dotenv()
+    if dotenv_path:
+        load_dotenv(dotenv_path)
+
+
+def get_instance() -> str:
+    """Return the Mastodon instance URL."""
+    _load_env()
+    return os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
+
+
+def get_access_token() -> str:
+    """Return the Mastodon access token."""
+    _load_env()
+    return os.getenv("MASTODON_TOKEN")
 
 
 def post_to_mastodon(status: str, visibility: str = "private") -> None:
     """Post a status to Mastodon."""
     try:
-        masto = Mastodon(access_token=ACCESS_TOKEN, api_base_url=MASTODON_INSTANCE)
+        masto = Mastodon(access_token=get_access_token(), api_base_url=get_instance())
         # `toot` in Mastodon.py 2.x does not accept extra keyword arguments such as
         # ``visibility``.  Use ``status_post`` instead, which exposes these
         # parameters.
