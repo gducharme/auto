@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 from pathlib import Path
 from invoke import Context
 
@@ -24,8 +25,26 @@ def setup_db(tmp_path):
 def test_quick_post_schedules(monkeypatch, tmp_path):
     setup_db(tmp_path)
     with SessionLocal() as session:
-        session.add(Post(id="1", title="One", link="http://1", summary="", published="2000"))
-        session.add(Post(id="2", title="Two", link="http://2", summary="", published="1999"))
+        session.add(
+            Post(
+                id="1",
+                title="One",
+                link="http://1",
+                summary="",
+                published="2000",
+                created_at=datetime(2000, 1, 1),
+            )
+        )
+        session.add(
+            Post(
+                id="2",
+                title="Two",
+                link="http://2",
+                summary="",
+                published="1999",
+                created_at=datetime(1999, 1, 1),
+            )
+        )
         session.add(PostStatus(post_id="1", network="mastodon", status="published"))
         session.commit()
 
@@ -42,7 +61,16 @@ def test_quick_post_schedules(monkeypatch, tmp_path):
 def test_quick_post_abort(monkeypatch, tmp_path):
     setup_db(tmp_path)
     with SessionLocal() as session:
-        session.add(Post(id="1", title="One", link="http://1", summary="", published="2000"))
+        session.add(
+            Post(
+                id="1",
+                title="One",
+                link="http://1",
+                summary="",
+                published="2000",
+                created_at=datetime(2000, 1, 1),
+            )
+        )
         session.commit()
 
     monkeypatch.setattr("builtins.input", lambda prompt='': 'n')

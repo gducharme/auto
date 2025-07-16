@@ -125,7 +125,12 @@ def quick_post(ctx, network="mastodon"):
         .exists()
     )
 
-    stmt = select(Post).where(~exists_stmt).order_by(Post.published).limit(1)
+    stmt = (
+        select(Post)
+        .where(~exists_stmt)
+        .order_by(Post.created_at)
+        .limit(1)
+    )
 
     with SessionLocal() as session:
         post = session.execute(stmt).scalars().first()
