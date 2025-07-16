@@ -31,3 +31,16 @@ class PostStatus(Base):
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
+
+
+class PostPreview(Base):
+    __tablename__ = "post_previews"
+
+    post_id = Column(String, ForeignKey("posts.id"), primary_key=True)
+    network = Column(String, primary_key=True)
+    content = Column(Text, nullable=False)
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
