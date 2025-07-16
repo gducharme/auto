@@ -200,7 +200,7 @@ def _get_medium_magic_link():
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
 
-    match = re.search(r"https://medium\.com/magic/\S+", result.stdout)
+    match = re.search(r"https://medium\.com/(?:m/[^\s]+|magic/\S+)", result.stdout)
     return match.group(0) if match else None
 
 
