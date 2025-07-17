@@ -8,7 +8,6 @@ from tasks.helpers import (
     _parse_when,
     _ci,
     update_dependencies,
-    _fill_safari_tab,
 )
 from auto.automation.safari import SafariController
 
@@ -212,14 +211,34 @@ def safari_fill(ctx, url, selector, text):
 
 @task
 def codex_todo(ctx):
-    """Open the ChatGPT Codex and prefill the TODO prompt."""
-    result = _fill_safari_tab(
-        "https://chatgpt.com/codex",
+    """Open the ChatGPT Codex, prefill the TODO prompt and click ``Code``."""
+    controller = SafariController()
+    controller.open("https://chatgpt.com/codex")
+    fill_result = controller.fill(
         "#prompt-textarea",
         "Tackle the top item in the TODO.md file. When the PR is complete, remove that item",
     )
-    if result:
-        print(result)
+    if fill_result:
+        print(fill_result)
+
+    js_click_code = (
+        "const candidates=document.querySelectorAll('div.flex.items-center.justify-center');"
+        "console.log('🔍 Found',candidates.length,'candidates:',candidates);"
+        "const codeButton=Array.from(candidates).find(el=>{"
+        "const t=el.innerText.trim();"
+        "console.log('   • candidate text:',JSON.stringify(t));"
+        "return t==='Code';});"
+        "if(codeButton){"
+        "codeButton.click();"
+        "console.log('✅ Clicked the Code button!');"
+        "}else{"
+        "console.warn('❌ No matching Code button found—check the debug log above.');"
+        "}"
+    )
+
+    js_result = controller.run_js(js_click_code)
+    if js_result:
+        print(js_result)
 
 
 @task
