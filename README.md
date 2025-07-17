@@ -125,6 +125,19 @@ marker:
 pytest -m integration
 ```
 
+### Network isolation
+
+Tests are executed with [`pytest-recording`](https://pypi.org/project/pytest-recording/)
+in `--block-network` mode. This prevents unexpected connections to the real
+internet. Recorded HTTP interactions are stored as VCR cassettes under a
+`cassettes/` directory next to each test module. To allow live recording or
+network access, override the default options:
+
+```bash
+pytest --record-mode=new_episodes
+```
+
+
 ## License
 
 Distributed under the [MIT License](LICENSE).

@@ -72,6 +72,7 @@ pydantic_core==2.33.2
 Pygments==2.19.2
 PySocks==1.7.1
 pytest==8.4.1
+pytest-recording==0.13.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 python-magic==0.4.27
