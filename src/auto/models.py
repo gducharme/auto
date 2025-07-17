@@ -10,6 +10,29 @@ from sqlalchemy import (
     text,
 )
 
+from sqlalchemy.types import TypeDecorator
+
+
+class TZDateTime(TypeDecorator):
+    """A timezone-aware DateTime that normalizes to UTC."""
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
 from .db import Base
 
 
@@ -22,12 +45,12 @@ class Post(Base):
     summary = Column(Text)
     published = Column(String)
     created_at = Column(
-        DateTime(timezone=True),
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
     updated_at = Column(
-        DateTime(timezone=True),
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -40,7 +63,7 @@ class PostStatus(Base):
     post_id = Column(String, ForeignKey("posts.id"), primary_key=True)
     network = Column(String, primary_key=True)
     scheduled_at = Column(
-        DateTime(timezone=True),
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
@@ -48,7 +71,7 @@ class PostStatus(Base):
     attempts = Column(Integer, nullable=False, server_default="0")
     last_error = Column(Text)
     updated_at = Column(
-        DateTime(timezone=True),
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -62,7 +85,7 @@ class PostPreview(Base):
     network = Column(String, primary_key=True)
     content = Column(Text, nullable=False)
     updated_at = Column(
-        DateTime(timezone=True),
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=lambda: datetime.now(timezone.utc),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -12,7 +13,10 @@ from dateutil import parser
 
 
 def _parse_when(value: str) -> datetime:
-    """Parse relative or absolute time specifications."""
+    """Parse relative or absolute time specifications.
+
+    Always return a timezone-aware UTC datetime.
+    """
     value = value.strip().lower()
     m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value)
     if m:
@@ -24,7 +28,11 @@ def _parse_when(value: str) -> datetime:
             "d": timedelta(days=int(amount)),
         }[unit]
         return datetime.now(timezone.utc) + delta
-    return parser.isoparse(value)
+
+    dt = parser.isoparse(value)
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _get_medium_magic_link() -> str | None:
@@ -50,17 +58,18 @@ def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
     ctx.run("pip install -r requirements.txt", pty=True, echo=True)
 
     if upgrade:
-        result = ctx.run("pip list --outdated --format=freeze", hide=True, warn=True)
-        packages = [line.split("==")[0] for line in result.stdout.splitlines() if line]
-        for pkg in packages:
-            res = ctx.run(
-                f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True
-            )
-            if res.exited != 0:
-                raise Exit(
-                    "Dependency upgrade failed; manual intervention required",
-                    code=res.exited,
+        result = ctx.run("pip list --outdated --format=json", hide=True, warn=True)
+        packages = [pkg["name"] for pkg in json.loads(result.stdout)]
+        if packages:
+            for pkg in packages:
+                res = ctx.run(
+                    f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True
                 )
+                if res.exited != 0:
+                    raise Exit(
+                        "Dependency upgrade failed; manual intervention required",
+                        code=res.exited,
+                    )
 
     ctx.run("alembic upgrade head", pty=True, echo=True)
     ctx.run("pre-commit run --all-files", pty=True, echo=True)
