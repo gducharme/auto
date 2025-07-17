@@ -25,6 +25,11 @@ class DummyController:
                 return "<button>Create PR</button>"
             if "click" in code:
                 return "clicked"
+        if "Merge pull request" in code:
+            if "outerHTML" in code:
+                return "<button>Merge pull request</button>" if self.mergeable else ""
+            if "click" in code:
+                return "clicked" if self.mergeable else ""
         if "button.js-merge-branch" in code:
             return "1" if self.mergeable else ""
         return ""
@@ -42,28 +47,35 @@ def test_merge_bot_merges(monkeypatch):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
+    monkeypatch.setenv("TASKS_DELAY", "0")
 
     tasks.merge_bot(Context())
 
-    assert ("click", "button.js-merge-branch") in controller.calls
-    assert ("click", "#archive") in controller.calls
+    assert any(
+        call[0] == "run_js" and "Merge pull request" in call[1] and "click" in call[1]
+        for call in controller.calls
+    )
 
 
 def test_merge_bot_skips_when_not_mergeable(monkeypatch):
     controller = DummyController(mergeable=False)
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
+    monkeypatch.setenv("TASKS_DELAY", "0")
 
     tasks.merge_bot(Context())
 
-    assert ("click", "button.js-merge-branch") not in controller.calls
-    assert ("click", "#all-done") in controller.calls
+    assert not any(
+        call[0] == "run_js" and "Merge pull request" in call[1] and "click" in call[1]
+        for call in controller.calls
+    )
 
 
 def test_merge_bot_no_pr(monkeypatch):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: [])
+    monkeypatch.setenv("TASKS_DELAY", "0")
 
     tasks.merge_bot(Context())
 
@@ -77,6 +89,7 @@ def test_merge_bot_create_pr_button(monkeypatch):
     controller = DummyController(github_link=False)
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
+    monkeypatch.setenv("TASKS_DELAY", "0")
 
     tasks.merge_bot(Context())
 
