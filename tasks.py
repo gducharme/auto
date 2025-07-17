@@ -76,13 +76,10 @@ def schedule(ctx, post_id, time, network=None):
     ``"in 1h"`` or ``"+30m"``. If ``--network`` is omitted the post is
     scheduled for all known networks.
     """
-    from datetime import timezone
     from auto.db import SessionLocal
     from auto.models import Post, PostStatus
 
     scheduled_at = _parse_when(time)
-    if scheduled_at.tzinfo is not None:
-        scheduled_at = scheduled_at.astimezone(timezone.utc)
     networks = [network] if network else ["mastodon"]
 
     with SessionLocal() as session:
