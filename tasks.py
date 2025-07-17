@@ -10,6 +10,11 @@ from tasks.helpers import (
     update_dependencies,
 )
 from auto.automation.safari import SafariController
+from auto.html_helpers import (
+    fetch_dom as fetch_dom_html,
+    download_html,
+    count_link_states,
+)
 
 
 @task
@@ -244,12 +249,18 @@ def codex_todo(ctx):
 @task
 def fetch_dom(ctx):
     """Open the Codex page and print the full DOM tree."""
-
-    controller = SafariController()
-    controller.open("https://chatgpt.com/codex")
-    dom = controller.run_js("document.documentElement.outerHTML")
+    dom = fetch_dom_html()
     if dom:
         print(dom)
+
+
+@task
+def count_links(ctx, url="https://github.com/gducharme/auto/pulls"):
+    """Download ``url`` and report merged vs active link counts."""
+    html = download_html(url)
+    merged, active = count_link_states(html)
+    print(f"Merged links: {merged}")
+    print(f"Active tasks: {active}")
 
 
 @task
