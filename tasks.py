@@ -183,6 +183,12 @@ def chat(
 
 
 @task
+def dspy_experiment(ctx):
+    """Run the standalone dspy experiment script."""
+    ctx.run("python src/experiments/dspy.py", pty=True, echo=True)
+
+
+@task
 def medium_magic_link(ctx):
     """Check Apple Mail once for a Medium magic link and print the result."""
 
