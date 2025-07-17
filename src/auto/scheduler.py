@@ -13,6 +13,7 @@ from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
 from .socials.mastodon_client import post_to_mastodon_async
+from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .config import (
     get_poll_interval,
     get_post_delay,
@@ -24,7 +25,12 @@ logger = logging.getLogger(__name__)
 TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 
 
-def register_task_handler(name: str) -> Callable[[Callable[[Task, Session], Awaitable[None]]], Callable[[Task, Session], Awaitable[None]]]:
+def register_task_handler(
+    name: str,
+) -> Callable[
+    [Callable[[Task, Session], Awaitable[None]]],
+    Callable[[Task, Session], Awaitable[None]],
+]:
     def decorator(func: Callable[[Task, Session], Awaitable[None]]):
         TASK_HANDLERS[name] = func
         return func
@@ -56,10 +62,12 @@ async def _publish(status: PostStatus, session):
             raise ValueError(f"Unsupported network {status.network}")
         status.status = "published"
         status.last_error = None
+        POSTS_PUBLISHED.labels(network=status.network).inc()
     except Exception as exc:
         status.status = "error"
         status.last_error = str(exc)
         logger.error("Failed to publish %s: %s", status.post_id, exc)
+        POSTS_FAILED.labels(network=status.network).inc()
     finally:
         status.attempts += 1
         session.commit()

@@ -5,7 +5,7 @@ import json
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task
 from auto.scheduler import process_pending
-import auto.ingest_scheduler  # register handler
+from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
 
 class DummyPoster:
@@ -24,7 +24,9 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     DummyPoster.called = False
 
     with SessionLocal() as session:
-        post = Post(id="1", title="Title", link="http://example", summary="", published="")
+        post = Post(
+            id="1", title="Title", link="http://example", summary="", published=""
+        )
         session.add(post)
         status = PostStatus(
             post_id="1",
@@ -47,6 +49,9 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     monkeypatch.setattr("auto.scheduler.post_to_mastodon_async", fake_post)
     monkeypatch.setenv("POST_DELAY", "0")
 
+    start = POSTS_PUBLISHED.labels(network="mastodon")._value.get()
+    fail_start = POSTS_FAILED.labels(network="mastodon")._value.get()
+
     asyncio.run(run_process())
 
     with SessionLocal() as session:
@@ -55,6 +60,8 @@ def test_publish_post_task(test_db_engine, monkeypatch):
         t = session.get(Task, task_id)
         assert t.status == "completed"
     assert DummyPoster.called
+    assert POSTS_PUBLISHED.labels(network="mastodon")._value.get() == start + 1
+    assert POSTS_FAILED.labels(network="mastodon")._value.get() == fail_start
 
 
 def test_ingest_feed_task(test_db_engine, monkeypatch):
@@ -89,3 +96,40 @@ def test_ingest_feed_task(test_db_engine, monkeypatch):
         assert next_task is not None
 
 
+def test_publish_failure_metrics(test_db_engine, monkeypatch):
+    with SessionLocal() as session:
+        post = Post(
+            id="2", title="Title", link="http://example", summary="", published=""
+        )
+        session.add(post)
+        status = PostStatus(
+            post_id="2",
+            network="mastodon",
+            scheduled_at=datetime.now(timezone.utc),
+        )
+        session.add(status)
+        task = Task(
+            type="publish_post",
+            payload=json.dumps({"post_id": "2", "network": "mastodon"}),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+        )
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    async def fail_post(text, visibility="unlisted"):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("auto.scheduler.post_to_mastodon_async", fail_post)
+    monkeypatch.setenv("POST_DELAY", "0")
+
+    start = POSTS_FAILED.labels(network="mastodon")._value.get()
+
+    asyncio.run(run_process())
+
+    with SessionLocal() as session:
+        ps = session.get(PostStatus, {"post_id": "2", "network": "mastodon"})
+        assert ps.status == "error"
+        t = session.get(Task, task_id)
+        assert t.status == "completed"
+    assert POSTS_FAILED.labels(network="mastodon")._value.get() == start + 1
