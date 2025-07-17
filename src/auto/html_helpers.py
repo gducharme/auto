@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import httpx
 from bs4 import BeautifulSoup
 
 from .automation.safari import SafariController
@@ -12,13 +11,6 @@ def fetch_dom(url: str = "https://chatgpt.com/codex") -> str:
     controller = SafariController()
     controller.open(url)
     return controller.run_js("document.documentElement.outerHTML")
-
-
-def download_html(url: str) -> str:
-    """Return the HTML contents of ``url``."""
-    response = httpx.get(url, timeout=10, verify=False)
-    response.raise_for_status()
-    return response.text
 
 
 def count_link_states(html: str) -> tuple[int, int]:

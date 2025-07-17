@@ -12,7 +12,6 @@ from tasks.helpers import (
 from auto.automation.safari import SafariController
 from auto.html_helpers import (
     fetch_dom as fetch_dom_html,
-    download_html,
     count_link_states,
 )
 
@@ -255,10 +254,10 @@ def fetch_dom(ctx):
 
 
 @task
-def count_links(ctx, url="https://github.com/gducharme/auto/pulls"):
+def count_links(ctx, url="https://chatgpt.com/codex"):
     """Download ``url`` and report merged vs active link counts."""
-    html = download_html(url)
-    merged, active = count_link_states(html)
+    dom = fetch_dom_html()
+    merged, active = count_link_states(dom)
     print(f"Merged links: {merged}")
     print(f"Active tasks: {active}")
 
