@@ -2,6 +2,7 @@
 
 These principles emphasize explicit initialization, safe resource handling, and minimal global state.
 
+- UTC is life. Always use it, with timezones.
 - Use the shared connection factory in `db.py` whenever possible.
 - Prefer SQLAlchemy models rather than raw SQL statements.
 - Retrieve environment variables inside functions so changes take effect without a restart.
