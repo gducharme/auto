@@ -5,6 +5,8 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from invoke import Exit
+
 from auto.automation.safari import SafariController
 from dateutil import parser
 
@@ -40,3 +42,38 @@ def _fill_safari_tab(url: str, selector: str, text: str) -> str:
     controller = SafariController()
     controller.open(url)
     return controller.fill(selector, text)
+
+
+def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
+    """Run the CI pipeline used by the ``ci`` Invoke task."""
+
+    ctx.run("pip install -r requirements.txt", pty=True, echo=True)
+
+    if upgrade:
+        result = ctx.run("pip list --outdated --format=freeze", hide=True, warn=True)
+        packages = [line.split("==")[0] for line in result.stdout.splitlines() if line]
+        for pkg in packages:
+            res = ctx.run(
+                f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True
+            )
+            if res.exited != 0:
+                raise Exit(
+                    "Dependency upgrade failed; manual intervention required",
+                    code=res.exited,
+                )
+
+    ctx.run("alembic upgrade head", pty=True, echo=True)
+    ctx.run("pre-commit run --all-files", pty=True, echo=True)
+
+    test_res = ctx.run("pytest --cov", warn=True, pty=True, echo=True)
+
+    coverage = None
+    for line in test_res.stdout.splitlines():
+        if line.strip().startswith("TOTAL"):
+            coverage = line.split()[-1]
+
+    status = "passed" if test_res.ok else "failed"
+    print(f"Tests {status}; coverage: {coverage or 'unknown'}")
+
+    if upgrade and freeze:
+        ctx.run("invoke freeze", pty=True, echo=True)
