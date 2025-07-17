@@ -14,6 +14,7 @@ from auto.html_helpers import (
     fetch_dom as fetch_dom_html,
     count_link_states,
 )
+from auto.html_utils import extract_links_with_green_span
 
 
 @task
@@ -260,6 +261,52 @@ def count_links(ctx, url="https://chatgpt.com/codex"):
     merged, active = count_link_states(dom)
     print(f"Merged links: {merged}")
     print(f"Active tasks: {active}")
+
+
+@task
+def merge_bot(ctx, kodex_url="https://chatgpt.com/kodex"):
+    """Automatically merge ready PRs from the Kodex page."""
+    controller = SafariController()
+
+    controller.open(kodex_url)
+
+    dom = controller.run_js("document.documentElement.outerHTML")
+    links = extract_links_with_green_span(dom)
+    if not links:
+        print("No pull request ready")
+        return
+
+    pr_url = links[0]
+    controller.open(pr_url)
+
+    github_js = (
+        "(() => {"
+        "const l=document.querySelector('a[href^=\"https://github.com\"]');"
+        "return l?l.href:'';"
+        "})()"
+    )
+    github_url = controller.run_js(github_js)
+    if not github_url:
+        print("GitHub link not found")
+        return
+
+    controller.open(github_url)
+
+    merge_js = "document.querySelector('button.js-merge-branch') !== null"
+    mergeable = controller.run_js(merge_js)
+
+    if mergeable:
+        controller.click("button.js-merge-branch")
+        merged = True
+    else:
+        merged = False
+
+    controller.close_tab()
+
+    if merged:
+        controller.click("#archive")
+    else:
+        controller.click("#all-done")
 
 
 @task
