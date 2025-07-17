@@ -117,6 +117,9 @@ Install the pre-commit hooks so formatting and linting run automatically:
 pre-commit install
 ```
 
+Use `invoke update-deps` to upgrade outdated dependencies. Pass `--freeze` to
+rewrite `requirements.txt` after the upgrades.
+
 ## Plan parser
 
 The project plan in `PLAN.md` can be turned into machine-readable task files.

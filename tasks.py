@@ -3,7 +3,12 @@ import os
 from invoke import task
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
-from tasks.helpers import _get_medium_magic_link, _parse_when, _ci
+from tasks.helpers import (
+    _get_medium_magic_link,
+    _parse_when,
+    _ci,
+    update_dependencies,
+)
 from auto.automation.safari import SafariController
 
 
@@ -299,3 +304,9 @@ def edit_preview(ctx, post_id, network="mastodon"):
 def ci(ctx, upgrade=False, freeze=False):
     """Install dependencies, run migrations, lint and test."""
     _ci(ctx, upgrade=upgrade, freeze=freeze)
+
+
+@task(help={"freeze": "Regenerate requirements.txt after upgrades"})
+def update_deps(ctx, freeze=False):
+    """Upgrade dependencies to their latest versions."""
+    update_dependencies(ctx, freeze=freeze)
