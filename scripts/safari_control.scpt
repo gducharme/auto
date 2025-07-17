@@ -42,7 +42,7 @@ on run argv
         set theSelector to item 2 of argv
         set valueStr to item 3 of argv
         tell application "Safari"
-            do JavaScript "var el=document.querySelector('" & theSelector & "'); if(el){el.value='" & valueStr & "'; el.dispatchEvent(new Event('input'));}" in current tab of window 1
+            do JavaScript "var el=document.querySelector('" & theSelector & "'); if(el){el.innerText='" & valueStr & "'; el.dispatchEvent(new Event('input'));}" in current tab of window 1
             return "OK"
         end tell
     else if cmd is "run_js" then

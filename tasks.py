@@ -215,7 +215,7 @@ def codex_todo(ctx):
     """Open the ChatGPT Codex and prefill the TODO prompt."""
     result = _fill_safari_tab(
         "https://chatgpt.com/codex",
-        "#text-area",
+        "#prompt-textarea",
         "Tackle the top item in the TODO.md file. When the PR is complete, remove that item",
     )
     if result:
