@@ -4,6 +4,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from .feeds.ingestion import init_db, run_ingest
 from . import scheduler, configure_logging
+from .metrics import router as metrics_router
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(metrics_router)
 
 
 @app.post("/ingest")

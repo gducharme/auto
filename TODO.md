@@ -3,9 +3,7 @@
 ## High Priority
 
 ## Medium Priority
-- Expose Prometheus metrics for published and failed posts to aid health
-  monitoring.
- - Integrate the Medium automation client so posts can also be published there.
+- Integrate the Medium automation client so posts can also be published there.
 
 ## Low Priority
 - Expand social network support beyond Mastodon.
