@@ -264,11 +264,11 @@ def count_links(ctx, url="https://chatgpt.com/codex"):
 
 
 @task
-def merge_bot(ctx, kodex_url="https://chatgpt.com/kodex"):
-    """Automatically merge ready PRs from the Kodex page."""
+def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
+    """Automatically merge ready PRs from the Codex page."""
     controller = SafariController()
 
-    controller.open(kodex_url)
+    controller.open(codex_url)
 
     dom = controller.run_js("document.documentElement.outerHTML")
     links = extract_links_with_green_span(dom)
