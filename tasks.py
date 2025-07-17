@@ -11,6 +11,7 @@ from tasks.helpers import (
     _parse_when,
     _ci,
     update_dependencies,
+    click_button_by_text,
 )
 from auto.automation.safari import SafariController
 from auto.html_helpers import (
@@ -21,7 +22,7 @@ from auto.html_utils import extract_links_with_green_span
 
 
 def _slow_print(message: str) -> None:
-    """Print ``message`` then pause for 10 seconds."""
+    """Print ``message`` then pause for 5 seconds."""
     print(message)
     time.sleep(5)
 
@@ -305,53 +306,20 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     _slow_print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
-    github_url = False
-    _slow_print(f"Before if statement GitHub URL: {github_url}")
-    # remove this old conditional code
-    if not github_url:
-
-        # the order of operation should be reversed. first, look for a View PR button and click it
-        # if it's not found, then we click Create PR, then View PR, and proceed to the merge
-        _slow_print("GitHub link not found; searching for Create PR button")
-        # This find_btn_js and click_btn_js is a good pattern. let's extract it to a function
-        find_btn_js = (
-            "(() => {"
-            "const span=Array.from(document.querySelectorAll('button span.truncate'))"
-            ".find(el=>el.textContent.trim()==='Create PR');"
-            "return span?span.closest('button').outerHTML:'';"
-            "})()"
-        )
-        btn_html = controller.run_js(find_btn_js)
-        if btn_html:
-            _slow_print(btn_html)
-            click_btn_js = (
-                "(() => {"
-                "const span=Array.from(document.querySelectorAll('button span.truncate'))"
-                ".find(el=>el.textContent.trim()==='Create PR');"
-                "if(span){span.closest('button').click();return 'clicked';}"
-                "return '';"
-                "})()"
-            )
-            click_res = controller.run_js(click_btn_js)
-            if click_res:
-                _slow_print("Clicked Create PR")
-                # the create PR process is slow, so we should create some wait time here
-                time.sleep(15)
-                # now let's reuse the pattern we've extracted above to find the updated button called 'View PR'
-                # and when found, let's click it
-                # clicking on the view PR opens a new tab that contains the PR
-                # we need a way to wait for the new tab to open
-                # once the new tab is open, we need to wait for it to load the PR page
-                # so, we need to wait for a span with text 'Merge pull request' to appear.
-                # once the span is found, we need to click it, using the same pattern we've extracted above
-            else:
-                _slow_print("Failed to click Create PR")
-        else:
+    if not click_button_by_text(controller, "View PR"):
+        _slow_print("View PR button not found; trying to create PR")
+        if not click_button_by_text(controller, "Create PR"):
             _slow_print("Create PR button not found")
-        return
+            return
+        _slow_print("Waiting for PR creation")
+        time.sleep(15)
+        click_button_by_text(controller, "View PR")
 
-    _slow_print(f"Opening GitHub URL: {github_url}")
-    controller.open(github_url)
+    time.sleep(5)
+    if click_button_by_text(controller, "Merge pull request"):
+        _slow_print("Clicked merge button")
+    else:
+        _slow_print("Merge button not found")
 
 
 @task

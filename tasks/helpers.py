@@ -5,8 +5,6 @@ import re
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-
-import json
 from invoke import Exit
 
 from auto.automation.safari import SafariController
@@ -51,6 +49,37 @@ def _fill_safari_tab(url: str, selector: str, text: str) -> str:
     controller = SafariController()
     controller.open(url)
     return controller.fill(selector, text)
+
+
+def click_button_by_text(controller: SafariController, text: str) -> bool:
+    """Click the first button containing ``text``.
+
+    Returns ``True`` if the button was found and clicked.
+    """
+    quoted = json.dumps(text)
+    find_btn_js = f"""
+(() => {{
+  const span = Array.from(document.querySelectorAll('button span.truncate'))
+    .find(el => el.textContent.trim() === {quoted});
+  return span ? span.closest('button').outerHTML : '';
+}})()
+"""
+    btn_html = controller.run_js(find_btn_js)
+    if not btn_html:
+        return False
+
+    click_btn_js = f"""
+(() => {{
+  const span = Array.from(document.querySelectorAll('button span.truncate'))
+    .find(el => el.textContent.trim() === {quoted});
+  if (span) {{
+    span.closest('button').click();
+    return 'clicked';
+  }}
+  return '';
+}})()
+"""
+    return bool(controller.run_js(click_btn_js))
 
 
 def update_dependencies(ctx, freeze: bool = False) -> None:
