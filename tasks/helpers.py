@@ -12,7 +12,10 @@ from dateutil import parser
 
 
 def _parse_when(value: str) -> datetime:
-    """Parse relative or absolute time specifications."""
+    """Parse relative or absolute time specifications.
+
+    Always return a timezone-aware UTC datetime.
+    """
     value = value.strip().lower()
     m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value)
     if m:
@@ -24,7 +27,11 @@ def _parse_when(value: str) -> datetime:
             "d": timedelta(days=int(amount)),
         }[unit]
         return datetime.now(timezone.utc) + delta
-    return parser.isoparse(value)
+
+    dt = parser.isoparse(value)
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _get_medium_magic_link() -> str | None:
