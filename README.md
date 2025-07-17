@@ -79,6 +79,12 @@ post’s publish status per network is tracked in the `post_status` table.
 While minimal, the goal is to provide the scaffolding for mirroring your
 Substack content across multiple social sites with a single workflow.
 
+### Scheduling posts
+
+Posts are queued with the `invoke schedule` task. The time argument accepts
+absolute ISO timestamps or relative values like `"+30m"`. Timestamps without a
+timezone are interpreted in UTC and stored as timezone-aware datetimes.
+
 ## Managing previews
 
 Previews are small templates used when posting to other networks. They can be listed, generated or edited with Invoke tasks:
