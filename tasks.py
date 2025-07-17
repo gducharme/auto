@@ -21,9 +21,9 @@ from auto.html_utils import extract_links_with_green_span
 
 
 def _slow_print(message: str) -> None:
-    """Sleep 10 seconds before printing the message."""
-    time.sleep(10)
+    """Print ``message`` then pause for 10 seconds."""
     print(message)
+    time.sleep(10)
 
 
 @task
@@ -297,6 +297,11 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
 
     pr_url = links[0]
     # the links are broken without domain. add it back in
+    if not pr_url.startswith("http"):
+        from urllib.parse import urljoin
+
+        pr_url = urljoin(codex_url, pr_url)
+
     _slow_print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
@@ -306,7 +311,6 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
         "return l?l.href:'';"
         "})()"
     )
-    # use controller.open instead
     github_url = controller.run_js(github_js)
     if not github_url:
         _slow_print("GitHub link not found")

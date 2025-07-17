@@ -62,6 +62,6 @@ def test_merge_bot_no_pr(monkeypatch):
     tasks.merge_bot(Context())
 
     assert controller.calls == [
-        ("open", "https://chatgpt.com/kodex"),
+        ("open", "https://chatgpt.com/codex"),
         ("run_js", "document.documentElement.outerHTML"),
     ]
