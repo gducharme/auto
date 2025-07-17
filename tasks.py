@@ -307,7 +307,11 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
 
     github_url = False
     _slow_print(f"Before if statement GitHub URL: {github_url}")
+    # remove this old conditional code
     if not github_url:
+
+        # the order of operation should be reversed. first, look for a View PR button and click it
+        # if it's not found, then we click Create PR, then View PR, and proceed to the merge
         _slow_print("GitHub link not found; searching for Create PR button")
         # This find_btn_js and click_btn_js is a good pattern. let's extract it to a function
         find_btn_js = (
