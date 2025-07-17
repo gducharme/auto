@@ -80,7 +80,7 @@ def schedule(ctx, post_id, time, network=None):
     from auto.models import Post, PostStatus
 
     scheduled_at = _parse_when(time)
-    networks = [network] if network else ["mastodon"]
+    networks = [network] if network else ["mastodon", "medium"]
 
     with SessionLocal() as session:
         if session.get(Post, post_id) is None:

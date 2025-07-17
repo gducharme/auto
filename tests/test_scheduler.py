@@ -64,6 +64,52 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     assert POSTS_FAILED.labels(network="mastodon")._value.get() == fail_start
 
 
+def test_publish_medium_post_task(test_db_engine, monkeypatch):
+    called = {"flag": False}
+
+    with SessionLocal() as session:
+        post = Post(
+            id="m1",
+            title="Title",
+            link="http://example",
+            summary="",
+            published="",
+        )
+        session.add(post)
+        status = PostStatus(
+            post_id="m1",
+            network="medium",
+            scheduled_at=datetime.now(timezone.utc),
+        )
+        session.add(status)
+        task = Task(
+            type="publish_post",
+            payload=json.dumps({"post_id": "m1", "network": "medium"}),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+        )
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    async def fake_publish(title, content):
+        called["flag"] = True
+
+    monkeypatch.setattr("auto.scheduler.post_to_medium_async", fake_publish)
+    monkeypatch.setenv("POST_DELAY", "0")
+
+    start = POSTS_PUBLISHED.labels(network="medium")._value.get()
+
+    asyncio.run(run_process())
+
+    with SessionLocal() as session:
+        ps = session.get(PostStatus, {"post_id": "m1", "network": "medium"})
+        assert ps.status == "published"
+        t = session.get(Task, task_id)
+        assert t.status == "completed"
+    assert called["flag"]
+    assert POSTS_PUBLISHED.labels(network="medium")._value.get() == start + 1
+
+
 def test_ingest_feed_task(test_db_engine, monkeypatch):
     called = {"count": 0}
 

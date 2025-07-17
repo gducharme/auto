@@ -13,6 +13,7 @@ from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
 from .socials.mastodon_client import post_to_mastodon_async
+from .socials.medium_client import post_to_medium_async
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .config import (
     get_poll_interval,
@@ -58,6 +59,16 @@ async def _publish(status: PostStatus, session):
             else:
                 text = f"{post.title} {post.link}"
             await post_to_mastodon_async(text, visibility="unlisted")
+        elif status.network == "medium":
+            preview = session.get(
+                PostPreview,
+                {"post_id": status.post_id, "network": status.network},
+            )
+            if preview:
+                content = Template(preview.content).render(post=post)
+            else:
+                content = f"{post.title}\n\n{post.link}"
+            await post_to_medium_async(post.title, content)
         else:
             raise ValueError(f"Unsupported network {status.network}")
         status.status = "published"

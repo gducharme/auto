@@ -3,7 +3,7 @@
 Auto is a small proof-of-concept for automatically reposting Substack articles
 to other platforms.  It periodically ingests a Substack RSS feed and stores the
 entries in a local SQLite database.  Those stored posts can then be published to
-supported social networks – currently Mastodon – using small helper scripts.
+supported social networks – currently Mastodon and Medium – using small helper scripts.
 
 The API itself is implemented with **FastAPI** and database migrations are
 handled via **Alembic**.  The project is intentionally tiny but demonstrates the
@@ -76,7 +76,8 @@ database.
 
 The `src/auto/socials` directory contains simple clients for publishing to
 different platforms.  For example `mastodon_client.py` posts a status to a
-Mastodon instance.  Additional networks can be added in a similar way.  Each
+Mastodon instance and `medium_client.py` automates creating a new Medium story.
+Additional networks can be added in a similar way.  Each
 post’s publish status per network is tracked in the `post_status` table.
 
 While minimal, the goal is to provide the scaffolding for mirroring your

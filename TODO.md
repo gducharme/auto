@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Integrate the Medium automation client so posts can also be published there.
 
 ## Low Priority
 - Expand social network support beyond Mastodon.
