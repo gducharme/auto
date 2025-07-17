@@ -186,7 +186,7 @@ def chat(
 @task
 def dspy_experiment(ctx):
     """Run the standalone dspy experiment script."""
-    ctx.run("python src/experiments/dspy.py", pty=True, echo=True)
+    ctx.run("python src/experiments/dspy_exp.py", pty=True, echo=True)
 
 
 @task
