@@ -8,6 +8,7 @@ from tasks.helpers import (
     _parse_when,
     _ci,
     update_dependencies,
+    _fill_safari_tab,
 )
 from auto.automation.safari import SafariController
 
@@ -205,6 +206,18 @@ def safari_fill(ctx, url, selector, text):
     controller = SafariController()
     controller.open(url)
     result = controller.fill(selector, text)
+    if result:
+        print(result)
+
+
+@task
+def codex_todo(ctx):
+    """Open the ChatGPT Codex and prefill the TODO prompt."""
+    result = _fill_safari_tab(
+        "https://chatgpt.com/codex",
+        "#text-area",
+        "Tackle the top item in the TODO.md file. When the PR is complete, remove that item",
+    )
     if result:
         print(result)
 
