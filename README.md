@@ -122,7 +122,10 @@ python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
 
 ## Running tests
 
-Before running tests, install the project dependencies:
+Before running tests, install the project dependencies. The
+`pytest-recording` plugin is included here and provides the
+`--block-network` and `--record-mode` options configured in
+`pytest.ini`:
 
 ```bash
 pip install -r requirements.txt
