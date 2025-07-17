@@ -49,8 +49,10 @@ migrations.
 
 The background scheduler is started automatically during application
 startup.  The FastAPI lifespan in `src/auto/main.py` calls
-`scheduler.start()` which continuously invokes `process_pending` to
-publish queued posts.  You can also run it on its own:
+`scheduler.start()` which continuously executes entries from the
+`tasks` table.  Tasks have a ``type`` and optional JSON payload.  Current
+types are ``publish_post`` and ``ingest_feed``.  You can also run the
+scheduler on its own:
 
 ```bash
 python -m auto.scheduler
@@ -59,8 +61,9 @@ python -m auto.scheduler
 ## Ingesting Substack posts
 
 The application automatically ingests the configured RSS feed on a
-schedule controlled by `INGEST_INTERVAL`. You can also trigger a run
-manually:
+schedule controlled by `INGEST_INTERVAL`. Ingestion runs are stored as
+``ingest_feed`` tasks so the scheduler can trigger them. You can also
+trigger a run manually:
 
 ```bash
 invoke ingest
@@ -94,7 +97,7 @@ invoke edit-preview --post-id <id> --network mastodon
 
 ## Health checks
 
-The scheduler checks for the presence of the `post_status` table when it
+The scheduler checks for the presence of the `tasks` table when it
 starts.  Ensure this table exists and watch the logs for any publishing
 errors.  Production deployments should also expose metrics such as
 Prometheus counters for successful and failed posts to provide better

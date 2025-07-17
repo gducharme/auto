@@ -1,20 +1,35 @@
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Callable, Awaitable, Dict
+from sqlalchemy.orm import Session
+import json
 
 from jinja2 import Template
 
 from sqlalchemy import and_, or_
 
+from .models import PostStatus, Post, PostPreview, Task
+
 from .db import SessionLocal, get_engine
-from .models import PostStatus, Post, PostPreview
 from .socials.mastodon_client import post_to_mastodon_async
-from .config import get_poll_interval, get_post_delay, get_max_attempts
+from .config import (
+    get_poll_interval,
+    get_post_delay,
+    get_max_attempts,
+)
 
 logger = logging.getLogger(__name__)
 
+TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 
+
+def register_task_handler(name: str) -> Callable[[Callable[[Task, Session], Awaitable[None]]], Callable[[Task, Session], Awaitable[None]]]:
+    def decorator(func: Callable[[Task, Session], Awaitable[None]]):
+        TASK_HANDLERS[name] = func
+        return func
+
+    return decorator
 
 
 async def _publish(status: PostStatus, session):
@@ -51,29 +66,57 @@ async def _publish(status: PostStatus, session):
         await asyncio.sleep(get_post_delay())
 
 
+@register_task_handler("publish_post")
+async def handle_publish_post(task: Task, session: Session) -> None:
+    data = json.loads(task.payload or "{}")
+    post_id = data.get("post_id")
+    network = data.get("network")
+    status = session.get(PostStatus, {"post_id": post_id, "network": network})
+    if status is None:
+        raise ValueError(f"status not found for {post_id}/{network}")
+    await _publish(status, session)
+
+
 async def process_pending(max_attempts: Optional[int] = None):
-    # use timezone-aware UTC datetime for all comparisons
+    """Fetch due tasks and dispatch them to registered handlers."""
     now = datetime.now(timezone.utc)
     if max_attempts is None:
         max_attempts = get_max_attempts()
     with SessionLocal() as session:
-        statuses = (
-            session.query(PostStatus)
+        tasks = (
+            session.query(Task)
             .filter(
-                PostStatus.scheduled_at <= now,
+                Task.scheduled_at <= now,
                 or_(
-                    PostStatus.status == "pending",
-                    and_(
-                        PostStatus.status == "error",
-                        PostStatus.attempts < max_attempts,
-                    ),
+                    Task.status == "pending",
+                    and_(Task.status == "error", Task.attempts < max_attempts),
                 ),
             )
-            .order_by(PostStatus.scheduled_at)
+            .order_by(Task.scheduled_at)
             .all()
         )
-        for status in statuses:
-            await _publish(status, session)
+
+        for task in tasks:
+            handler = TASK_HANDLERS.get(task.type)
+            if handler is None:
+                task.status = "error"
+                task.last_error = f"no handler for {task.type}"
+                task.attempts += 1
+                session.commit()
+                continue
+            task.status = "running"
+            session.commit()
+            try:
+                await handler(task, session)
+                task.status = "completed"
+                task.last_error = None
+            except Exception as exc:
+                task.status = "error"
+                task.last_error = str(exc)
+                logger.error("Task %s failed: %s", task.type, exc)
+            finally:
+                task.attempts += 1
+                session.commit()
 
 
 async def run_scheduler():
@@ -94,9 +137,17 @@ class Scheduler:
             from sqlalchemy import inspect
 
             inspector = inspect(get_engine())
-            if not inspector.has_table("post_status"):
-                logger.warning("post_status table missing; scheduler not started")
+            if not inspector.has_table("tasks"):
+                logger.warning("tasks table missing; scheduler not started")
                 return None
+
+            # ensure ingest handler is registered and an initial task exists
+            from . import ingest_scheduler
+
+            with SessionLocal() as session:
+                ingest_scheduler.ensure_initial_task(session)
+                session.commit()
+
             self._task = asyncio.create_task(run_scheduler())
         return self._task
 
