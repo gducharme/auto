@@ -23,7 +23,7 @@ from auto.html_utils import extract_links_with_green_span
 def _slow_print(message: str) -> None:
     """Print ``message`` then pause for 10 seconds."""
     print(message)
-    time.sleep(10)
+    time.sleep(5)
 
 
 @task
@@ -305,15 +305,11 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     _slow_print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
-    github_js = (
-        "(() => {"
-        "const l=document.querySelector('a[href^=\"https://github.com\"]');"
-        "return l?l.href:'';"
-        "})()"
-    )
-    github_url = controller.run_js(github_js)
+    github_url = False
+    _slow_print(f"Before if statement GitHub URL: {github_url}")
     if not github_url:
         _slow_print("GitHub link not found; searching for Create PR button")
+        # This find_btn_js and click_btn_js is a good pattern. let's extract it to a function
         find_btn_js = (
             "(() => {"
             "const span=Array.from(document.querySelectorAll('button span.truncate'))"
@@ -334,36 +330,24 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
             )
             click_res = controller.run_js(click_btn_js)
             if click_res:
-                _slow_print('Clicked Create PR')
+                _slow_print("Clicked Create PR")
+                # the create PR process is slow, so we should create some wait time here
+                time.sleep(15)
+                # now let's reuse the pattern we've extracted above to find the updated button called 'View PR'
+                # and when found, let's click it
+                # clicking on the view PR opens a new tab that contains the PR
+                # we need a way to wait for the new tab to open
+                # once the new tab is open, we need to wait for it to load the PR page
+                # so, we need to wait for a span with text 'Merge pull request' to appear.
+                # once the span is found, we need to click it, using the same pattern we've extracted above
             else:
-                _slow_print('Failed to click Create PR')
+                _slow_print("Failed to click Create PR")
         else:
-            _slow_print('Create PR button not found')
+            _slow_print("Create PR button not found")
         return
 
     _slow_print(f"Opening GitHub URL: {github_url}")
     controller.open(github_url)
-
-    merge_js = "document.querySelector('button.js-merge-branch') !== null"
-    mergeable = controller.run_js(merge_js)
-    _slow_print(f"Merge button present: {bool(mergeable)}")
-
-    if mergeable:
-        _slow_print("Merging pull request")
-        controller.click("button.js-merge-branch")
-        merged = True
-    else:
-        merged = False
-
-    controller.close_tab()
-    _slow_print("Closed GitHub tab")
-
-    if merged:
-        _slow_print("Archiving entry")
-        controller.click("#archive")
-    else:
-        _slow_print("Skipping archive")
-        controller.click("#all-done")
 
 
 @task
