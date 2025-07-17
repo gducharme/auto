@@ -22,6 +22,7 @@ dev = [
   "pre-commit",
   "invoke",
   "dspy",
+  "alembic",
 ]
 
 [build-system]
