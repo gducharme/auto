@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import json
 from invoke import Exit
 
 from auto.automation.safari import SafariController
@@ -44,23 +45,40 @@ def _fill_safari_tab(url: str, selector: str, text: str) -> str:
     return controller.fill(selector, text)
 
 
+def update_dependencies(ctx, freeze: bool = False) -> None:
+    """Upgrade outdated dependencies and optionally regenerate requirements."""
+
+    res = ctx.run("pip list --outdated --format=json", hide=True, warn=True)
+    packages = []
+    if res.stdout.strip():
+        try:
+            packages = [pkg["name"] for pkg in json.loads(res.stdout)]
+        except json.JSONDecodeError as exc:
+            raise Exit(f"Failed to parse outdated packages: {exc}") from exc
+
+    for pkg in packages:
+        result = ctx.run(f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True)
+        if result.exited != 0:
+            raise Exit(
+                f"Failed to upgrade {pkg}; manual intervention required",
+                code=result.exited,
+            )
+
+    check = ctx.run("pip check", warn=True, pty=True, echo=True)
+    if check.exited != 0:
+        raise Exit("Dependency conflicts remain after upgrade", code=check.exited)
+
+    if freeze:
+        ctx.run("invoke freeze", pty=True, echo=True)
+
+
 def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
     """Run the CI pipeline used by the ``ci`` Invoke task."""
 
     ctx.run("pip install -r requirements.txt", pty=True, echo=True)
 
     if upgrade:
-        result = ctx.run("pip list --outdated --format=freeze", hide=True, warn=True)
-        packages = [line.split("==")[0] for line in result.stdout.splitlines() if line]
-        for pkg in packages:
-            res = ctx.run(
-                f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True
-            )
-            if res.exited != 0:
-                raise Exit(
-                    "Dependency upgrade failed; manual intervention required",
-                    code=res.exited,
-                )
+        update_dependencies(ctx, freeze=freeze)
 
     ctx.run("alembic upgrade head", pty=True, echo=True)
     ctx.run("pre-commit run --all-files", pty=True, echo=True)
@@ -74,6 +92,3 @@ def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
 
     status = "passed" if test_res.ok else "failed"
     print(f"Tests {status}; coverage: {coverage or 'unknown'}")
-
-    if upgrade and freeze:
-        ctx.run("invoke freeze", pty=True, echo=True)
