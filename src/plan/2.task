@@ -1,0 +1,5 @@
+{
+  "id": "2",
+  "heading": "Project Plan / Stand up CI/Dev environment",
+  "text": "Install the testing framework (**pytest**) and code-quality hooks."
+}

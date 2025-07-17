@@ -1,0 +1,5 @@
+{
+  "id": "17",
+  "heading": "Project Plan / Phase 2 \u2014 Metric Collection & Scoring (1 week)",
+  "text": "Nightly job that retrieves engagement data and fills `metrics_*` fields."
+}

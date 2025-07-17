@@ -1,0 +1,5 @@
+{
+  "id": "29",
+  "heading": "Project Plan / Phase 4 \u2014 Modular Plugins & Multi-Platform (3 weeks)",
+  "text": "Refactor the dispatcher to iterate over enabled plugins."
+}
