@@ -21,10 +21,20 @@ from auto.html_helpers import (
 from auto.html_utils import extract_links_with_green_span
 
 
+def _delay(seconds: float) -> None:
+    """Sleep for ``seconds`` or ``TASKS_DELAY`` env override."""
+    override = os.getenv("TASKS_DELAY")
+    try:
+        wait = float(override) if override is not None else seconds
+    except ValueError:
+        wait = seconds
+    time.sleep(wait)
+
+
 def _slow_print(message: str) -> None:
-    """Print ``message`` then pause for 5 seconds."""
+    """Print ``message`` then pause for a short delay."""
     print(message)
-    time.sleep(5)
+    _delay(5)
 
 
 @task
@@ -312,10 +322,10 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
             _slow_print("Create PR button not found")
             return
         _slow_print("Waiting for PR creation")
-        time.sleep(15)
+        _delay(15)
         click_button_by_text(controller, "View PR")
 
-    time.sleep(5)
+    _delay(5)
     if click_button_by_text(controller, "Merge pull request"):
         _slow_print("Clicked merge button")
     else:
