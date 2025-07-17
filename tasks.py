@@ -1,6 +1,8 @@
 # tasks.py
 import os
 import time
+from pathlib import Path
+
 from invoke import task
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
@@ -255,10 +257,17 @@ def codex_todo(ctx):
 
 @task
 def fetch_dom(ctx):
-    """Open the Codex page and print the full DOM tree."""
+    """Open the Codex page and print the full DOM tree.
+
+    If a DOM tree is captured it is also written to
+    ``tests/fixtures/dom.html``.
+    """
     dom = fetch_dom_html()
     if dom:
         print(dom)
+        dest = Path("tests/fixtures/dom.html")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(dom)
 
 
 @task
