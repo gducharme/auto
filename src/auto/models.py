@@ -1,6 +1,15 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, text
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    Integer,
+    DateTime,
+    ForeignKey,
+    text,
+)
+
 from sqlalchemy.types import TypeDecorator
 
 
@@ -77,6 +86,33 @@ class PostPreview(Base):
     content = Column(Text, nullable=False)
     updated_at = Column(
         TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String, nullable=False)
+    payload = Column(Text)
+    scheduled_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    status = Column(String, nullable=False, server_default="pending")
+    attempts = Column(Integer, nullable=False, server_default="0")
+    last_error = Column(Text)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=lambda: datetime.now(timezone.utc),

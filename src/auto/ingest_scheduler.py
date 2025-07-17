@@ -1,50 +1,28 @@
-import asyncio
+"""Handler for ingest_feed tasks."""
+
 import logging
-from typing import Optional
+from datetime import datetime, timezone, timedelta
 
 from .feeds.ingestion import run_ingest_async
 from .config import get_ingest_interval
+from .models import Task
+from .scheduler import register_task_handler
 
 logger = logging.getLogger(__name__)
 
 
-async def _ingest_loop():
-    while True:
-        try:
-            await run_ingest_async()
-        except Exception as exc:
-            logger.error("Scheduled ingestion failed: %s", exc)
-        await asyncio.sleep(get_ingest_interval())
+@register_task_handler("ingest_feed")
+async def handle_ingest_feed(task: Task, session) -> None:
+    """Run feed ingestion and schedule the next run."""
+    try:
+        await run_ingest_async()
+    finally:
+        next_run = datetime.now(timezone.utc) + timedelta(seconds=get_ingest_interval())
+        session.add(Task(type="ingest_feed", scheduled_at=next_run))
 
 
-class IngestScheduler:
-    """Run feed ingestion on a timer in the background."""
-
-    def __init__(self) -> None:
-        self._task: Optional[asyncio.Task] = None
-
-    async def start(self) -> Optional[asyncio.Task]:
-        if self._task is None or self._task.done():
-            self._task = asyncio.create_task(_ingest_loop())
-        return self._task
-
-    async def stop(self) -> None:
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
-            self._task = None
-
-
-# backward compatible default instance
-default_scheduler = IngestScheduler()
-
-
-async def start() -> Optional[asyncio.Task]:
-    return await default_scheduler.start()
-
-
-async def stop() -> None:
-    await default_scheduler.stop()
+def ensure_initial_task(session) -> None:
+    """Ensure at least one ingest_feed task exists."""
+    exists = session.query(Task).filter(Task.type == "ingest_feed").first()
+    if not exists:
+        session.add(Task(type="ingest_feed"))
