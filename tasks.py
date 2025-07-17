@@ -1,5 +1,6 @@
 # tasks.py
 import os
+import time
 from invoke import task
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
@@ -15,6 +16,12 @@ from auto.html_helpers import (
     count_link_states,
 )
 from auto.html_utils import extract_links_with_green_span
+
+
+def _slow_print(message: str) -> None:
+    """Sleep 10 seconds before printing the message."""
+    time.sleep(10)
+    print(message)
 
 
 @task
@@ -264,23 +271,23 @@ def count_links(ctx, url="https://chatgpt.com/codex"):
 
 
 @task
-def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
+def merge_bot(ctx, codex_url="https://chatgpt.com/kodex"):
     """Automatically merge ready PRs from the Codex page."""
     controller = SafariController()
 
-    print(f"Opening Codex page: {codex_url}")
+    _slow_print(f"Opening Codex page: {codex_url}")
     controller.open(codex_url)
 
-    print("Fetching DOM")
+    _slow_print("Fetching DOM")
     dom = controller.run_js("document.documentElement.outerHTML")
-    print("Extracting links")
+    _slow_print("Extracting links")
     links = extract_links_with_green_span(dom)
     if not links:
-        print("No pull request ready")
+        _slow_print("No pull request ready")
         return
 
     pr_url = links[0]
-    print(f"Opening PR link: {pr_url}")
+    _slow_print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
     github_js = (
@@ -291,31 +298,31 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     )
     github_url = controller.run_js(github_js)
     if not github_url:
-        print("GitHub link not found")
+        _slow_print("GitHub link not found")
         return
 
-    print(f"Opening GitHub URL: {github_url}")
+    _slow_print(f"Opening GitHub URL: {github_url}")
     controller.open(github_url)
 
     merge_js = "document.querySelector('button.js-merge-branch') !== null"
     mergeable = controller.run_js(merge_js)
-    print(f"Merge button present: {bool(mergeable)}")
+    _slow_print(f"Merge button present: {bool(mergeable)}")
 
     if mergeable:
-        print("Merging pull request")
+        _slow_print("Merging pull request")
         controller.click("button.js-merge-branch")
         merged = True
     else:
         merged = False
 
     controller.close_tab()
-    print("Closed GitHub tab")
+    _slow_print("Closed GitHub tab")
 
     if merged:
-        print("Archiving entry")
+        _slow_print("Archiving entry")
         controller.click("#archive")
     else:
-        print("Skipping archive")
+        _slow_print("Skipping archive")
         controller.click("#all-done")
 
 
