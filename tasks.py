@@ -280,7 +280,7 @@ def count_links(ctx, url="https://chatgpt.com/codex"):
 
 
 @task
-def merge_bot(ctx, codex_url="https://chatgpt.com/kodex"):
+def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     """Automatically merge ready PRs from the Codex page."""
     controller = SafariController()
 
@@ -296,6 +296,7 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/kodex"):
         return
 
     pr_url = links[0]
+    # the links are broken without domain. add it back in
     _slow_print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
@@ -305,6 +306,7 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/kodex"):
         "return l?l.href:'';"
         "})()"
     )
+    # use controller.open instead
     github_url = controller.run_js(github_js)
     if not github_url:
         _slow_print("GitHub link not found")
