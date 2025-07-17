@@ -313,7 +313,32 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     )
     github_url = controller.run_js(github_js)
     if not github_url:
-        _slow_print("GitHub link not found")
+        _slow_print("GitHub link not found; searching for Create PR button")
+        find_btn_js = (
+            "(() => {"
+            "const span=Array.from(document.querySelectorAll('button span.truncate'))"
+            ".find(el=>el.textContent.trim()==='Create PR');"
+            "return span?span.closest('button').outerHTML:'';"
+            "})()"
+        )
+        btn_html = controller.run_js(find_btn_js)
+        if btn_html:
+            _slow_print(btn_html)
+            click_btn_js = (
+                "(() => {"
+                "const span=Array.from(document.querySelectorAll('button span.truncate'))"
+                ".find(el=>el.textContent.trim()==='Create PR');"
+                "if(span){span.closest('button').click();return 'clicked';}"
+                "return '';"
+                "})()"
+            )
+            click_res = controller.run_js(click_btn_js)
+            if click_res:
+                _slow_print('Clicked Create PR')
+            else:
+                _slow_print('Failed to click Create PR')
+        else:
+            _slow_print('Create PR button not found')
         return
 
     _slow_print(f"Opening GitHub URL: {github_url}")

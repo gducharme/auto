@@ -3,9 +3,10 @@ import tasks  # noqa: E402
 
 
 class DummyController:
-    def __init__(self, mergeable=True):
+    def __init__(self, mergeable=True, github_link=True):
         self.calls = []
         self.mergeable = mergeable
+        self.github_link = github_link
 
     def open(self, url):
         self.calls.append(("open", url))
@@ -18,7 +19,12 @@ class DummyController:
                 "<div><a href='/pr1'><span class='text-green-500'>+1</span></a></div>"
             )
         if "github.com" in code:
-            return "https://github.com/user/repo/pull/1"
+            return "https://github.com/user/repo/pull/1" if self.github_link else ""
+        if "Create PR" in code:
+            if "outerHTML" in code:
+                return "<button>Create PR</button>"
+            if "click" in code:
+                return "clicked"
         if "button.js-merge-branch" in code:
             return "1" if self.mergeable else ""
         return ""
@@ -65,3 +71,21 @@ def test_merge_bot_no_pr(monkeypatch):
         ("open", "https://chatgpt.com/codex"),
         ("run_js", "document.documentElement.outerHTML"),
     ]
+
+
+def test_merge_bot_create_pr_button(monkeypatch):
+    controller = DummyController(github_link=False)
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
+
+    tasks.merge_bot(Context())
+
+    assert ("open", "https://chatgpt.com/pr1") in controller.calls
+    assert any(
+        call[0] == "run_js" and "Create PR" in call[1] and "outerHTML" in call[1]
+        for call in controller.calls
+    )
+    assert any(
+        call[0] == "run_js" and "Create PR" in call[1] and "click" in call[1]
+        for call in controller.calls
+    )
