@@ -242,6 +242,17 @@ def codex_todo(ctx):
 
 
 @task
+def fetch_dom(ctx):
+    """Open the Codex page and print the full DOM tree."""
+
+    controller = SafariController()
+    controller.open("https://chatgpt.com/codex")
+    dom = controller.run_js("document.documentElement.outerHTML")
+    if dom:
+        print(dom)
+
+
+@task
 def list_previews(ctx):
     """List stored post previews."""
     from sqlalchemy import select
