@@ -108,6 +108,18 @@ Install the pre-commit hooks so formatting and linting run automatically:
 pre-commit install
 ```
 
+## Plan parser
+
+The project plan in `PLAN.md` can be turned into machine-readable task files.
+`src/auto/plan/parser.py` extracts each bullet or numbered item and writes a
+`.task` file per entry. These files live under `src/plan/`.
+
+Regenerate them with:
+
+```bash
+python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
+```
+
 ## Running tests
 
 Before running tests, install the project dependencies:
