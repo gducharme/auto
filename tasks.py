@@ -268,15 +268,19 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
     """Automatically merge ready PRs from the Codex page."""
     controller = SafariController()
 
+    print(f"Opening Codex page: {codex_url}")
     controller.open(codex_url)
 
+    print("Fetching DOM")
     dom = controller.run_js("document.documentElement.outerHTML")
+    print("Extracting links")
     links = extract_links_with_green_span(dom)
     if not links:
         print("No pull request ready")
         return
 
     pr_url = links[0]
+    print(f"Opening PR link: {pr_url}")
     controller.open(pr_url)
 
     github_js = (
@@ -290,22 +294,28 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
         print("GitHub link not found")
         return
 
+    print(f"Opening GitHub URL: {github_url}")
     controller.open(github_url)
 
     merge_js = "document.querySelector('button.js-merge-branch') !== null"
     mergeable = controller.run_js(merge_js)
+    print(f"Merge button present: {bool(mergeable)}")
 
     if mergeable:
+        print("Merging pull request")
         controller.click("button.js-merge-branch")
         merged = True
     else:
         merged = False
 
     controller.close_tab()
+    print("Closed GitHub tab")
 
     if merged:
+        print("Archiving entry")
         controller.click("#archive")
     else:
+        print("Skipping archive")
         controller.click("#all-done")
 
 
