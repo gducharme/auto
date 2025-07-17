@@ -16,7 +16,7 @@ def fetch_dom(url: str = "https://chatgpt.com/codex") -> str:
 
 def download_html(url: str) -> str:
     """Return the HTML contents of ``url``."""
-    response = httpx.get(url, timeout=10)
+    response = httpx.get(url, timeout=10, verify=False)
     response.raise_for_status()
     return response.text
 
