@@ -1,0 +1,5 @@
+{
+  "id": "37",
+  "heading": "Project Plan / Phase 5 \u2014 Self-Healing & Vision-Driven Fallback (4 weeks)",
+  "text": "Agent prompt design that reads error logs, infers new selectors or templates and generates updated plugin code."
+}
