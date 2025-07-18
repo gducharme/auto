@@ -16,6 +16,7 @@ from auto.cli.helpers import (
 from auto.html_helpers import fetch_dom as fetch_dom_html, count_link_states
 from auto.html_utils import extract_links_with_green_span, parse_codex_tasks
 from auto.automation.safari import SafariController
+from auto.automation.workflow import execute
 
 app = typer.Typer(help="Automation commands")
 
@@ -34,9 +35,7 @@ def chat(
     lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
     dspy.configure(lm=lm)
 
-    default_question = (
-        "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
-    )
+    default_question = "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
     prompt = message or default_question
     response = dspy.chat(prompt)
     print(response)
@@ -202,3 +201,10 @@ def github_bot(codex_url: str = "https://chatgpt.com/codex") -> None:
     else:
         _slow_print("Failed to click Open button")
 
+
+@app.command()
+def execute_workflow(workflow_id: str = "default") -> None:
+    """Execute the next workflow step."""
+
+    state = execute(workflow_id)
+    print(f"Workflow state: {state.value}")

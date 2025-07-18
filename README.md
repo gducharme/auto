@@ -132,6 +132,18 @@ Regenerate them with:
 python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
 ```
 
+## Workflow automation
+
+The automation workflow controls Safari to open Codex tasks and merge
+pull requests. State is stored as JSON files under the ``workflow/``
+directory with one file per workflow ID. Steps progress through
+``FETCH_DOM``, ``PARSE_TASKS``, ``OPEN_PR`` and ``MERGE_PR``. Run the
+next step with:
+
+```bash
+python -m auto.cli automation execute-workflow
+```
+
 ## Running tests
 
 Before running tests, install the project dependencies. The
