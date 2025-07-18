@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 from invoke import task
+from bs4 import BeautifulSoup
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
 from tasks.helpers import (
@@ -330,6 +331,44 @@ def merge_bot(ctx, codex_url="https://chatgpt.com/codex"):
         _slow_print("Clicked merge button")
     else:
         _slow_print("Merge button not found")
+
+
+@task
+def github_bot(ctx, codex_url="https://chatgpt.com/codex"):
+    """Open Codex and click the first button with a span containing 'Open'."""
+    controller = SafariController()
+
+    _slow_print(f"Opening Codex page: {codex_url}")
+    controller.open(codex_url)
+
+    _slow_print("Fetching DOM")
+    dom = controller.run_js("document.documentElement.outerHTML")
+    _slow_print("Scanning for Open button")
+
+    soup = BeautifulSoup(dom, "html.parser")
+    found = any(
+        span.find_parent("button") is not None and "Open" in span.get_text()
+        for span in soup.find_all("span")
+    )
+    if not found:
+        _slow_print("Open button not found")
+        return
+
+    click_js = """
+(() => {
+  const span = Array.from(document.querySelectorAll('button span'))
+    .find(el => el.textContent.includes('Open'));
+  if (span) {
+    span.closest('button').click();
+    return 'clicked';
+  }
+  return '';
+})()
+"""
+    if controller.run_js(click_js):
+        _slow_print("Clicked Open button")
+    else:
+        _slow_print("Failed to click Open button")
 
 
 @task
