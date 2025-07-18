@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 
 from bs4 import BeautifulSoup
+import re
 
 
 def extract_links_with_green_span(html: str) -> List[str]:
@@ -24,3 +25,26 @@ def extract_links_with_green_span(html: str) -> List[str]:
 
         links.append(a["href"])
     return links
+
+
+def parse_codex_tasks(html: str) -> List[dict]:
+    """Return task info dictionaries extracted from Codex HTML.
+
+    Each returned dict contains ``text`` with the row text, ``status`` which is
+    either ``"Merged"`` or ``"Open"`` (or ``None`` if neither is present), and a
+    boolean ``code`` flag indicating whether the row includes code changes.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    rows = soup.select("div.task-row-container")
+    tasks: List[dict] = []
+    for row in rows:
+        text = row.get_text(" ", strip=True)
+        if "Merged" in text:
+            status = "Merged"
+        elif "Open" in text:
+            status = "Open"
+        else:
+            status = None
+        code = bool(re.search(r"\+[0-9]+", text))
+        tasks.append({"text": text, "status": status, "code": code})
+    return tasks

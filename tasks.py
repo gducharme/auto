@@ -19,7 +19,7 @@ from auto.html_helpers import (
     fetch_dom as fetch_dom_html,
     count_link_states,
 )
-from auto.html_utils import extract_links_with_green_span
+from auto.html_utils import extract_links_with_green_span, parse_codex_tasks
 
 
 def _delay(seconds: float) -> None:
@@ -345,12 +345,8 @@ def github_bot(ctx, codex_url="https://chatgpt.com/codex"):
     dom = controller.run_js("document.documentElement.outerHTML")
     _slow_print("Scanning for Open button")
 
-    soup = BeautifulSoup(dom, "html.parser")
-    found = any(
-        span.find_parent("button") is not None and "Open" in span.get_text()
-        for span in soup.find_all("span")
-    )
-    if not found:
+    tasks = parse_codex_tasks(dom)
+    if not any(t["status"] == "Open" for t in tasks):
         _slow_print("Open button not found")
         return
 
