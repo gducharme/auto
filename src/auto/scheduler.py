@@ -12,7 +12,8 @@ from sqlalchemy import and_, or_
 from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
-from .socials.mastodon_client import post_to_mastodon_async
+from .socials.base import SocialPlugin
+from .socials.mastodon_client import MastodonClient
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .config import (
     get_poll_interval,
@@ -23,6 +24,11 @@ from .config import (
 logger = logging.getLogger(__name__)
 
 TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
+
+# Available social network plugins keyed by network name.
+PLUGINS: Dict[str, SocialPlugin] = {
+    "mastodon": MastodonClient(),
+}
 
 
 def register_task_handler(
@@ -48,18 +54,18 @@ async def _publish(status: PostStatus, session):
         session.commit()
         return
     try:
-        if status.network == "mastodon":
-            preview = session.get(
-                PostPreview,
-                {"post_id": status.post_id, "network": status.network},
-            )
-            if preview:
-                text = Template(preview.content).render(post=post)
-            else:
-                text = f"{post.title} {post.link}"
-            await post_to_mastodon_async(text, visibility="unlisted")
-        else:
+        plugin = PLUGINS.get(status.network)
+        if plugin is None:
             raise ValueError(f"Unsupported network {status.network}")
+        preview = session.get(
+            PostPreview,
+            {"post_id": status.post_id, "network": status.network},
+        )
+        if preview:
+            text = Template(preview.content).render(post=post)
+        else:
+            text = f"{post.title} {post.link}"
+        await plugin.post(text, visibility="unlisted")
         status.status = "published"
         status.last_error = None
         POSTS_PUBLISHED.labels(network=status.network).inc()
