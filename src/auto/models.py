@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from .db import Base
+
 from sqlalchemy import (
     Column,
     String,
@@ -32,8 +34,6 @@ class TZDateTime(TypeDecorator):
         if value.tzinfo is None:
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
-
-from .db import Base
 
 
 class Post(Base):

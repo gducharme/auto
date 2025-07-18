@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 
 from invoke import task
-from bs4 import BeautifulSoup
 
 __path__ = [os.path.join(os.path.dirname(__file__), "tasks")]
 from tasks.helpers import (

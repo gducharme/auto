@@ -1,5 +1,4 @@
 import textwrap
-from pathlib import Path
 from auto.plan.parser import parse_plan
 
 

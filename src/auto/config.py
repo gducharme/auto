@@ -5,6 +5,7 @@ DEFAULT_FEED_URL = "https://geoffreyducharme.substack.com/feed"
 
 _loaded = False
 
+
 def load_env() -> None:
     """Load environment variables from the nearest ``.env`` file once."""
     global _loaded

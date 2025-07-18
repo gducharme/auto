@@ -68,7 +68,6 @@ def parse_plan(plan_file: Path, out_dir: Path = DEFAULT_OUTPUT_DIR) -> List[Task
             else:
                 continue
 
-
             item_id = str(seq)
             seq += 1
 

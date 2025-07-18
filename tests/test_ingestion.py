@@ -3,6 +3,7 @@ import sqlite3
 from sqlalchemy import create_engine
 from auto.feeds.ingestion import init_db, save_entries
 
+
 class DummyEntry:
     def __init__(self, id, title, link, summary="", published="", updated=""):
         self.id = id
@@ -12,6 +13,7 @@ class DummyEntry:
         self.published = published
         self.updated = updated
 
+
 class DummyFeed:
     def __init__(self, entries):
         self.entries = entries
@@ -19,25 +21,29 @@ class DummyFeed:
 
 def test_save_entries_inserts_and_ignores_duplicates(tmp_path):
     db_path = tmp_path / "test.db"
-    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
     init_db(str(db_path), engine=engine)
 
-    feed = DummyFeed([
-        DummyEntry(
-            "1",
-            "First",
-            "http://example.com/1",
-            published="2025-01-01",
-            updated="2025-02-01",
-        ),
-        DummyEntry(
-            "2",
-            "Second",
-            "http://example.com/2",
-            published="2025-01-02",
-            updated="2025-02-02",
-        ),
-    ])
+    feed = DummyFeed(
+        [
+            DummyEntry(
+                "1",
+                "First",
+                "http://example.com/1",
+                published="2025-01-01",
+                updated="2025-02-01",
+            ),
+            DummyEntry(
+                "2",
+                "Second",
+                "http://example.com/2",
+                published="2025-01-02",
+                updated="2025-02-02",
+            ),
+        ]
+    )
 
     # First insertion
     save_entries(feed, str(db_path), engine=engine)

@@ -8,8 +8,6 @@ from .config import get_database_url
 _engine = None
 
 
-
-
 def get_engine():
     """Return a cached SQLAlchemy engine instance."""
     global _engine

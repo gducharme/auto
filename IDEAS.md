@@ -7,4 +7,3 @@ Some brainstorming ideas for extending the project:
 - Provide a scheduling interface to control when posts are published to each network.
 - Integrate with a content moderation service to filter posts automatically before publishing.
 - Add notifications for failed publish attempts via email or messaging apps.
-

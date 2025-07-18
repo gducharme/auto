@@ -33,4 +33,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("post_previews")
-

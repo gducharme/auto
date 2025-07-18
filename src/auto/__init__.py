@@ -16,4 +16,3 @@ def configure_logging() -> None:
         level=os.getenv("LOG_LEVEL", "INFO"),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-

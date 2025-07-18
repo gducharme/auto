@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from mastodon import Mastodon
 import httpx
 
 from ..config import get_mastodon_instance, get_mastodon_token

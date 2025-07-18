@@ -83,4 +83,3 @@ def test_parse_when_aware():
     result = _parse_when("2023-01-02T01:02:03+02:00")
     assert result == datetime(2023, 1, 1, 23, 2, 3, tzinfo=timezone.utc)
     assert result.tzinfo is timezone.utc
-

@@ -28,7 +28,9 @@ def upgrade() -> None:
     )
 
     rows = conn.execute(
-        sa.select(post_status.c.post_id, post_status.c.network, post_status.c.scheduled_at)
+        sa.select(
+            post_status.c.post_id, post_status.c.network, post_status.c.scheduled_at
+        )
     ).fetchall()
 
     for pid, net, ts in rows:
@@ -46,4 +48,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     pass
-
