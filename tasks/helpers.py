@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -120,7 +121,11 @@ def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
     ctx.run("alembic upgrade head", pty=True, echo=True)
     ctx.run("pre-commit run --all-files", pty=True, echo=True)
 
-    test_res = ctx.run("pytest --cov", warn=True, pty=True, echo=True)
+    cmd = "pytest --cov=src/auto --cov-report=term --cov-report=xml"
+    if os.getenv("COVERAGE_HTML"):
+        cmd += " --cov-report=html"
+
+    test_res = ctx.run(cmd, warn=True, pty=True, echo=True)
 
     coverage = None
     for line in test_res.stdout.splitlines():
