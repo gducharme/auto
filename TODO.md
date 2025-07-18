@@ -8,7 +8,7 @@
 ## Low Priority
 - Expand social network support beyond Mastodon.
 - Containerize the application with a Dockerfile.
-- Add code coverage reporting for the test suite.
+- ~~Add code coverage reporting for the test suite.~~
 
 ## Code Smells
 - Unused imports reported by `ruff` should be cleaned up.
