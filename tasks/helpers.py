@@ -16,8 +16,8 @@ def _parse_when(value: str) -> datetime:
 
     Always return a timezone-aware UTC datetime.
     """
-    value = value.strip().lower()
-    m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value)
+    value = value.strip()
+    m = re.match(r"(?:in\s+|\+)?(\d+)([smhd])$", value.lower())
     if m:
         amount, unit = m.groups()
         delta = {
@@ -30,8 +30,10 @@ def _parse_when(value: str) -> datetime:
 
     dt = parser.isoparse(value)
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt
 
 
 def _get_medium_magic_link() -> str | None:
