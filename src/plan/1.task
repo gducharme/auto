@@ -1,5 +1,0 @@
-{
-  "id": "1",
-  "heading": "Project Plan / Stand up CI/Dev environment",
-  "text": "Create the repository scaffold with `src/auto`, Alembic migrations, `tasks.py`, `.env` and `pre-commit`."
-}

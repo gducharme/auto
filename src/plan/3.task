@@ -1,5 +1,0 @@
-{
-  "id": "3",
-  "heading": "Project Plan / Agent integration",
-  "text": "Integrate the AI agent into the development loop via an editor extension or CLI wrapper so that it:"
-}
