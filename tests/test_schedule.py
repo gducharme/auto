@@ -1,13 +1,12 @@
-from invoke import Context
 
-import tasks  # noqa: E402
-from tasks.helpers import _parse_when  # noqa: E402
+from auto.cli import publish as tasks
+from auto.cli.helpers import _parse_when  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402
 from auto.models import PostStatus
 
 
 def test_schedule_missing_post(monkeypatch, test_db_engine, capsys):
-    tasks.schedule(Context(), post_id="missing", time="in 1s")
+    tasks.schedule(post_id="missing", time="in 1s")
 
     captured = capsys.readouterr()
     assert "Post missing not found" in captured.out
@@ -34,7 +33,7 @@ def test_schedule_naive_timestamp(test_db_engine):
         )
         session.commit()
 
-    tasks.schedule(Context(), post_id="1", time=ts)
+    tasks.schedule(post_id="1", time=ts)
 
     with SessionLocal() as session:
         ps = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
@@ -60,7 +59,7 @@ def test_schedule_aware_timestamp(test_db_engine):
         )
         session.commit()
 
-    tasks.schedule(Context(), post_id="2", time=ts)
+    tasks.schedule(post_id="2", time=ts)
 
     with SessionLocal() as session:
         ps = session.get(PostStatus, {"post_id": "2", "network": "mastodon"})

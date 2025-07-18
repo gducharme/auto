@@ -1,4 +1,4 @@
-import tasks  # noqa: E402
+from auto.cli.helpers import _get_medium_magic_link
 
 
 def test_get_medium_magic_link(monkeypatch):
@@ -14,7 +14,7 @@ def test_get_medium_magic_link(monkeypatch):
 
     monkeypatch.setattr("subprocess.run", fake_run)
 
-    link = tasks._get_medium_magic_link()
+    link = _get_medium_magic_link()
     assert (
         link
         == "https://medium.com/m/callback/email?token=d4a805f6a804&operation=login&state=medium"

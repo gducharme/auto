@@ -1,6 +1,4 @@
-from invoke import Context
-
-import tasks  # noqa: E402
+from auto.cli import publish as tasks
 import mastodon  # noqa: E402
 
 
@@ -11,7 +9,7 @@ def test_trending_tags_outputs(monkeypatch, capsys):
 
     monkeypatch.setattr(mastodon, "Mastodon", lambda **_: DummyMastodon())
 
-    tasks.trending_tags(Context(), limit=2)
+    tasks.trending_tags(limit=2)
 
     captured = capsys.readouterr()
     assert "python" in captured.out
