@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import logging
 from dataclasses import dataclass, asdict, field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from selenium import webdriver  # or playwright, etc.
 from openai import OpenAI  # pseudo-import for LLM planning
@@ -21,8 +21,17 @@ logger = logging.getLogger(__name__)
 # ─── Data Structures ───────────────────────────────────────────────────────────
 @dataclass
 class Step:
+    """Represents one atomic automation step."""
+
     id: int
-    description: str
+    # New flexible fields allow multiple plan formats. "type" is used by
+    # newer JSON plans while "description" supports older free-form steps.
+    type: Optional[str] = None
+    description: Optional[str] = None
+    url: Optional[str] = None
+    selector: Optional[str] = None
+    prompt_template: Optional[str] = None
+    store_as: Optional[str] = None
     status: str = "pending"  # pending | success | failed | abandoned
     result: Optional[str] = None  # log of what happened
     dom_snapshot: Optional[str] = None  # path to saved DOM snapshot
@@ -154,9 +163,22 @@ class Planner:
 
 # ─── Executor with Pre/Post Condition Checks & Logging ─────────────────────────
 class StepExecutor:
-    def __init__(self, max_retries: int = 3):
-        self.driver = webdriver.Chrome()
+    def __init__(self, driver: Optional[webdriver.Chrome] = None, max_retries: int = 3):
+        self.driver = driver or webdriver.Chrome()
         self.max_retries = max_retries
+        # simple in-memory variable store for discovery steps
+        self.variables: Dict[str, Any] = {}
+
+    def _render(self, template: str) -> str:
+        """Render a template string using variables from previous steps."""
+        from jinja2 import Template
+
+        try:
+            tmpl = Template(template)
+            return tmpl.render(**self.variables)
+        except Exception as e:
+            logger.error(f"Template render failed for '{template}': {e}")
+            return template
 
     def check_pre_conditions(self, step: Step) -> bool:
         for cond in step.pre_conditions:
@@ -187,7 +209,8 @@ class StepExecutor:
         return True
 
     def execute(self, step: Step) -> Step:
-        logger.info(f"Starting Step {step.id}: {step.description}")
+        description = step.description or step.type or "(unknown)"
+        logger.info(f"Starting Step {step.id}: {description}")
 
         if step.pre_conditions and not self.check_pre_conditions(step):
             step.status = "failed"
@@ -198,19 +221,38 @@ class StepExecutor:
         while attempt < self.max_retries and step.status == "pending":
             attempt += 1
             try:
-                desc = step.description.lower()
-                if "navigate to" in desc:
-                    url = desc.split("navigate to", 1)[1].strip()
+                # Support old description-based steps as a fallback
+                if step.type is None and step.description:
+                    desc = step.description.lower()
+                    if "navigate to" in desc:
+                        step.type = "navigate"
+                        step.url = desc.split("navigate to", 1)[1].strip()
+                    elif "click" in desc:
+                        step.type = "click"
+                        step.selector = desc.split("click", 1)[1].strip()
+
+                if step.type == "navigate" and step.url:
+                    url = self._render(step.url)
                     self.driver.get(url)
                     step.result = f"navigated to {url}"
-                elif "click" in desc:
-                    selector = desc.split("click", 1)[1].strip()
+                elif step.type == "click" and step.selector:
+                    selector = self._render(step.selector)
                     elem = self.driver.find_element_by_css_selector(selector)
                     elem.click()
                     step.result = f"clicked {selector}"
+                elif step.type == "discover" and step.prompt_template:
+                    # Real implementation would call an LLM with DOM and the prompt
+                    dom = self.driver.page_source
+                    rendered = self._render(step.prompt_template)
+                    logger.debug(f"Discovery prompt: {rendered[:100]}")
+                    # Placeholder: store empty list
+                    selectors: List[str] = []
+                    if step.store_as:
+                        self.variables[step.store_as] = selectors
+                    step.result = f"discovered {len(selectors)} selectors"
                 else:
                     step.status = "failed"
-                    step.result = "requires human input"
+                    step.result = "unsupported step type"
                     break
 
                 if step.post_conditions and not self.check_post_conditions(step):
@@ -269,7 +311,7 @@ def main():
             event = {
                 "timestamp": datetime.now().isoformat(),
                 "step_id": step.id,
-                "description": step.description,
+                "description": step.description or step.type,
                 "status": step.status,
                 "result": step.result,
                 "dom_snapshot": step.dom_snapshot,
