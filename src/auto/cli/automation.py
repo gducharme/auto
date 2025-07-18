@@ -34,9 +34,7 @@ def chat(
     lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
     dspy.configure(lm=lm)
 
-    default_question = (
-        "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
-    )
+    default_question = "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
     prompt = message or default_question
     response = dspy.chat(prompt)
     print(response)
@@ -202,3 +200,23 @@ def github_bot(codex_url: str = "https://chatgpt.com/codex") -> None:
     else:
         _slow_print("Failed to click Open button")
 
+
+@app.command()
+def test_task(codex_url: str = "https://chatgpt.com/codex") -> None:
+    """Open Codex then send an ``'f'`` keypress via JavaScript."""
+
+    controller = SafariController()
+
+    _slow_print(f"Opening Codex page: {codex_url}")
+    controller.open(codex_url)
+
+    _slow_print("Sending 'f' key")
+    js = """
+(() => {
+  const evtInit = {key: 'f', code: 'KeyF', keyCode: 70, which: 70, bubbles: true};
+  document.dispatchEvent(new KeyboardEvent('keydown', evtInit));
+  document.dispatchEvent(new KeyboardEvent('keyup', evtInit));
+  return 'sent';
+})()
+"""
+    controller.run_js(js)
