@@ -1,5 +1,4 @@
-from invoke import Context
-import tasks  # noqa: E402
+from auto.cli import automation as tasks
 
 
 class DummyController:
@@ -49,7 +48,7 @@ def test_merge_bot_merges(monkeypatch):
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
     monkeypatch.setenv("TASKS_DELAY", "0")
 
-    tasks.merge_bot(Context())
+    tasks.merge_bot()
 
     assert any(
         call[0] == "run_js" and "Merge pull request" in call[1] and "click" in call[1]
@@ -63,7 +62,7 @@ def test_merge_bot_skips_when_not_mergeable(monkeypatch):
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
     monkeypatch.setenv("TASKS_DELAY", "0")
 
-    tasks.merge_bot(Context())
+    tasks.merge_bot()
 
     assert not any(
         call[0] == "run_js" and "Merge pull request" in call[1] and "click" in call[1]
@@ -77,7 +76,7 @@ def test_merge_bot_no_pr(monkeypatch):
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: [])
     monkeypatch.setenv("TASKS_DELAY", "0")
 
-    tasks.merge_bot(Context())
+    tasks.merge_bot()
 
     assert controller.calls == [
         ("open", "https://chatgpt.com/codex"),
@@ -91,7 +90,7 @@ def test_merge_bot_create_pr_button(monkeypatch):
     monkeypatch.setattr(tasks, "extract_links_with_green_span", lambda html: ["/pr1"])
     monkeypatch.setenv("TASKS_DELAY", "0")
 
-    tasks.merge_bot(Context())
+    tasks.merge_bot()
 
     assert ("open", "https://chatgpt.com/pr1") in controller.calls
     assert any(

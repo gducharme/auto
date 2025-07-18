@@ -12,6 +12,7 @@ dependencies = [
   "selenium",
   "jinja2",
   "prometheus-client",
+  "typer",
 ]
 
 [project.optional-dependencies]

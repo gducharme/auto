@@ -39,7 +39,7 @@ Install dependencies (which include **lxml** for XML parsing) and start the deve
 
 ```bash
 pip install -r requirements.txt
-invoke uv
+python -m auto.cli maintenance uv
 ```
 
 Running from the project root ensures Alembic can locate `alembic.ini` and
@@ -66,7 +66,7 @@ schedule controlled by `INGEST_INTERVAL`. Ingestion runs are stored as
 trigger a run manually:
 
 ```bash
-invoke ingest
+python -m auto.cli maintenance ingest
 ```
 
 Both methods fetch the configured RSS feed and store any new posts in the
@@ -84,18 +84,18 @@ Substack content across multiple social sites with a single workflow.
 
 ### Scheduling posts
 
-Posts are queued with the `invoke schedule` task. The time argument accepts
+Posts are queued with the `python -m auto.cli publish schedule` command. The time argument accepts
 absolute ISO timestamps or relative values like `"+30m"`. Timestamps without a
 timezone are interpreted in UTC and stored as timezone-aware datetimes.
 
 ## Managing previews
 
-Previews are small templates used when posting to other networks. They can be listed, generated or edited with Invoke tasks:
+Previews are small templates used when posting to other networks. They can be listed, generated or edited with CLI commands:
 
 ```bash
-invoke list-previews
-invoke generate-preview --post-id <id> --network mastodon
-invoke edit-preview --post-id <id> --network mastodon
+python -m auto.cli publish list-previews
+python -m auto.cli publish generate-preview --post-id <id> --network mastodon
+python -m auto.cli publish edit-preview --post-id <id> --network mastodon
 ```
 
 `generate-preview` uses a local LLM when available and falls back to a simple template. Previews are only created when the post has been scheduled.
@@ -117,7 +117,7 @@ Install the pre-commit hooks so formatting and linting run automatically:
 pre-commit install
 ```
 
-Use `invoke update-deps` to upgrade outdated dependencies. Pass `--freeze` to
+Use `python -m auto.cli maintenance update-deps` to upgrade outdated dependencies. Pass `--freeze` to
 rewrite `requirements.txt` after the upgrades.
 
 ## Plan parser

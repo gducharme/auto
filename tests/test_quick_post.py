@@ -1,7 +1,5 @@
 from datetime import datetime
-from invoke import Context
-
-import tasks  # noqa: E402
+from auto.cli import publish as tasks
 from auto.db import SessionLocal  # noqa: E402
 from auto.models import Post, PostStatus  # noqa: E402
 
@@ -33,7 +31,7 @@ def test_quick_post_schedules(monkeypatch, test_db_engine):
 
     monkeypatch.setattr("builtins.input", lambda prompt="": "y")
 
-    tasks.quick_post(Context())
+    tasks.quick_post()
 
     with SessionLocal() as session:
         ps = session.get(PostStatus, {"post_id": "2", "network": "mastodon"})
@@ -57,7 +55,7 @@ def test_quick_post_abort(monkeypatch, test_db_engine):
 
     monkeypatch.setattr("builtins.input", lambda prompt="": "n")
 
-    tasks.quick_post(Context())
+    tasks.quick_post()
 
     with SessionLocal() as session:
         statuses = session.query(PostStatus).all()

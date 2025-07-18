@@ -7,9 +7,34 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from invoke import Exit
+import time
 
 from auto.automation.safari import SafariController
 from dateutil import parser
+
+
+def _delay(seconds: float) -> None:
+    """Sleep for ``seconds`` or ``TASKS_DELAY`` env override."""
+    override = os.getenv("TASKS_DELAY")
+    try:
+        wait = float(override) if override is not None else seconds
+    except ValueError:
+        wait = seconds
+    time.sleep(wait)
+
+
+def _slow_print(message: str) -> None:
+    """Print ``message`` then pause for a short delay."""
+    print(message)
+    _delay(5)
+
+
+def freeze_requirements() -> None:
+    """Regenerate requirements.txt without editable installs."""
+    res = subprocess.run(
+        ["pip", "freeze", "--exclude-editable"], capture_output=True, text=True, check=True
+    )
+    Path("requirements.txt").write_text(res.stdout)
 
 
 def _parse_when(value: str) -> datetime:
@@ -85,54 +110,62 @@ def click_button_by_text(controller: SafariController, text: str) -> bool:
     return bool(controller.run_js(click_btn_js))
 
 
-def update_dependencies(ctx, freeze: bool = False) -> None:
+def update_dependencies(freeze: bool = False) -> None:
     """Upgrade outdated dependencies and optionally regenerate requirements."""
 
-    res = ctx.run("pip list --outdated --format=json", hide=True, warn=True)
+    res = subprocess.run(
+        ["pip", "list", "--outdated", "--format=json"],
+        capture_output=True,
+        text=True,
+    )
     packages = []
     if res.stdout.strip():
         try:
             packages = [pkg["name"] for pkg in json.loads(res.stdout)]
         except json.JSONDecodeError as exc:
-            raise Exit(f"Failed to parse outdated packages: {exc}") from exc
+            raise RuntimeError(f"Failed to parse outdated packages: {exc}") from exc
 
     for pkg in packages:
-        result = ctx.run(f"pip install --upgrade {pkg}", warn=True, pty=True, echo=True)
-        if result.exited != 0:
-            raise Exit(
-                f"Failed to upgrade {pkg}; manual intervention required",
-                code=result.exited,
+        result = subprocess.run(["pip", "install", "--upgrade", pkg])
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Failed to upgrade {pkg}; manual intervention required"
             )
 
-    check = ctx.run("pip check", warn=True, pty=True, echo=True)
-    if check.exited != 0:
-        raise Exit("Dependency conflicts remain after upgrade", code=check.exited)
+    check = subprocess.run(["pip", "check"])
+    if check.returncode != 0:
+        raise RuntimeError("Dependency conflicts remain after upgrade")
 
     if freeze:
-        ctx.run("invoke freeze", pty=True, echo=True)
+        freeze_requirements()
 
 
-def _ci(ctx, upgrade: bool = False, freeze: bool = False) -> None:
-    """Run the CI pipeline used by the ``ci`` Invoke task."""
+def _ci(upgrade: bool = False, freeze: bool = False) -> None:
+    """Run the CI pipeline used by the ``ci`` command."""
 
-    ctx.run("pip install -r requirements.txt", pty=True, echo=True)
+    subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
 
     if upgrade:
-        update_dependencies(ctx, freeze=freeze)
+        update_dependencies(freeze=freeze)
 
-    ctx.run("alembic upgrade head", pty=True, echo=True)
-    ctx.run("pre-commit run --all-files", pty=True, echo=True)
+    subprocess.run(["alembic", "upgrade", "head"], check=True)
+    subprocess.run(["pre-commit", "run", "--all-files"], check=True)
 
-    cmd = "pytest --cov=src/auto --cov-report=term --cov-report=xml"
+    cmd = [
+        "pytest",
+        "--cov=src/auto",
+        "--cov-report=term",
+        "--cov-report=xml",
+    ]
     if os.getenv("COVERAGE_HTML"):
-        cmd += " --cov-report=html"
+        cmd.append("--cov-report=html")
 
-    test_res = ctx.run(cmd, warn=True, pty=True, echo=True)
+    result = subprocess.run(cmd, text=True, capture_output=True)
 
     coverage = None
-    for line in test_res.stdout.splitlines():
+    for line in result.stdout.splitlines():
         if line.strip().startswith("TOTAL"):
             coverage = line.split()[-1]
 
-    status = "passed" if test_res.ok else "failed"
+    status = "passed" if result.returncode == 0 else "failed"
     print(f"Tests {status}; coverage: {coverage or 'unknown'}")
