@@ -37,9 +37,9 @@
       "selector": "{{ready_selectors[0]}}",
       "prompt_template": null,
       "store_as": null,
-      "status": "failed",
-      "result": "Attempt 1 failed: 'WebDriver' object has no attribute 'find_element_by_css_selector'",
-      "dom_snapshot": "dom_step_3_attempt_1.html",
+      "status": "pending",
+      "result": null,
+      "dom_snapshot": null,
       "pre_conditions": [],
       "post_conditions": []
     },

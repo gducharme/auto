@@ -1,0 +1,19 @@
+{
+  "step_stats": {
+    "1": {
+      "success": 1,
+      "failed": 0,
+      "abandoned": 0
+    },
+    "2": {
+      "success": 1,
+      "failed": 0,
+      "abandoned": 0
+    },
+    "3": {
+      "success": 0,
+      "failed": 1,
+      "abandoned": 0
+    }
+  }
+}

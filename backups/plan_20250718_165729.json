@@ -1,0 +1,27 @@
+{
+  "objective": "Open the Codex page and spin up a PR from a ready work item",
+  "steps": [
+    { "id": 1,
+      "type": "navigate",
+      "url": "https://chatgpt.com/codex"
+    },
+    { "id": 2,
+      "type": "discover",
+      "prompt_template": "Given this HTML, return a JSON list of CSS selectors for any work-item tiles marked “ready for PR”.",
+      "store_as": "ready_selectors"
+    },
+    { "id": 3,
+      "type": "click",
+      "selector": "{{ready_selectors[0]}}"
+    },
+    { "id": 4,
+      "type": "discover",
+      "prompt_template": "Here’s the HTML of the opened work-item. Return a JSON list of CSS selectors for the “Create PR” button.",
+      "store_as": "create_pr_selectors"
+    },
+    { "id": 5,
+      "type": "click",
+      "selector": "{{create_pr_selectors[0]}}"
+    }
+  ]
+}
