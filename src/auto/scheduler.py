@@ -140,7 +140,7 @@ async def run_scheduler():
 
 
 class Scheduler:
-    """Manage the background scheduler task without using module-level globals."""
+    """Manage the background scheduler task without relying on globals."""
 
     def __init__(self) -> None:
         self._task: Optional[asyncio.Task] = None
@@ -175,19 +175,6 @@ class Scheduler:
                 pass
             self._task = None
 
-
-# provide a default scheduler instance for backwards compatibility
-default_scheduler = Scheduler()
-
-
-async def start() -> Optional[asyncio.Task]:
-    """Start the default background scheduler loop."""
-    return await default_scheduler.start()
-
-
-async def stop() -> None:
-    """Stop the default background scheduler loop."""
-    await default_scheduler.stop()
 
 
 def main():
