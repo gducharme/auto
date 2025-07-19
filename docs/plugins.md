@@ -13,6 +13,9 @@ Auto supports pluggable social network clients. Plugins implement the
 
 The ``network`` string identifies the plugin when Auto publishes posts.
 
+Our guidelines avoid using Selenium for browser automation. Instead, use the
+[`SafariController`](../src/auto/automation/safari.py) helper shown below.
+
 ## Example: MediumClient
 
 ```python
@@ -20,8 +23,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Dict
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+from auto.automation.safari import SafariController
 
 from .base import SocialPlugin
 
@@ -30,8 +32,8 @@ logger = logging.getLogger(__name__)
 class MediumClient(SocialPlugin):
     network = "medium"
 
-    def __init__(self, driver: webdriver.Firefox | None = None) -> None:
-        self.driver = driver
+    def __init__(self, safari: SafariController | None = None) -> None:
+        self.safari = safari or SafariController()
 
     async def post(self, text: str, visibility: str = "draft") -> None:
         await asyncio.to_thread(self._post_sync, text, visibility)
@@ -39,13 +41,12 @@ class MediumClient(SocialPlugin):
     def _post_sync(self, text: str, visibility: str) -> None:
         from ..automation.medium import MediumClient as AutomationClient
 
-        driver = self.driver or webdriver.Firefox()
-        client = AutomationClient(driver=driver)
+        safari = self.safari or SafariController()
+        client = AutomationClient(safari=safari)
         try:
             client.login()
-            driver.get("https://medium.com/new-story")
-            body = driver.find_element(By.TAG_NAME, "body")
-            body.send_keys(text)
+            safari.open("https://medium.com/new-story")
+            safari.fill("article", text)
             logger.info("Created Medium draft")
         finally:
             client.close()
