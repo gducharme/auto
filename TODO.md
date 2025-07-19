@@ -2,8 +2,6 @@
 
 ## High Priority
 
-- Remove the module-level scheduler globals and create `Scheduler` instances in `main.py`.
-
 ## Medium Priority
 - Integrate the Medium automation client so posts can also be published there.
 - Move plugin registration to `src/auto/socials/registry.py` and document how to write a plugin with an example `medium_client.py`.
