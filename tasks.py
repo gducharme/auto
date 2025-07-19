@@ -90,3 +90,9 @@ def tests(c, marker=None):
     if marker:
         cmd += f" -m {marker}"
     c.run(cmd, pty=True)
+
+
+@task
+def help(c):
+    """List available invoke tasks."""
+    c.run("invoke --list", pty=True)
