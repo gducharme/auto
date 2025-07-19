@@ -5,14 +5,18 @@ import logging
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from selenium import webdriver  # or playwright, etc.
+from pathlib import Path
 from openai import OpenAI  # pseudo-import for LLM planning
+from .safari import SafariController
 
 # ─── Logging Configuration ─────────────────────────────────────────────────────
+DATA_DIR = Path("automation_data")
+DATA_DIR.mkdir(exist_ok=True, parents=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    filename="agent.log",
+    filename=str(DATA_DIR / "agent.log"),
     filemode="a",
 )
 logger = logging.getLogger(__name__)
@@ -47,7 +51,7 @@ class Plan:
 
 # ─── Execution Logger ──────────────────────────────────────────────────────────
 class ExecutionLogger:
-    def __init__(self, path: str = "execution_log.json"):
+    def __init__(self, path: str = str(DATA_DIR / "execution_log.json")):
         self.path = path
         try:
             with open(self.path, "r") as f:
@@ -64,7 +68,7 @@ class ExecutionLogger:
 
 # ─── Memory Module ─────────────────────────────────────────────────────────────
 class MemoryModule:
-    def __init__(self, path: str = "memory.json"):
+    def __init__(self, path: str = str(DATA_DIR / "memory.json")):
         self.path = path
         try:
             with open(self.path, "r") as f:
@@ -98,9 +102,10 @@ def commit_file(path: str, message: str):
 
 # ─── Plan Management ────────────────────────────────────────────────────────────
 class PlanManager:
-    def __init__(self, path: str, backup_dir: str = "backups"):
+    def __init__(self, path: str = str(DATA_DIR / "plan.json"), backup_dir: str = str(DATA_DIR / "backups")):
         self.path = path
         self.backup_dir = backup_dir
+        Path(self.backup_dir).mkdir(exist_ok=True, parents=True)
 
     def load(self) -> Plan:
         data = json.load(open(self.path))
@@ -163,9 +168,16 @@ class Planner:
 
 # ─── Executor with Pre/Post Condition Checks & Logging ─────────────────────────
 class StepExecutor:
-    def __init__(self, driver: Optional[webdriver.Chrome] = None, max_retries: int = 3):
-        self.driver = driver or webdriver.Chrome()
+    def __init__(
+        self,
+        controller: Optional[SafariController] = None,
+        artifact_dir: str = str(DATA_DIR),
+        max_retries: int = 3,
+    ):
+        self.controller = controller or SafariController()
         self.max_retries = max_retries
+        self.artifact_dir = Path(artifact_dir)
+        self.artifact_dir.mkdir(exist_ok=True, parents=True)
         # simple in-memory variable store for discovery steps
         self.variables: Dict[str, Any] = {}
 
@@ -183,10 +195,9 @@ class StepExecutor:
     def check_pre_conditions(self, step: Step) -> bool:
         for cond in step.pre_conditions:
             logger.info(f"Checking pre-condition '{cond}' for step {step.id}")
-            try:
-                self.driver.find_element_by_css_selector(cond)
-            except Exception as e:
-                logger.error(f"Pre-condition '{cond}' failed: {e}")
+            js = f"document.querySelector({json.dumps(cond)}) ? '1' : ''"
+            if not self.controller.run_js(js):
+                logger.error(f"Pre-condition '{cond}' failed")
                 return False
         return True
 
@@ -195,16 +206,16 @@ class StepExecutor:
             logger.info(f"Checking post-condition '{cond}' for step {step.id}")
             if cond.startswith("url_contains:"):
                 expected = cond.split(":", 1)[1].strip()
-                if expected not in self.driver.current_url:
+                current = self.controller.run_js("window.location.href")
+                if expected not in current:
                     logger.error(
                         f"Post-condition '{cond}' failed: URL does not contain {expected}"
                     )
                     return False
             else:
-                try:
-                    self.driver.find_element_by_css_selector(cond)
-                except Exception as e:
-                    logger.error(f"Post-condition '{cond}' failed: {e}")
+                js = f"document.querySelector({json.dumps(cond)}) ? '1' : ''"
+                if not self.controller.run_js(js):
+                    logger.error(f"Post-condition '{cond}' failed")
                     return False
         return True
 
@@ -233,16 +244,15 @@ class StepExecutor:
 
                 if step.type == "navigate" and step.url:
                     url = self._render(step.url)
-                    self.driver.get(url)
-                    step.result = f"navigated to {url}"
+                    self.controller.open(url)
+                    step.result = f"opened {url}"
                 elif step.type == "click" and step.selector:
                     selector = self._render(step.selector)
-                    elem = self.driver.find_element_by_css_selector(selector)
-                    elem.click()
+                    self.controller.click(selector)
                     step.result = f"clicked {selector}"
                 elif step.type == "discover" and step.prompt_template:
                     # Real implementation would call an LLM with DOM and the prompt
-                    dom = self.driver.page_source
+                    dom = self.controller.run_js("document.documentElement.outerHTML")
                     rendered = self._render(step.prompt_template)
                     logger.debug(f"Discovery prompt: {rendered[:100]}")
                     # Placeholder: store empty list
@@ -270,11 +280,11 @@ class StepExecutor:
             finally:
                 # save DOM
                 try:
-                    dom = self.driver.page_source
-                    filename = f"dom_step_{step.id}_attempt_{attempt}.html"
+                    dom = self.controller.run_js("document.documentElement.outerHTML")
+                    filename = self.artifact_dir / f"dom_step_{step.id}_attempt_{attempt}.html"
                     with open(filename, "w", encoding="utf-8") as f:
                         f.write(dom)
-                    step.dom_snapshot = filename
+                    step.dom_snapshot = str(filename)
                     logger.info(
                         f"Saved DOM snapshot for step {step.id} attempt {attempt}: {filename}"
                     )
@@ -286,8 +296,8 @@ class StepExecutor:
 
 # ─── Main Orchestration ────────────────────────────────────────────────────────
 def main():
-    plan_file = "plan.json"
-    manager = PlanManager(plan_file)
+    plan_file = DATA_DIR / "plan.json"
+    manager = PlanManager(str(plan_file))
     exec_logger = ExecutionLogger()
     memory = MemoryModule()
 
@@ -299,7 +309,7 @@ def main():
         plan = planner.generate_plan("Merge pull request")
         manager.save(plan)
 
-    executor = StepExecutor()
+    executor = StepExecutor(artifact_dir=str(DATA_DIR))
 
     for step in plan.steps:
         if step.status == "pending":
