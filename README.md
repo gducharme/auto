@@ -151,6 +151,13 @@ pre-commit install
 Use `python -m auto.cli maintenance update-deps` to upgrade outdated dependencies. Pass `--freeze` to
 rewrite `requirements.txt` after the upgrades.
 
+Convenient wrappers for these scripts are also available as Invoke tasks. Run `invoke --list` to see
+the full set and pass `--help` to any task for usage details. For example:
+
+```bash
+invoke create-preview --help
+```
+
 ## Plan parser
 
 The project plan in `PLAN.md` can be turned into machine-readable task files.

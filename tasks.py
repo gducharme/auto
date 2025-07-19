@@ -9,7 +9,13 @@ def install_deps(c):
     c.run("pip install -r requirements.txt", pty=True)
 
 
-@task
+@task(
+    help={
+        "host": "Interface to bind the server to",
+        "port": "Port number for the development server",
+        "reload": "Reload on code changes",
+    }
+)
 def uv(c, host="127.0.0.1", port=8000, reload=True):
     """Start the FastAPI development server."""
     flag = "--reload" if reload else ""
@@ -43,7 +49,12 @@ def list_schedule(c):
     c.run("python -m auto.cli publish list-schedule", pty=True)
 
 
-@task
+@task(
+    help={
+        "post_id": "ID of the post to generate a preview for",
+        "network": "Target social network (default: mastodon)",
+    }
+)
 def generate_preview(c, post_id, network="mastodon"):
     """Generate or update a preview for ``post_id``."""
     c.run(
@@ -52,7 +63,14 @@ def generate_preview(c, post_id, network="mastodon"):
     )
 
 
-@task
+@task(
+    help={
+        "post_id": "ID of the post to generate a preview for",
+        "network": "Target social network (default: mastodon)",
+        "when": "Schedule time (e.g. '+10m' or ISO timestamp)",
+        "dry_run": "Print actions without writing to the database",
+    }
+)
 def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
     """Schedule preview generation."""
     when_flag = f"--when {when}" if when else ""
@@ -63,7 +81,12 @@ def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
     )
 
 
-@task
+@task(
+    help={
+        "post_id": "ID of the post to edit",
+        "network": "Target social network (default: mastodon)",
+    }
+)
 def edit_preview(c, post_id, network="mastodon"):
     """Interactively edit a stored preview."""
     c.run(
@@ -72,7 +95,13 @@ def edit_preview(c, post_id, network="mastodon"):
     )
 
 
-@task
+@task(
+    help={
+        "limit": "Number of tags to display",
+        "instance": "Mastodon instance URL",
+        "token": "Access token for the instance",
+    }
+)
 def trending_tags(c, limit=10, instance=None, token=None):
     """Display trending tags from Mastodon."""
     cmd = f"python -m auto.cli publish trending-tags --limit {limit}"
@@ -89,14 +118,21 @@ def sync_mastodon_posts(c):
     c.run("python -m auto.cli publish sync-mastodon-posts", pty=True)
 
 
-@task
+@task(
+    help={"freeze": "Rewrite requirements.txt after upgrading"}
+)
 def update_deps(c, freeze=False):
     """Upgrade dependencies to their latest versions."""
     flag = "--freeze" if freeze else ""
     c.run(f"python -m auto.cli maintenance update-deps {flag}", pty=True)
 
 
-@task
+@task(
+    help={
+        "remote": "Remote repository name",
+        "main": "Name of the main branch",
+    }
+)
 def cleanup_branches(c, remote="origin", main="main"):
     """Delete branches merged into main locally and on the remote."""
     c.run(
@@ -105,7 +141,12 @@ def cleanup_branches(c, remote="origin", main="main"):
     )
 
 
-@task
+@task(
+    help={
+        "host": "Server host",
+        "port": "Port serving metrics",
+    }
+)
 def metrics(c, host="localhost", port=8000):
     """Output Prometheus metrics from the running server."""
     c.run(
@@ -129,7 +170,7 @@ def parse_plan(c):
     )
 
 
-@task
+@task(help={"plan": "Path to the plan JSON file"})
 def execute_plan(c, plan="plan.json"):
     """Run the automation plan executor."""
     c.run(f"python -m auto.automation.plan_executor {plan}", pty=True)
@@ -141,7 +182,7 @@ def install_hooks(c):
     c.run("pre-commit install", pty=True)
 
 
-@task
+@task(help={"marker": "Only run tests matching this marker"})
 def tests(c, marker=None):
     """Run the test suite."""
     cmd = "pytest"
