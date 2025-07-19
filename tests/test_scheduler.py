@@ -8,7 +8,7 @@ from auto.socials import registry
 from auto.socials.registry import PluginRegistry
 from auto.socials.mastodon_client import MastodonClient
 import pytest
-from auto.scheduler import process_pending, Scheduler
+from auto.scheduler import Scheduler
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
 
@@ -29,7 +29,8 @@ def setup_plugins():
 
 
 async def run_process():
-    await process_pending()
+    sched = Scheduler()
+    await sched.process_pending()
 
 
 def test_publish_post_task(test_db_engine, monkeypatch):

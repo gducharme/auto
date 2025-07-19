@@ -6,12 +6,12 @@ from datetime import datetime, timezone, timedelta
 from .feeds.ingestion import run_ingest_async
 from .config import get_ingest_interval
 from .models import Task
-from .scheduler import register_task_handler
+from .scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler("ingest_feed")
+@Scheduler.register_task_handler("ingest_feed")
 async def handle_ingest_feed(task: Task, session) -> None:
     """Run feed ingestion and schedule the next run."""
     try:
