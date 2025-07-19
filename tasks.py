@@ -115,6 +115,12 @@ def metrics(c, host="localhost", port=8000):
 
 
 @task
+def safari_control(c):
+    """Open the interactive Safari controller menu."""
+    c.run("python -m auto.cli automation control-safari", pty=True)
+
+
+@task
 def parse_plan(c):
     """Parse PLAN.md into task files."""
     c.run(
