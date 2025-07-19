@@ -72,6 +72,15 @@ def cleanup_branches(c, remote="origin", main="main"):
 
 
 @task
+def metrics(c, host="localhost", port=8000):
+    """Output Prometheus metrics from the running server."""
+    c.run(
+        f"python -m auto.cli maintenance metrics --host {host} --port {port}",
+        pty=True,
+    )
+
+
+@task
 def parse_plan(c):
     """Parse PLAN.md into task files."""
     c.run(
