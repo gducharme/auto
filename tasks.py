@@ -66,6 +66,17 @@ def edit_preview(c, post_id, network="mastodon"):
 
 
 @task
+def trending_tags(c, limit=10, instance=None, token=None):
+    """Display trending tags from Mastodon."""
+    cmd = f"python -m auto.cli publish trending-tags --limit {limit}"
+    if instance:
+        cmd += f" --instance {instance}"
+    if token:
+        cmd += f" --token {token}"
+    c.run(cmd, pty=True)
+
+
+@task
 def sync_mastodon_posts(c):
     """Mark posts as published if they already appear on Mastodon."""
     c.run("python -m auto.cli publish sync-mastodon-posts", pty=True)
