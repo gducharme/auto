@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import typer
 from sqlalchemy import select, case
 
@@ -39,7 +41,7 @@ def list_posts() -> None:
 
 
 @app.command()
-def schedule(post_id: str, time: str, network: str | None = None) -> None:
+def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
     """Schedule a post for publishing."""
 
     scheduled_at = _parse_when(time)
@@ -95,7 +97,7 @@ def quick_post(network: str = "mastodon") -> None:
 
 
 @app.command()
-def trending_tags(limit: int = 10, instance: str | None = None, token: str | None = None) -> None:
+def trending_tags(limit: int = 10, instance: Optional[str] = None, token: Optional[str] = None) -> None:
     """Display trending tags from Mastodon."""
 
     from mastodon import Mastodon

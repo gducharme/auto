@@ -48,9 +48,10 @@ migrations.
 ## Scheduler
 
 The background scheduler is started automatically during application
-startup.  The FastAPI lifespan in `src/auto/main.py` calls
-`scheduler.start()` which continuously executes entries from the
-`tasks` table.  Tasks have a ``type`` and optional JSON payload.  Current
+startup.  The FastAPI lifespan in `src/auto/main.py` creates a
+`Scheduler` instance and calls its `start()` method, which continuously
+executes entries from the `tasks` table.  Tasks have a ``type`` and
+optional JSON payload.  Current
 types are ``publish_post`` and ``ingest_feed``.  You can also run the
 scheduler on its own:
 
@@ -138,17 +139,18 @@ python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
 
 ## Plan executor
 
-The step executor automates small browser tasks using Selenium. A plan is stored
-in `plan.json` and updated after each step. Generate a new plan automatically if
-the file does not exist and run it with:
+The step executor automates small browser tasks using Selenium. A plan is
+defined in `plan.json`, but a working copy `plan_work.json` is updated after
+each step. Generate a new plan automatically if the file does not exist and run
+it with:
 
 ```bash
 python -m auto.automation.plan_executor plan.json
 ```
 
 DOM snapshots and backups are written alongside the plan so failures can be
-inspected or rolled back. Each HTML snapshot is also copied to a `cassettes/`
-subdirectory which allows tests to replay DOM content without a live network.
+inspected or rolled back. Use the `--reset` flag to delete the working plan and
+all generated artifacts.
 
 ## Running tests
 

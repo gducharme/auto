@@ -4,8 +4,8 @@ import json
 
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task
-from auto.scheduler import process_pending
 from auto.socials.registry import get_plugin
+from auto.scheduler import process_pending, PLUGINS, Scheduler
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
 
@@ -138,3 +138,19 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
         t = session.get(Task, task_id)
         assert t.status == "completed"
     assert POSTS_FAILED.labels(network="mastodon")._value.get() == start + 1
+
+
+def test_scheduler_start_stop(test_db_engine, monkeypatch):
+    monkeypatch.setattr("auto.ingest_scheduler.ensure_initial_task", lambda s: None)
+    monkeypatch.setenv("SCHEDULER_POLL_INTERVAL", "0")
+
+    sched = Scheduler()
+
+    async def run():
+        task = await sched.start()
+        assert task is sched._worker.task
+        await asyncio.sleep(0.01)
+        await sched.stop()
+        assert sched._worker.task is None
+
+    asyncio.run(run())
