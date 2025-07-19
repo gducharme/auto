@@ -11,7 +11,11 @@ def test_cleanup_branches(monkeypatch):
         if cmd[:3] == ["git", "branch", "--merged"]:
             return CompletedProcess(cmd, 0, stdout="  main\n  feature\n")
         if cmd[:4] == ["git", "branch", "-r", "--merged"]:
-            return CompletedProcess(cmd, 0, stdout="  origin/main\n  origin/old\n")
+            return CompletedProcess(
+                cmd,
+                0,
+                stdout="  origin/main\n  origin/HEAD -> origin/main\n  origin/old\n",
+            )
         return CompletedProcess(cmd, 0, stdout="", stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
