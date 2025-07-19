@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 from openai import OpenAI
 
-from .plan_executor import ExecutionLogger, Plan, PlanManager, Step
+from ..plan.logging import ExecutionLogger
+from ..plan.types import Plan, PlanManager, Step
 
 logger = logging.getLogger(__name__)
 

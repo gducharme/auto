@@ -1,179 +1,21 @@
-import json
 import shutil
-import subprocess
 import logging
-from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from pathlib import Path
-import glob
 import argparse
 from selenium import webdriver  # or playwright, etc.
 from openai import OpenAI  # pseudo-import for LLM planning
 
+from ..plan.types import Plan, PlanManager, Step
+from ..plan.logging import (
+    configure_logging,
+    ExecutionLogger,
+    MemoryModule,
+)
+
 # ─── Logging Configuration ─────────────────────────────────────────────────────
 logger = logging.getLogger(__name__)
-
-
-def configure_logging() -> None:
-    """Initialize logging when the executor starts."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        filename="agent.log",
-        filemode="a",
-    )
-
-
-# ─── Data Structures ───────────────────────────────────────────────────────────
-@dataclass
-class Step:
-    """Represents one atomic automation step."""
-
-    id: int
-    # New flexible fields allow multiple plan formats. "type" is used by
-    # newer JSON plans while "description" supports older free-form steps.
-    type: Optional[str] = None
-    description: Optional[str] = None
-    url: Optional[str] = None
-    selector: Optional[str] = None
-    prompt_template: Optional[str] = None
-    store_as: Optional[str] = None
-    status: str = "pending"  # pending | success | failed | abandoned
-    result: Optional[str] = None  # log of what happened
-    dom_snapshot: Optional[str] = None  # path to saved DOM snapshot
-    pre_conditions: List[str] = field(default_factory=list)  # CSS selectors or checks
-    post_conditions: List[str] = field(default_factory=list)  # CSS selectors or checks
-
-
-@dataclass
-class Plan:
-    objective: str
-    steps: List[Step]
-
-
-# ─── Execution Logger ──────────────────────────────────────────────────────────
-class ExecutionLogger:
-    def __init__(self, path: str = "execution_log.json"):
-        self.path = path
-        try:
-            with open(self.path, "r") as f:
-                self.events = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.events = []
-
-    def log_event(self, event: Dict):
-        self.events.append(event)
-        with open(self.path, "w") as f:
-            json.dump(self.events, f, indent=2)
-        logger.info(f"Logged event: {event}")
-
-
-# ─── Memory Module ─────────────────────────────────────────────────────────────
-class MemoryModule:
-    def __init__(self, path: str = "memory.json"):
-        self.path = path
-        try:
-            with open(self.path, "r") as f:
-                self.memory = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.memory = {"step_stats": {}}
-
-    def record_event(self, event: Dict):
-        sid = str(event["step_id"])
-        stats = self.memory["step_stats"].setdefault(
-            sid, {"success": 0, "failed": 0, "abandoned": 0}
-        )
-        status = event.get("status")
-        if status in stats:
-            stats[status] += 1
-        # persist memory
-        with open(self.path, "w") as f:
-            json.dump(self.memory, f, indent=2)
-        logger.info(f"Updated memory for step {sid}: {stats}")
-
-
-# ─── Git Versioning Utility ────────────────────────────────────────────────────
-def commit_file(path: str, message: str):
-    try:
-        subprocess.run(["git", "add", path], check=True)
-        subprocess.run(["git", "commit", "-m", message], check=True)
-        logger.info(f"Committed {path}: {message}")
-    except Exception as e:
-        logger.warning(f"Git commit failed for {path}: {e}")
-
-
-# ─── Plan Management ────────────────────────────────────────────────────────────
-class PlanManager:
-    def __init__(self, path: str, backup_dir: str = "backups", work_path: Optional[str] = None):
-        self.src_path = path
-        suffix = Path(path).suffix
-        self.path = work_path or f"{Path(path).stem}_work{suffix}"
-        self.backup_dir = Path(backup_dir)
-        self._ensure_working_copy()
-
-    def _ensure_working_copy(self) -> None:
-        """Create a modifiable copy of the original plan if needed."""
-        if not Path(self.path).exists() and Path(self.src_path).exists():
-            shutil.copy(self.src_path, self.path)
-            logger.info(f"Copied plan {self.src_path} -> {self.path}")
-
-    def load(self) -> Plan:
-        self._ensure_working_copy()
-        data = json.load(open(self.path))
-        steps = [Step(**s) for s in data.get("steps", [])]
-        plan = Plan(objective=data.get("objective", ""), steps=steps)
-        logger.info(f"Loaded plan: {plan.objective} with {len(steps)} steps")
-        return plan
-
-    def save(self, plan: Plan):
-        with open(self.path, "w") as f:
-            json.dump(
-                {"objective": plan.objective, "steps": [asdict(s) for s in plan.steps]},
-                f,
-                indent=2,
-            )
-        logger.info(f"Saved plan to {self.path}")
-        commit_file(
-            self.path,
-            f"Update plan after changes at {datetime.now(timezone.utc).isoformat()}"
-        )
-
-    def reset(self) -> None:
-        """Remove the working plan and all generated artifacts."""
-        artifacts = [self.path, "execution_log.json", "memory.json"]
-        for art in artifacts:
-            try:
-                Path(art).unlink(missing_ok=True)
-            except Exception as exc:
-                logger.warning(f"Failed to delete {art}: {exc}")
-        for html in glob.glob("dom_step_*.html"):
-            try:
-                Path(html).unlink(missing_ok=True)
-            except Exception as exc:
-                logger.warning(f"Failed to delete DOM snapshot {html}: {exc}")
-        if self.backup_dir.is_dir():
-            shutil.rmtree(self.backup_dir, ignore_errors=True)
-        logger.info("Reset plan state and removed artifacts")
-
-    def backup(self):
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        dest = self.backup_dir / f"plan_{timestamp}.json"
-        self.backup_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy(self.path, dest)
-        logger.info(f"Backup of plan saved to {dest}")
-
-    def restore(self, step_id: int) -> Plan:
-        plan = self.load()
-        for step in plan.steps:
-            if step.id >= step_id:
-                step.status = "pending"
-                step.result = None
-                step.dom_snapshot = None
-        self.save(plan)
-        logger.info(f"Restored plan to step {step_id}")
-        return plan
-
 
 # ─── Planner (retro-causal “look-ahead”) ────────────────────────────────────────
 class Planner:
@@ -362,7 +204,7 @@ def main():
         plan = planner.generate_plan("Merge pull request")
         manager.save(plan)
 
-    plan_dir = Path(plan_file).resolve().parent
+    plan_dir = Path(manager.path).resolve().parent
     cassette_dir = plan_dir / "cassettes"
     executor = StepExecutor(snapshot_dir=plan_dir, cassette_dir=cassette_dir)
 
