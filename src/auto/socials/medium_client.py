@@ -7,7 +7,6 @@ from typing import Dict
 from ..automation.safari import SafariController
 
 from .base import SocialPlugin
-from .registry import register_plugin
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +40,3 @@ class MediumClient(SocialPlugin):
     async def fetch_metrics(self, post_id: str) -> Dict[str, int]:
         logger.info("MediumClient.fetch_metrics called for %s", post_id)
         return {}
-
-
-register_plugin(MediumClient())

@@ -17,5 +17,7 @@ def get_plugin(name: str) -> Optional[SocialPlugin]:
 
 # register built-in plugins
 from .mastodon_client import MastodonClient
+from .medium_client import MediumClient
 
 register_plugin(MastodonClient())
+register_plugin(MediumClient())
