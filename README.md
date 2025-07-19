@@ -143,7 +143,8 @@ python -m auto.automation.plan_executor plan.json
 ```
 
 DOM snapshots and backups are written alongside the plan so failures can be
-inspected or rolled back.
+inspected or rolled back. Each HTML snapshot is also copied to a `cassettes/`
+subdirectory which allows tests to replay DOM content without a live network.
 
 ## Running tests
 

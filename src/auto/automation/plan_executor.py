@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
 from selenium import webdriver  # or playwright, etc.
 from openai import OpenAI  # pseudo-import for LLM planning
 
@@ -163,9 +164,20 @@ class Planner:
 
 # ─── Executor with Pre/Post Condition Checks & Logging ─────────────────────────
 class StepExecutor:
-    def __init__(self, driver: Optional[webdriver.Chrome] = None, max_retries: int = 3):
+    def __init__(
+        self,
+        driver: Optional[webdriver.Chrome] = None,
+        max_retries: int = 3,
+        snapshot_dir: str | Path = ".",
+        cassette_dir: Optional[str | Path] = None,
+    ) -> None:
         self.driver = driver or webdriver.Chrome()
         self.max_retries = max_retries
+        self.snapshot_dir = Path(snapshot_dir)
+        self.cassette_dir = Path(cassette_dir) if cassette_dir else None
+        self.snapshot_dir.mkdir(parents=True, exist_ok=True)
+        if self.cassette_dir:
+            self.cassette_dir.mkdir(parents=True, exist_ok=True)
         # simple in-memory variable store for discovery steps
         self.variables: Dict[str, Any] = {}
 
@@ -272,12 +284,19 @@ class StepExecutor:
                 try:
                     dom = self.driver.page_source
                     filename = f"dom_step_{step.id}_attempt_{attempt}.html"
-                    with open(filename, "w", encoding="utf-8") as f:
+                    path = self.snapshot_dir / filename
+                    with path.open("w", encoding="utf-8") as f:
                         f.write(dom)
-                    step.dom_snapshot = filename
+                    step.dom_snapshot = str(path)
                     logger.info(
-                        f"Saved DOM snapshot for step {step.id} attempt {attempt}: {filename}"
+                        f"Saved DOM snapshot for step {step.id} attempt {attempt}: {path}"
                     )
+                    if self.cassette_dir:
+                        dest = self.cassette_dir / filename
+                        shutil.copy(path, dest)
+                        logger.info(
+                            f"Copied DOM snapshot for step {step.id} to cassette: {dest}"
+                        )
                 except Exception as dom_exc:
                     logger.warning(f"Failed to save DOM for step {step.id}: {dom_exc}")
 
@@ -299,7 +318,9 @@ def main():
         plan = planner.generate_plan("Merge pull request")
         manager.save(plan)
 
-    executor = StepExecutor()
+    plan_dir = Path(plan_file).resolve().parent
+    cassette_dir = plan_dir / "cassettes"
+    executor = StepExecutor(snapshot_dir=plan_dir, cassette_dir=cassette_dir)
 
     for step in plan.steps:
         if step.status == "pending":
