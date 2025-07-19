@@ -128,7 +128,7 @@ Pass `--instance` and `--token` to override the defaults from the environment.
 
 ## Writing social network plugins
 
-Plugins implement the `SocialPlugin` protocol defined in `src/auto/socials/base.py`. Create a new module under `src/auto/socials/` with `post()` and `fetch_metrics()` methods and register an instance using `register_plugin()` from `src/auto/socials/registry.py`. The `network` attribute of the plugin is used to look it up when publishing. See `medium_client.py` for a minimal example.
+Plugins implement the `SocialPlugin` protocol defined in `src/auto/socials/base.py`. Create a module under `src/auto/socials/` and register an instance in `src/auto/socials/registry.py`. The plugin's `network` attribute is used to look it up when publishing. See [docs/plugins.md](docs/plugins.md) for a walkthrough and the `medium_client.py` example.
 
 
 ## Health checks
