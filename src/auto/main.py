@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI, HTTPException
-import asyncio
 from contextlib import asynccontextmanager
+import asyncio
 from .feeds.ingestion import init_db, run_ingest
 from .scheduler import Scheduler
 from . import configure_logging

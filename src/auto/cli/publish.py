@@ -9,12 +9,13 @@ from datetime import datetime, timezone
 import typer
 from sqlalchemy import select, case
 
-from auto.cli.helpers import _parse_when
+from auto.cli.helpers import _parse_when, add_async_command
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, PostPreview, Task
 from auto.preview import create_preview as _create_preview
 
 app = typer.Typer(help="Publishing commands")
+add_async_command(app)
 
 
 @app.command()
@@ -239,14 +240,13 @@ def edit_preview(post_id: str, network: str = "mastodon") -> None:
     print("Preview updated")
 
 
-@app.command()
-def sync_mastodon_posts() -> None:
+@app.async_command()
+async def sync_mastodon_posts() -> None:
     """Mark posts as published if they already appear on Mastodon."""
-    import asyncio
     from auto.db import SessionLocal
     from auto.models import Task
     from auto.mastodon_sync import handle_sync_mastodon_posts
 
     with SessionLocal() as session:
         task = Task(type="sync_mastodon_posts")
-        asyncio.run(handle_sync_mastodon_posts(task, session))
+        await handle_sync_mastodon_posts(task, session)

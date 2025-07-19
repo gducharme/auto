@@ -10,6 +10,9 @@ import time
 
 from auto.automation.safari import SafariController
 from dateutil import parser
+import anyio
+import typer
+from typing import Callable, Any
 
 
 def _delay(seconds: float) -> None:
@@ -169,3 +172,20 @@ def _ci(upgrade: bool = False, freeze: bool = False) -> None:
 
     status = "passed" if result.returncode == 0 else "failed"
     print(f"Tests {status}; coverage: {coverage or 'unknown'}")
+
+
+def add_async_command(app: typer.Typer) -> None:
+    """Add an ``async_command`` decorator to ``app`` using ``anyio.run``."""
+
+    def async_command(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            def wrapper(*f_args: Any, **f_kwargs: Any) -> Any:
+                return anyio.run(func, *f_args, **f_kwargs)
+
+            return app.command(*args, **kwargs)(wrapper)
+
+        return decorator
+
+    setattr(app, "async_command", async_command)

@@ -1,5 +1,5 @@
-import asyncio
 import logging
+import anyio
 from typing import Optional
 
 import httpx
@@ -101,7 +101,7 @@ async def fetch_feed_async(feed_url: Optional[str] = None):
 
 def fetch_feed(feed_url: Optional[str] = None):
     """Synchronous wrapper around :func:`fetch_feed_async`."""
-    return asyncio.run(fetch_feed_async(feed_url))
+    return anyio.run(fetch_feed_async, feed_url)
 
 
 def _extract_text(item, name: str, default: str = ""):
@@ -190,12 +190,15 @@ async def run_ingest_async() -> None:
 
 def run_ingest() -> None:
     """Synchronous wrapper around :func:`run_ingest_async`."""
-    asyncio.run(run_ingest_async())
+    try:
+        anyio.from_thread.run(run_ingest_async)
+    except RuntimeError:
+        anyio.run(run_ingest_async)
 
 
 def main():
     init_db()
-    asyncio.run(run_ingest_async())
+    anyio.run(run_ingest_async)
 
 
 if __name__ == "__main__":
