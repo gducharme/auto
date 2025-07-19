@@ -5,7 +5,7 @@ import json
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task
 from auto.socials.registry import get_plugin
-from auto.scheduler import process_pending, PLUGINS, Scheduler
+from auto.scheduler import process_pending, Scheduler
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
 
