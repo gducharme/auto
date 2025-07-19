@@ -1,39 +1,33 @@
 from auto.automation.medium import MediumClient
 
 
-class DummyElement:
-    def __init__(self, calls, value):
-        self.calls = calls
-        self.value = value
-
-    def send_keys(self, keys):
-        self.calls.append(("send_keys", self.value, keys))
-
-    def click(self):
-        self.calls.append(("click", self.value))
-
-
-class DummyDriver:
+class DummyController:
     def __init__(self):
         self.calls = []
 
-    def get(self, url):
-        self.calls.append(("get", url))
+    def open(self, url):
+        self.calls.append(("open", url))
 
-    def find_element(self, by, value):
-        self.calls.append(("find", by, value))
-        return DummyElement(self.calls, value)
+    def fill(self, selector, text):
+        self.calls.append(("fill", selector, text))
 
-    def quit(self):
-        self.calls.append(("quit",))
+    def click(self, selector):
+        self.calls.append(("click", selector))
+
+    def run_js(self, code):
+        self.calls.append(("js", code))
+        return ""
+
+    def close_tab(self):
+        self.calls.append(("close_tab",))
 
 
 def test_login_uses_env(monkeypatch):
     monkeypatch.setenv("MEDIUM_EMAIL", "user@example.com")
     monkeypatch.setenv("MEDIUM_PASSWORD", "secret")
-    driver = DummyDriver()
-    client = MediumClient(driver=driver)
+    controller = DummyController()
+    client = MediumClient(safari=controller)
     client.login()
-    assert ("get", "https://medium.com/m/signin") in driver.calls
-    assert ("send_keys", "email", "user@example.com") in driver.calls
-    assert ("send_keys", "password", "secret") in driver.calls
+    assert ("open", "https://medium.com/m/signin") in controller.calls
+    assert ("fill", "input[name='email']", "user@example.com") in controller.calls
+    assert ("fill", "input[name='password']", "secret") in controller.calls

@@ -1,6 +1,7 @@
 import os
 import pytest
-from selenium import webdriver
+
+from auto.automation.safari import SafariController
 from auto.automation.medium import MediumClient  # noqa: E402
 
 
@@ -12,11 +13,8 @@ def test_medium_login_real():
     if not email or not password:
         pytest.skip("MEDIUM_EMAIL and MEDIUM_PASSWORD must be set")
 
-    options = webdriver.FirefoxOptions()
-    options.add_argument("-headless")
-    driver = webdriver.Firefox(options=options)
-
-    client = MediumClient(driver=driver)
+    controller = SafariController()
+    client = MediumClient(safari=controller)
     try:
         client.login()
     finally:
