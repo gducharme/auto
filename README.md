@@ -103,6 +103,8 @@ python -m auto.cli publish edit-preview --post-id <id> --network mastodon
 
 `generate-preview` uses a local LLM when available and falls back to a simple template. Previews are only created when the post has been scheduled.
 
+For a step-by-step walkthrough of generating, scheduling and editing previews, see [docs/previews.md](docs/previews.md).
+
 ## Syncing Mastodon posts
 
 If you previously published to Mastodon outside of Auto, run the sync command to
