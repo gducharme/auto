@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import json
 
 from auto.db import SessionLocal
-from auto.models import Post, PostStatus, Task
+from auto.models import Post, PostStatus, Task, PostPreview
 from auto.socials.registry import get_plugin
 from auto.scheduler import process_pending, Scheduler
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
@@ -138,6 +138,37 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
         t = session.get(Task, task_id)
         assert t.status == "completed"
     assert POSTS_FAILED.labels(network="mastodon")._value.get() == start + 1
+
+
+def test_create_preview_task(test_db_engine):
+    with SessionLocal() as session:
+        post = Post(
+            id="3", title="T3", link="http://example3", summary="", published=""
+        )
+        session.add(post)
+        session.add(
+            PostStatus(
+                post_id="3",
+                network="mastodon",
+                scheduled_at=datetime.now(timezone.utc),
+            )
+        )
+        task = Task(
+            type="create_preview",
+            payload=json.dumps({"post_id": "3", "network": "mastodon"}),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+        )
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    asyncio.run(run_process())
+
+    with SessionLocal() as session:
+        preview = session.get(PostPreview, {"post_id": "3", "network": "mastodon"})
+        assert preview is not None
+        t = session.get(Task, task_id)
+        assert t.status == "completed"
 
 
 def test_scheduler_start_stop(test_db_engine, monkeypatch):

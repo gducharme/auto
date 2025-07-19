@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from typing import Optional
+import json
+from datetime import datetime, timezone
 
 import typer
 from sqlalchemy import select, case
 
 from auto.cli.helpers import _parse_when
 from auto.db import SessionLocal
-from auto.models import Post, PostStatus, PostPreview
+from auto.models import Post, PostStatus, PostPreview, Task
+from auto.preview import create_preview as _create_preview
 
 app = typer.Typer(help="Publishing commands")
 
@@ -24,14 +27,11 @@ def list_posts() -> None:
         .exists()
     )
 
-    stmt = (
-        select(
-            Post.id,
-            Post.title,
-            case((exists_stmt, "published"), else_="pending").label("published"),
-        )
-        .order_by(Post.published.desc())
-    )
+    stmt = select(
+        Post.id,
+        Post.title,
+        case((exists_stmt, "published"), else_="pending").label("published"),
+    ).order_by(Post.published.desc())
 
     with SessionLocal() as session:
         rows = session.execute(stmt).all()
@@ -60,7 +60,9 @@ def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
                 ps.scheduled_at = scheduled_at
                 ps.status = "pending"
             session.commit()
-    print(f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}")
+    print(
+        f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}"
+    )
 
 
 @app.command()
@@ -97,7 +99,9 @@ def quick_post(network: str = "mastodon") -> None:
 
 
 @app.command()
-def trending_tags(limit: int = 10, instance: Optional[str] = None, token: Optional[str] = None) -> None:
+def trending_tags(
+    limit: int = 10, instance: Optional[str] = None, token: Optional[str] = None
+) -> None:
     """Display trending tags from Mastodon."""
 
     from mastodon import Mastodon
@@ -130,6 +134,29 @@ def list_previews() -> None:
 
 
 @app.command()
+def create_preview(
+    post_id: str, network: str = "mastodon", when: Optional[str] = None
+) -> None:
+    """Schedule a preview generation task."""
+
+    scheduled_at = _parse_when(when) if when else datetime.now(timezone.utc)
+
+    with SessionLocal() as session:
+        if session.get(Post, post_id) is None:
+            print(f"Post {post_id} not found")
+            return
+        status = session.get(PostStatus, {"post_id": post_id, "network": network})
+        if status is None:
+            print(f"Post {post_id} is not scheduled for {network}")
+            return
+        payload = json.dumps({"post_id": post_id, "network": network})
+        task = Task(type="create_preview", payload=payload, scheduled_at=scheduled_at)
+        session.add(task)
+        session.commit()
+    print(f"Preview task scheduled for {post_id} at {scheduled_at.isoformat()}")
+
+
+@app.command()
 def generate_preview(
     post_id: str,
     network: str = "mastodon",
@@ -140,40 +167,20 @@ def generate_preview(
 ) -> None:
     """Generate or update a preview template for a scheduled post."""
 
-    import dspy
-
     with SessionLocal() as session:
-        status = session.get(PostStatus, {"post_id": post_id, "network": network})
-        if status is None:
-            print(f"Post {post_id} is not scheduled for {network}")
+        try:
+            _create_preview(
+                session,
+                post_id,
+                network,
+                use_llm=use_llm,
+                model=model,
+                api_base=api_base,
+                model_type=model_type,
+            )
+        except ValueError as exc:
+            print(str(exc))
             return
-        post = session.get(Post, post_id)
-        if post is None:
-            print(f"Post {post_id} not found")
-            return
-        preview = session.get(PostPreview, {"post_id": post_id, "network": network})
-
-        if use_llm:
-            try:
-                lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
-                dspy.configure(lm=lm)
-                prompt = (
-                    f"Create a short template for sharing the post titled '{post.title}'. "
-                    "Use { post.link } as a placeholder for the link."
-                )
-                content = dspy.chat(prompt).strip()
-            except Exception as exc:
-                print(f"LLM failed: {exc}; using default template")
-                content = f"{post.title} {{ post.link }}"
-        else:
-            content = f"{post.title} {{ post.link }}"
-
-        if preview is None:
-            preview = PostPreview(post_id=post_id, network=network, content=content)
-            session.add(preview)
-        else:
-            preview.content = content
-        session.commit()
     print("Preview saved")
 
 
