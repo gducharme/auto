@@ -31,4 +31,3 @@
 - Centralize configuration with a `Settings` class that loads environment variables at runtime.
 - Add a GitHub Actions workflow for tests, linting, and formatting.
 - Use context managers everywhere `SessionLocal()` is called.
-- Add a simple `mypy` configuration and start annotating modules.

@@ -42,7 +42,7 @@ def register_task_handler(
     return decorator
 
 
-async def _publish(status: PostStatus, session):
+async def _publish(status: PostStatus, session: Session) -> None:
     post = session.get(Post, status.post_id)
     if not post:
         logger.error("Post %s not found", status.post_id)
@@ -97,7 +97,7 @@ async def handle_create_preview(task: Task, session: Session) -> None:
     _create_preview(session, post_id, network)
 
 
-async def process_pending(max_attempts: Optional[int] = None):
+async def process_pending(max_attempts: Optional[int] = None) -> None:
     """Fetch due tasks and dispatch them to registered handlers."""
     now = datetime.now(timezone.utc)
     if max_attempts is None:
