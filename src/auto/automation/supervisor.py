@@ -7,11 +7,8 @@ from datetime import datetime, timedelta, timezone
 from openai import OpenAI
 from ..utils.periodic import PeriodicWorker
 
-from .plan_executor import (
-    ExecutionLogger,
-    MemoryModule,
-    PlanManager,
-)
+from ..plan.logging import ExecutionLogger, MemoryModule
+from ..plan.types import PlanManager
 from .retro_planner import RetroPlanner
 
 logger = logging.getLogger(__name__)
