@@ -58,6 +58,7 @@ scheduler on its own:
 ```bash
 python -m auto.scheduler
 ```
+The command logs when the loop starts and stops so you know it's running.
 
 ## Ingesting Substack posts
 
