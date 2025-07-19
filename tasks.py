@@ -47,11 +47,12 @@ def generate_preview(c, post_id, network="mastodon"):
 
 
 @task
-def create_preview(c, post_id, network="mastodon", when=None):
+def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
     """Schedule preview generation."""
     when_flag = f"--when {when}" if when else ""
+    dry_flag = "--dry-run" if dry_run else ""
     c.run(
-        f"python -m auto.cli publish create-preview --post-id {post_id} --network {network} {when_flag}",
+        f"python -m auto.cli publish create-preview --post-id {post_id} --network {network} {when_flag} {dry_flag}",
         pty=True,
     )
 
