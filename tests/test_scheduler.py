@@ -4,7 +4,10 @@ import json
 
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task, PostPreview
-from auto.socials.registry import get_plugin
+from auto.socials import registry
+from auto.socials.registry import PluginRegistry
+from auto.socials.mastodon_client import MastodonClient
+import pytest
 from auto.scheduler import process_pending, Scheduler
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
@@ -15,6 +18,14 @@ class DummyPoster:
     @classmethod
     def post(cls, text):
         cls.called = True
+
+
+@pytest.fixture(autouse=True)
+def setup_plugins():
+    registry.plugins = PluginRegistry()
+    registry.plugins.register(MastodonClient())
+    yield
+    registry.plugins = None
 
 
 async def run_process():
@@ -47,7 +58,8 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     async def fake_post(text, visibility="unlisted"):
         DummyPoster.post(text)
 
-    plugin = get_plugin("mastodon")
+    assert registry.plugins is not None
+    plugin = registry.plugins.get("mastodon")
     assert plugin is not None
     monkeypatch.setattr(plugin, "post", fake_post)
     monkeypatch.setenv("POST_DELAY", "0")
@@ -123,7 +135,8 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
     async def fail_post(text, visibility="unlisted"):
         raise RuntimeError("boom")
 
-    plugin = get_plugin("mastodon")
+    assert registry.plugins is not None
+    plugin = registry.plugins.get("mastodon")
     assert plugin is not None
     monkeypatch.setattr(plugin, "post", fail_post)
     monkeypatch.setenv("POST_DELAY", "0")
