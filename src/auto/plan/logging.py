@@ -11,12 +11,14 @@ logger = logging.getLogger(__name__)
 
 def configure_logging() -> None:
     """Initialize logging when the plan executor starts."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        filename="agent.log",
-        filemode="a",
-    )
+    root_logger = logging.getLogger()
+    if not root_logger.handlers:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s [%(levelname)s] %(message)s",
+            filename="agent.log",
+            filemode="a",
+        )
 
 
 class ExecutionLogger:
