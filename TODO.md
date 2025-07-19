@@ -2,7 +2,6 @@
 
 ## High Priority
 
-- Refactor `src/auto/automation/plan_executor.py` into focused submodules so types live in `plan/types.py` and logging helpers in `plan/logging.py`.
 - Remove the module-level scheduler globals and create `Scheduler` instances in `main.py`.
 
 ## Medium Priority
