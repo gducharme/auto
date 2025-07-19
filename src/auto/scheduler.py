@@ -15,7 +15,6 @@ from .db import SessionLocal, get_engine
 from .socials.registry import get_plugin
 
 # Temporary alias for tests using the old PLUGINS mapping
-from .socials.registry import _PLUGINS as PLUGINS
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .utils.periodic import PeriodicWorker
 from .config import (
@@ -23,6 +22,7 @@ from .config import (
     get_post_delay,
     get_max_attempts,
 )
+from .preview import create_preview as _create_preview
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +87,14 @@ async def handle_publish_post(task: Task, session: Session) -> None:
     if status is None:
         raise ValueError(f"status not found for {post_id}/{network}")
     await _publish(status, session)
+
+
+@register_task_handler("create_preview")
+async def handle_create_preview(task: Task, session: Session) -> None:
+    data = json.loads(task.payload or "{}")
+    post_id = data.get("post_id")
+    network = data.get("network", "mastodon")
+    _create_preview(session, post_id, network)
 
 
 async def process_pending(max_attempts: Optional[int] = None) -> None:
@@ -170,7 +178,7 @@ class Scheduler:
                 return None
 
             # ensure ingest handler and other task handlers are registered
-            from . import ingest_scheduler, mastodon_sync
+            from . import ingest_scheduler
 
             with SessionLocal() as session:
                 ingest_scheduler.ensure_initial_task(session)
