@@ -48,9 +48,10 @@ migrations.
 ## Scheduler
 
 The background scheduler is started automatically during application
-startup.  The FastAPI lifespan in `src/auto/main.py` calls
-`scheduler.start()` which continuously executes entries from the
-`tasks` table.  Tasks have a ``type`` and optional JSON payload.  Current
+startup.  The FastAPI lifespan in `src/auto/main.py` creates a
+`Scheduler` instance and calls its `start()` method, which continuously
+executes entries from the `tasks` table.  Tasks have a ``type`` and
+optional JSON payload.  Current
 types are ``publish_post`` and ``ingest_feed``.  You can also run the
 scheduler on its own:
 
