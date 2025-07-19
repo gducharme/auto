@@ -137,13 +137,20 @@ async def _scheduler_iteration() -> None:
 
 async def run_scheduler() -> None:
     """Run the scheduler loop until cancelled."""
-    worker = PeriodicWorker(_scheduler_iteration, get_poll_interval)
-    await worker.start()
+    from . import configure_logging
+
+    configure_logging()
+    sched = Scheduler()
+    task = await sched.start()
+    if task is None:
+        return
+
+    logger.info("Scheduler started; press Ctrl+C to exit")
     try:
-        if worker.task:
-            await worker.task
+        await task
     finally:
-        await worker.stop()
+        await sched.stop()
+        logger.info("Scheduler stopped")
 
 
 class Scheduler:
