@@ -1,5 +1,6 @@
 from auto.cli import automation as tasks
 
+
 class DummyController:
     def __init__(self):
         self.calls = []
@@ -25,18 +26,26 @@ class DummyController:
         return "OK"
 
 
-def test_control_safari(monkeypatch):
+def test_control_safari(monkeypatch, capsys):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     key_inputs = iter(["1", "4", "6"])  # open, run_js, quit
-    text_inputs = iter([
-        "https://example.com",
-        "2+2",
-    ])
+    text_inputs = iter(
+        [
+            "https://example.com",
+            "2+2",
+        ]
+    )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 
     tasks.control_safari()
 
+    captured = capsys.readouterr()
+
     assert ("open", "https://example.com") in controller.calls
     assert ("run_js", "2+2") in controller.calls
+    out = captured.out
+    assert "Command log:" in out
+    assert "open https://example.com" in out
+    assert "run_js 2+2" in out
