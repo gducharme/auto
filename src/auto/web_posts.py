@@ -19,7 +19,9 @@ router = APIRouter()
 @router.get("/posts/new", response_class=HTMLResponse)
 async def new_post(request: Request) -> HTMLResponse:
     """Render a simple form for creating posts."""
-    return TEMPLATES.TemplateResponse("create_post.html", {"request": request})
+    # Pass the request as the first parameter to avoid deprecation warnings
+    # from Starlette's TemplateResponse.
+    return TEMPLATES.TemplateResponse(request, "create_post.html")
 
 
 @router.post("/posts")
