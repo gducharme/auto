@@ -199,3 +199,15 @@ def edit_preview(post_id: str, network: str = "mastodon") -> None:
         session.commit()
     print("Preview updated")
 
+@app.command()
+def sync_mastodon_posts() -> None:
+    """Mark posts as published if they already appear on Mastodon."""
+    import asyncio
+    from auto.db import SessionLocal
+    from auto.models import Task
+    from auto.mastodon_sync import handle_sync_mastodon_posts
+
+    with SessionLocal() as session:
+        task = Task(type="sync_mastodon_posts")
+        asyncio.run(handle_sync_mastodon_posts(task, session))
+
