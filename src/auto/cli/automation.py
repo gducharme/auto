@@ -19,6 +19,22 @@ from auto.html_helpers import fetch_dom as fetch_dom_html, count_link_states
 from auto.html_utils import extract_links_with_green_span, parse_codex_tasks
 from auto.automation.safari import SafariController
 
+
+def _read_key() -> str:
+    """Read a single character from stdin without requiring Enter."""
+    import sys
+    import termios
+    import tty
+
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    return ch
+
 app = typer.Typer(help="Automation commands")
 
 
@@ -222,3 +238,58 @@ def test_task(codex_url: str = "https://chatgpt.com/codex") -> None:
 })()
 """
     controller.run_js(js)
+
+@app.command()
+def control_safari() -> None:
+    """Interactively control Safari via a menu loop."""
+
+    controller = SafariController()
+    commands = [
+        ("open", "Open a URL"),
+        ("click", "Click an element by CSS selector"),
+        ("fill", "Fill a selector with text"),
+        ("run_js", "Run arbitrary JavaScript"),
+        ("close_tab", "Close the current tab"),
+        ("quit", "Exit the menu"),
+    ]
+
+    while True:
+        print("\nAvailable commands:")
+        for i, (_, desc) in enumerate(commands, 1):
+            print(f"  {i}. {desc}")
+        print("Select option [1-{}]: ".format(len(commands)), end="", flush=True)
+        choice_idx = _read_key()
+        print(choice_idx)  # echo the selected key
+        if not choice_idx.isdigit() or not (1 <= int(choice_idx) <= len(commands)):
+            print("Unknown command")
+            continue
+
+        choice, _ = commands[int(choice_idx) - 1]
+        if choice == "quit":
+            break
+        elif choice == "open":
+            url = input("URL: ")
+            result = controller.open(url)
+            if result:
+                print(result)
+        elif choice == "click":
+            selector = input("Selector: ")
+            result = controller.click(selector)
+            if result:
+                print(result)
+        elif choice == "fill":
+            selector = input("Selector: ")
+            text = input("Text: ")
+            result = controller.fill(selector, text)
+            if result:
+                print(result)
+        elif choice == "run_js":
+            code = input("JavaScript: ")
+            result = controller.run_js(code)
+            if result:
+                print(result)
+        elif choice == "close_tab":
+            result = controller.close_tab()
+            if result:
+                print(result)
+
