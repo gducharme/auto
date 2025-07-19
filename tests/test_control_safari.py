@@ -1,4 +1,7 @@
 from auto.cli import automation as tasks
+from pathlib import Path
+import json
+import shutil
 
 
 class DummyController:
@@ -29,11 +32,13 @@ class DummyController:
 def test_control_safari(monkeypatch, capsys):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
-    key_inputs = iter(["1", "4", "6"])  # open, run_js, quit
+    monkeypatch.setattr(tasks, "fetch_dom_html", lambda: "<html></html>")
+
+    key_inputs = iter(["1", "5", "7"])  # open, fetch_dom, quit
     text_inputs = iter(
         [
+            "demo_test",
             "https://example.com",
-            "2+2",
         ]
     )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
@@ -44,8 +49,14 @@ def test_control_safari(monkeypatch, capsys):
     captured = capsys.readouterr()
 
     assert ("open", "https://example.com") in controller.calls
-    assert ("run_js", "2+2") in controller.calls
+
+    test_dir = Path("tests/fixtures/demo_test")
+    assert (test_dir / "1.html").exists()
+    log = json.loads((test_dir / "commands.json").read_text())
+    assert log[0] == ["open", "https://example.com"]
+    assert log[1] == ["fetch_dom"]
+
     out = captured.out
     assert "Command log:" in out
-    assert "open https://example.com" in out
-    assert "run_js 2+2" in out
+
+    shutil.rmtree(test_dir)

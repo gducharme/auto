@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 import subprocess
+import json
+import shutil
 
 from typing import Optional
 
@@ -245,17 +247,26 @@ def test_task(codex_url: str = "https://chatgpt.com/codex") -> None:
 def control_safari() -> None:
     """Interactively control Safari via a menu loop."""
 
+    test_name = input("Test name: ")
+    fixtures_root = Path("tests/fixtures")
+    test_dir = fixtures_root / test_name
+    if test_dir.exists():
+        shutil.rmtree(test_dir)
+    test_dir.mkdir(parents=True, exist_ok=True)
+
     controller = SafariController()
     commands = [
         ("open", "Open a URL"),
         ("click", "Click an element by CSS selector"),
         ("fill", "Fill a selector with text"),
         ("run_js", "Run arbitrary JavaScript"),
+        ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
         ("quit", "Exit the menu"),
     ]
 
     collected: list[tuple[str, ...]] = []
+    step = 1
 
     while True:
         print("\nAvailable commands:")
@@ -296,6 +307,13 @@ def control_safari() -> None:
             result = controller.run_js(code)
             if result:
                 print(result)
+        elif choice == "fetch_dom":
+            collected.append(("fetch_dom",))
+            dom = fetch_dom_html()
+            dest = test_dir / f"{step}.html"
+            dest.write_text(dom)
+            step += 1
+            print(f"Saved DOM to {dest}")
         elif choice == "close_tab":
             collected.append(("close_tab",))
             result = controller.close_tab()
@@ -306,3 +324,4 @@ def control_safari() -> None:
         print("\nCommand log:")
         for entry in collected:
             print(" ".join(entry))
+        (test_dir / "commands.json").write_text(json.dumps(collected, indent=2))
