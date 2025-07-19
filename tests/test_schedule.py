@@ -1,4 +1,3 @@
-
 from auto.cli import publish as tasks
 from auto.cli.helpers import _parse_when  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402
@@ -82,3 +81,32 @@ def test_parse_when_aware():
     result = _parse_when("2023-01-02T01:02:03+02:00")
     assert result == datetime(2023, 1, 1, 23, 2, 3, tzinfo=timezone.utc)
     assert result.tzinfo is timezone.utc
+
+
+def test_list_schedule_outputs(test_db_engine, capsys):
+    from datetime import datetime, timezone
+    from auto.models import Post
+
+    with SessionLocal() as session:
+        session.add(
+            Post(
+                id="1",
+                title="Title",
+                link="http://example",
+                summary="",
+                published="",
+            )
+        )
+        session.add(
+            PostStatus(
+                post_id="1",
+                network="mastodon",
+                scheduled_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            )
+        )
+        session.commit()
+
+    tasks.list_schedule()
+
+    captured = capsys.readouterr()
+    assert "1\tmastodon" in captured.out
