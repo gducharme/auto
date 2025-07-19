@@ -28,6 +28,7 @@ The following variables are used:
 - `INGEST_INTERVAL` – seconds between automatic feed ingestions,
   default `600`.
 - `POST_DELAY` – pause after each publish attempt, default `1` second.
+- `MASTODON_SYNC_DEBUG` – set to `1` to print Mastodon statuses during sync.
 - `LOG_LEVEL` – log verbosity used by `configure_logging()`, default `INFO`.
 
 Log output is sent to stdout when `configure_logging()` is called at

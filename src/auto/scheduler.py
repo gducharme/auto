@@ -162,8 +162,8 @@ class Scheduler:
                 logger.warning("tasks table missing; scheduler not started")
                 return None
 
-            # ensure ingest handler is registered and an initial task exists
-            from . import ingest_scheduler
+            # ensure ingest handler and other task handlers are registered
+            from . import ingest_scheduler, mastodon_sync
 
             with SessionLocal() as session:
                 ingest_scheduler.ensure_initial_task(session)

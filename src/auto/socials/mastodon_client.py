@@ -47,6 +47,29 @@ class MastodonClient(SocialPlugin):
                 "favourites": data.get("favourites_count", 0),
             }
 
+    async def fetch_all_statuses(self) -> list[dict]:
+        """Return all statuses for the authenticated account."""
+        from mastodon import Mastodon
+
+        token = get_mastodon_token()
+        instance = get_mastodon_instance()
+
+        def _sync_fetch() -> list[dict]:
+            masto = Mastodon(access_token=token, api_base_url=instance)
+            me = masto.account_verify_credentials()
+            account_id = me["id"]
+            statuses: list[dict] = []
+            max_id = None
+            while True:
+                page = masto.account_statuses(account_id, max_id=max_id, limit=40)
+                if not page:
+                    break
+                statuses.extend(page)
+                max_id = page[-1]["id"]
+            return statuses
+
+        return await asyncio.to_thread(_sync_fetch)
+
 
 async def post_to_mastodon_async(status: str, visibility: str = "private") -> None:
     """Backward-compatible wrapper around :class:`MastodonClient`."""
