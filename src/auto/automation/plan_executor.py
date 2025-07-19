@@ -4,19 +4,25 @@ import subprocess
 import logging
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+import glob
+import argparse
 from selenium import webdriver  # or playwright, etc.
 from openai import OpenAI  # pseudo-import for LLM planning
 
 # ─── Logging Configuration ─────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    filename="agent.log",
-    filemode="a",
-)
 logger = logging.getLogger(__name__)
+
+
+def configure_logging() -> None:
+    """Initialize logging when the executor starts."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        filename="agent.log",
+        filemode="a",
+    )
 
 
 # ─── Data Structures ───────────────────────────────────────────────────────────
@@ -99,11 +105,21 @@ def commit_file(path: str, message: str):
 
 # ─── Plan Management ────────────────────────────────────────────────────────────
 class PlanManager:
-    def __init__(self, path: str, backup_dir: str = "backups"):
-        self.path = path
-        self.backup_dir = backup_dir
+    def __init__(self, path: str, backup_dir: str = "backups", work_path: Optional[str] = None):
+        self.src_path = path
+        suffix = Path(path).suffix
+        self.path = work_path or f"{Path(path).stem}_work{suffix}"
+        self.backup_dir = Path(backup_dir)
+        self._ensure_working_copy()
+
+    def _ensure_working_copy(self) -> None:
+        """Create a modifiable copy of the original plan if needed."""
+        if not Path(self.path).exists() and Path(self.src_path).exists():
+            shutil.copy(self.src_path, self.path)
+            logger.info(f"Copied plan {self.src_path} -> {self.path}")
 
     def load(self) -> Plan:
+        self._ensure_working_copy()
         data = json.load(open(self.path))
         steps = [Step(**s) for s in data.get("steps", [])]
         plan = Plan(objective=data.get("objective", ""), steps=steps)
@@ -119,12 +135,31 @@ class PlanManager:
             )
         logger.info(f"Saved plan to {self.path}")
         commit_file(
-            self.path, f"Update plan after changes at {datetime.now().isoformat()}"
+            self.path,
+            f"Update plan after changes at {datetime.now(timezone.utc).isoformat()}"
         )
 
+    def reset(self) -> None:
+        """Remove the working plan and all generated artifacts."""
+        artifacts = [self.path, "execution_log.json", "memory.json"]
+        for art in artifacts:
+            try:
+                Path(art).unlink(missing_ok=True)
+            except Exception as exc:
+                logger.warning(f"Failed to delete {art}: {exc}")
+        for html in glob.glob("dom_step_*.html"):
+            try:
+                Path(html).unlink(missing_ok=True)
+            except Exception as exc:
+                logger.warning(f"Failed to delete DOM snapshot {html}: {exc}")
+        if self.backup_dir.is_dir():
+            shutil.rmtree(self.backup_dir, ignore_errors=True)
+        logger.info("Reset plan state and removed artifacts")
+
     def backup(self):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        dest = f"{self.backup_dir}/plan_{timestamp}.json"
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        dest = self.backup_dir / f"plan_{timestamp}.json"
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy(self.path, dest)
         logger.info(f"Backup of plan saved to {dest}")
 
@@ -305,8 +340,17 @@ class StepExecutor:
 
 # ─── Main Orchestration ────────────────────────────────────────────────────────
 def main():
-    plan_file = "plan.json"
-    manager = PlanManager(plan_file)
+    configure_logging()
+    parser = argparse.ArgumentParser(description="Execute or manage a plan")
+    parser.add_argument("plan", nargs="?", default="plan.json", help="Source plan file")
+    parser.add_argument("--reset", action="store_true", help="Remove working plan and artifacts")
+    args = parser.parse_args()
+
+    manager = PlanManager(args.plan)
+
+    if args.reset:
+        manager.reset()
+        return
     exec_logger = ExecutionLogger()
     memory = MemoryModule()
 
@@ -330,7 +374,7 @@ def main():
 
             # structured log event
             event = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "step_id": step.id,
                 "description": step.description or step.type,
                 "status": step.status,
