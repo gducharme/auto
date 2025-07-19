@@ -12,6 +12,9 @@
 ## Code Smells
 - Unused imports reported by `ruff` should be cleaned up.
 - AppleScript automation assumes the "Google" Mail account, which is brittle.
+- `mastodon_sync.py` and CLI modules print messages instead of using the logger.
+- `socials/registry.py` registers plugins at import time causing side effects.
+- Path lookups like `Path(__file__).resolve().parents[3]` break if the layout changes.
 
 ## DRY
 - ~~Create a `PeriodicWorker` helper in `src/auto/utils/periodic.py` and use it in the scheduler and supervisor loops.~~
