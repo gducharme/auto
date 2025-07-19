@@ -13,6 +13,9 @@ from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
 from .socials.registry import get_plugin
+
+# Temporary alias for tests using the old PLUGINS mapping
+from .socials.registry import _PLUGINS as PLUGINS
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .utils.periodic import PeriodicWorker
 from .config import (
@@ -172,7 +175,6 @@ class Scheduler:
     async def stop(self) -> None:
         """Stop the background scheduler loop."""
         await self._worker.stop()
-
 
 
 def main():
