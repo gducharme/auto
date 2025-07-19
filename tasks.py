@@ -63,6 +63,15 @@ def update_deps(c, freeze=False):
 
 
 @task
+def cleanup_branches(c, remote="origin", main="main"):
+    """Delete branches merged into main locally and on the remote."""
+    c.run(
+        f"python -m auto.cli maintenance cleanup-branches --remote {remote} --main {main}",
+        pty=True,
+    )
+
+
+@task
 def parse_plan(c):
     """Parse PLAN.md into task files."""
     c.run(

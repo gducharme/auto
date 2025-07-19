@@ -50,3 +50,11 @@ def update_deps(freeze: bool = False) -> None:
 
     update_dependencies(freeze=freeze)
 
+
+
+@app.command()
+def cleanup_branches(remote: str = "origin", main: str = "main") -> None:
+    """Delete branches merged into ``main`` locally and on ``remote``."""
+    from auto.git_utils import cleanup_merged_branches
+
+    cleanup_merged_branches(remote=remote, main=main)
