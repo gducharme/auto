@@ -35,6 +35,7 @@ def _read_key() -> str:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     return ch
 
+
 app = typer.Typer(help="Automation commands")
 
 
@@ -239,6 +240,7 @@ def test_task(codex_url: str = "https://chatgpt.com/codex") -> None:
 """
     controller.run_js(js)
 
+
 @app.command()
 def control_safari() -> None:
     """Interactively control Safari via a menu loop."""
@@ -252,6 +254,8 @@ def control_safari() -> None:
         ("close_tab", "Close the current tab"),
         ("quit", "Exit the menu"),
     ]
+
+    collected: list[tuple[str, ...]] = []
 
     while True:
         print("\nAvailable commands:")
@@ -269,27 +273,36 @@ def control_safari() -> None:
             break
         elif choice == "open":
             url = input("URL: ")
+            collected.append(("open", url))
             result = controller.open(url)
             if result:
                 print(result)
         elif choice == "click":
             selector = input("Selector: ")
+            collected.append(("click", selector))
             result = controller.click(selector)
             if result:
                 print(result)
         elif choice == "fill":
             selector = input("Selector: ")
             text = input("Text: ")
+            collected.append(("fill", selector, text))
             result = controller.fill(selector, text)
             if result:
                 print(result)
         elif choice == "run_js":
             code = input("JavaScript: ")
+            collected.append(("run_js", code))
             result = controller.run_js(code)
             if result:
                 print(result)
         elif choice == "close_tab":
+            collected.append(("close_tab",))
             result = controller.close_tab()
             if result:
                 print(result)
 
+    if collected:
+        print("\nCommand log:")
+        for entry in collected:
+            print(" ".join(entry))
