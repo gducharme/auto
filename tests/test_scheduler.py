@@ -4,7 +4,8 @@ import json
 
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task
-from auto.scheduler import process_pending, PLUGINS
+from auto.scheduler import process_pending
+from auto.socials.registry import get_plugin
 from auto.metrics import POSTS_PUBLISHED, POSTS_FAILED
 
 
@@ -46,7 +47,9 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     async def fake_post(text, visibility="unlisted"):
         DummyPoster.post(text)
 
-    monkeypatch.setattr(PLUGINS["mastodon"], "post", fake_post)
+    plugin = get_plugin("mastodon")
+    assert plugin is not None
+    monkeypatch.setattr(plugin, "post", fake_post)
     monkeypatch.setenv("POST_DELAY", "0")
 
     start = POSTS_PUBLISHED.labels(network="mastodon")._value.get()
@@ -120,7 +123,9 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
     async def fail_post(text, visibility="unlisted"):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(PLUGINS["mastodon"], "post", fail_post)
+    plugin = get_plugin("mastodon")
+    assert plugin is not None
+    monkeypatch.setattr(plugin, "post", fail_post)
     monkeypatch.setenv("POST_DELAY", "0")
 
     start = POSTS_FAILED.labels(network="mastodon")._value.get()
