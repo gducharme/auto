@@ -9,6 +9,9 @@ from alembic import command
 from dateutil import parser
 from pathlib import Path
 
+from contextlib import contextmanager
+from typing import Iterator
+
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
@@ -26,21 +29,25 @@ DB_PATH = str(BASE_DIR / "substack.db")
 ALEMBIC_INI = BASE_DIR / "alembic.ini"
 
 
+@contextmanager
 def _session_for_path(
     db_path: str,
     *,
     engine: Engine | None = None,
     session_factory: sessionmaker | None = None,
-) -> Session:
-    """Return a SQLAlchemy session for the given database path or engine."""
+) -> Iterator[Session]:
+    """Yield a session for the given database path or engine."""
     if session_factory is not None:
-        return session_factory()
-
-    if engine is None:
-        return SessionLocal()
-
-    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    return Session()
+        session = session_factory()
+    elif engine is None:
+        session = SessionLocal()
+    else:
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 def init_db(
