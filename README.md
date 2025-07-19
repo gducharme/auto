@@ -101,6 +101,10 @@ python -m auto.cli publish edit-preview --post-id <id> --network mastodon
 
 `generate-preview` uses a local LLM when available and falls back to a simple template. Previews are only created when the post has been scheduled.
 
+## Writing social network plugins
+
+Plugins implement the `SocialPlugin` protocol defined in `src/auto/socials/base.py`. Create a new module under `src/auto/socials/` with `post()` and `fetch_metrics()` methods and register an instance using `register_plugin()` from `src/auto/socials/registry.py`. The `network` attribute of the plugin is used to look it up when publishing. See `medium_client.py` for a minimal example.
+
 
 ## Health checks
 

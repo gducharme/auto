@@ -12,8 +12,7 @@ from sqlalchemy import and_, or_
 from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
-from .socials.base import SocialPlugin
-from .socials.mastodon_client import MastodonClient
+from .socials.registry import get_plugin
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
 from .utils.periodic import PeriodicWorker
 from .config import (
@@ -25,11 +24,6 @@ from .config import (
 logger = logging.getLogger(__name__)
 
 TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
-
-# Available social network plugins keyed by network name.
-PLUGINS: Dict[str, SocialPlugin] = {
-    "mastodon": MastodonClient(),
-}
 
 
 def register_task_handler(
@@ -55,7 +49,7 @@ async def _publish(status: PostStatus, session):
         session.commit()
         return
     try:
-        plugin = PLUGINS.get(status.network)
+        plugin = get_plugin(status.network)
         if plugin is None:
             raise ValueError(f"Unsupported network {status.network}")
         preview = session.get(
