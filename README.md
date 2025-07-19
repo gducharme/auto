@@ -144,7 +144,8 @@ python -m auto.automation.plan_executor plan.json
 ```
 
 DOM snapshots and backups are written alongside the plan so failures can be
-inspected or rolled back.
+inspected or rolled back. Use the `--reset` flag to delete the working plan and
+all generated artifacts.
 
 ## Running tests
 
