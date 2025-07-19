@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Move plugin registration to `src/auto/socials/registry.py` and document how to write a plugin with an example `medium_client.py`.
 
 ## Low Priority
 - Expand social network support beyond Mastodon.
