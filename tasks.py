@@ -47,6 +47,16 @@ def generate_preview(c, post_id, network="mastodon"):
 
 
 @task
+def create_preview(c, post_id, network="mastodon", when=None):
+    """Schedule preview generation."""
+    when_flag = f"--when {when}" if when else ""
+    c.run(
+        f"python -m auto.cli publish create-preview --post-id {post_id} --network {network} {when_flag}",
+        pty=True,
+    )
+
+
+@task
 def edit_preview(c, post_id, network="mastodon"):
     """Interactively edit a stored preview."""
     c.run(
