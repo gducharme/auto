@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from pathlib import Path
 import argparse
-from selenium import webdriver  # or playwright, etc.
+from .safari import SafariController
 from openai import OpenAI  # pseudo-import for LLM planning
 
 from ..plan.types import Plan, PlanManager, Step
@@ -43,12 +43,12 @@ class Planner:
 class StepExecutor:
     def __init__(
         self,
-        driver: Optional[webdriver.Chrome] = None,
+        controller: Optional[SafariController] = None,
         max_retries: int = 3,
         snapshot_dir: str | Path = ".",
         cassette_dir: Optional[str | Path] = None,
     ) -> None:
-        self.driver = driver or webdriver.Chrome()
+        self.controller = controller or SafariController()
         self.max_retries = max_retries
         self.snapshot_dir = Path(snapshot_dir)
         self.cassette_dir = Path(cassette_dir) if cassette_dir else None
@@ -73,7 +73,11 @@ class StepExecutor:
         for cond in step.pre_conditions:
             logger.info(f"Checking pre-condition '{cond}' for step {step.id}")
             try:
-                self.driver.find_element_by_css_selector(cond)
+                result = self.controller.run_js(
+                    f"document.querySelector('{cond}') ? '1' : '0'"
+                )
+                if result != "1":
+                    raise RuntimeError("element not found")
             except Exception as e:
                 logger.error(f"Pre-condition '{cond}' failed: {e}")
                 return False
@@ -84,14 +88,19 @@ class StepExecutor:
             logger.info(f"Checking post-condition '{cond}' for step {step.id}")
             if cond.startswith("url_contains:"):
                 expected = cond.split(":", 1)[1].strip()
-                if expected not in self.driver.current_url:
+                current_url = self.controller.run_js("window.location.href")
+                if expected not in current_url:
                     logger.error(
                         f"Post-condition '{cond}' failed: URL does not contain {expected}"
                     )
                     return False
             else:
                 try:
-                    self.driver.find_element_by_css_selector(cond)
+                    result = self.controller.run_js(
+                        f"document.querySelector('{cond}') ? '1' : '0'"
+                    )
+                    if result != "1":
+                        raise RuntimeError("element not found")
                 except Exception as e:
                     logger.error(f"Post-condition '{cond}' failed: {e}")
                     return False
@@ -122,16 +131,15 @@ class StepExecutor:
 
                 if step.type == "navigate" and step.url:
                     url = self._render(step.url)
-                    self.driver.get(url)
+                    self.controller.open(url)
                     step.result = f"navigated to {url}"
                 elif step.type == "click" and step.selector:
                     selector = self._render(step.selector)
-                    elem = self.driver.find_element_by_css_selector(selector)
-                    elem.click()
+                    self.controller.click(selector)
                     step.result = f"clicked {selector}"
                 elif step.type == "discover" and step.prompt_template:
                     # Real implementation would call an LLM with DOM and the prompt
-                    dom = self.driver.page_source
+                    dom = self.controller.run_js("document.documentElement.outerHTML")
                     rendered = self._render(step.prompt_template)
                     logger.debug(f"Discovery prompt: {rendered[:100]}")
                     # Placeholder: store empty list
@@ -159,7 +167,7 @@ class StepExecutor:
             finally:
                 # save DOM
                 try:
-                    dom = self.driver.page_source
+                    dom = self.controller.run_js("document.documentElement.outerHTML")
                     filename = f"dom_step_{step.id}_attempt_{attempt}.html"
                     path = self.snapshot_dir / filename
                     with path.open("w", encoding="utf-8") as f:
