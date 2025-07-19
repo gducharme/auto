@@ -134,16 +134,17 @@ python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
 
 ## Plan executor
 
-The step executor automates small browser tasks using Selenium. A plan is stored
-in `plan.json` and updated after each step. Generate a new plan automatically if
-the file does not exist and run it with:
+The step executor automates browser tasks using the `SafariController`. Runtime
+files live under the `automation_data/` directory and include the plan,
+execution log, memory file and DOM snapshots. Generate a new plan automatically
+if it does not exist and run the executor with:
 
 ```bash
-python -m auto.automation.plan_executor plan.json
+python -m auto.automation.plan_executor
 ```
 
-DOM snapshots and backups are written alongside the plan so failures can be
-inspected or rolled back.
+DOM snapshots and backups are written inside `automation_data/` so failures can
+be inspected or rolled back.
 
 ## Running tests
 

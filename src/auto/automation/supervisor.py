@@ -23,9 +23,9 @@ MAX_FAILURES = 3
 
 def supervise_loop() -> None:
     """Monitor automation progress and trigger replanning when needed."""
-    pm = PlanManager("plan.json")
-    el = ExecutionLogger("execution_log.json")
-    mm = MemoryModule("memory.json")
+    pm = PlanManager()
+    el = ExecutionLogger()
+    mm = MemoryModule()
     rp = RetroPlanner(llm_client=OpenAI(), log_store=el, pm=pm)
 
     last_check = datetime.min.replace(tzinfo=timezone.utc)
