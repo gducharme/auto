@@ -68,9 +68,9 @@ def get_medium_password() -> str | None:
     load_env()
     return os.getenv("MEDIUM_PASSWORD")
 
+
 def get_mastodon_sync_debug() -> bool:
     """Return True if debug output for Mastodon sync is enabled."""
     load_env()
     val = os.getenv("MASTODON_SYNC_DEBUG", "0").lower()
     return val not in {"0", "false", "no", "off", ""}
-

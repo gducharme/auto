@@ -43,7 +43,9 @@ class Plan:
 class PlanManager:
     """Handle reading, writing and backing up plan files."""
 
-    def __init__(self, path: str, backup_dir: str = "backups", work_path: Optional[str] = None) -> None:
+    def __init__(
+        self, path: str, backup_dir: str = "backups", work_path: Optional[str] = None
+    ) -> None:
         self.src_path = path
         suffix = Path(path).suffix
         self.path = work_path or f"{Path(path).stem}_work{suffix}"
@@ -65,9 +67,16 @@ class PlanManager:
 
     def save(self, plan: Plan) -> None:
         with open(self.path, "w") as f:
-            json.dump({"objective": plan.objective, "steps": [asdict(s) for s in plan.steps]}, f, indent=2)
+            json.dump(
+                {"objective": plan.objective, "steps": [asdict(s) for s in plan.steps]},
+                f,
+                indent=2,
+            )
         logger.info("Saved plan to %s", self.path)
-        commit_file(self.path, f"Update plan after changes at {datetime.now(timezone.utc).isoformat()}")
+        commit_file(
+            self.path,
+            f"Update plan after changes at {datetime.now(timezone.utc).isoformat()}",
+        )
 
     def reset(self) -> None:
         artifacts = [self.path, "execution_log.json", "memory.json"]
@@ -112,4 +121,3 @@ def commit_file(path: str, message: str) -> None:
         logger.info("Committed %s: %s", path, message)
     except Exception as e:  # pragma: no cover - git may not be available
         logger.warning("Git commit failed for %s: %s", path, e)
-

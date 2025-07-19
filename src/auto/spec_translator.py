@@ -65,7 +65,9 @@ def translate(spec_text: str) -> Dict[str, Any]:
             break
         if title:
             description_lines.append(line.strip())
-    description = " ".join(line_text for line_text in description_lines if line_text).strip()
+    description = " ".join(
+        line_text for line_text in description_lines if line_text
+    ).strip()
 
     name = _sanitize_name(title or schema.get("title", "function"))
     if not description:

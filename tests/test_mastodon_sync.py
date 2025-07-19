@@ -20,8 +20,12 @@ def test_sync_marks_published(monkeypatch, test_db_engine):
     monkeypatch.setattr(MastodonClient, "fetch_all_statuses", fake_fetch_all_statuses)
 
     with SessionLocal() as session:
-        session.add(Post(id="1", title="One", link="http://one", summary="", published=""))
-        session.add(Post(id="2", title="Two", link="http://two", summary="", published=""))
+        session.add(
+            Post(id="1", title="One", link="http://one", summary="", published="")
+        )
+        session.add(
+            Post(id="2", title="Two", link="http://two", summary="", published="")
+        )
         task = Task(type="sync_mastodon_posts")
         session.add(task)
         session.commit()
@@ -42,7 +46,9 @@ def test_sync_debug_output(monkeypatch, test_db_engine, capsys):
     monkeypatch.setenv("MASTODON_SYNC_DEBUG", "1")
 
     with SessionLocal() as session:
-        session.add(Post(id="1", title="One", link="http://one", summary="", published=""))
+        session.add(
+            Post(id="1", title="One", link="http://one", summary="", published="")
+        )
         task = Task(type="sync_mastodon_posts")
         session.add(task)
         session.commit()

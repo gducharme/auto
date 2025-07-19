@@ -17,6 +17,7 @@ from ..plan.logging import (
 # ─── Logging Configuration ─────────────────────────────────────────────────────
 logger = logging.getLogger(__name__)
 
+
 # ─── Planner (retro-causal “look-ahead”) ────────────────────────────────────────
 class Planner:
     def __init__(self, llm_client: OpenAI):
@@ -193,7 +194,9 @@ def main():
     configure_logging()
     parser = argparse.ArgumentParser(description="Execute or manage a plan")
     parser.add_argument("plan", nargs="?", default="plan.json", help="Source plan file")
-    parser.add_argument("--reset", action="store_true", help="Remove working plan and artifacts")
+    parser.add_argument(
+        "--reset", action="store_true", help="Remove working plan and artifacts"
+    )
     args = parser.parse_args()
 
     manager = PlanManager(args.plan)

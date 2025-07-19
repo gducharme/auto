@@ -6,7 +6,6 @@ import subprocess
 from typing import List
 
 
-
 def _run_git(cmd: List[str]) -> subprocess.CompletedProcess:
     """Run a git command and return the completed process."""
     return subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -51,4 +50,3 @@ def cleanup_merged_branches(remote: str = "origin", main: str = "main") -> None:
         )
         if result.returncode != 0:
             print(f"Failed to delete remote branch {br}")
-
