@@ -5,6 +5,9 @@ import logging
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
+import glob
+import sys
 from selenium import webdriver  # or playwright, etc.
 from openai import OpenAI  # pseudo-import for LLM planning
 
@@ -98,11 +101,21 @@ def commit_file(path: str, message: str):
 
 # ─── Plan Management ────────────────────────────────────────────────────────────
 class PlanManager:
-    def __init__(self, path: str, backup_dir: str = "backups"):
-        self.path = path
+    def __init__(self, path: str, backup_dir: str = "backups", work_path: Optional[str] = None):
+        self.src_path = path
+        suffix = Path(path).suffix
+        self.path = work_path or f"{Path(path).stem}_work{suffix}"
         self.backup_dir = backup_dir
+        self._ensure_working_copy()
+
+    def _ensure_working_copy(self) -> None:
+        """Create a modifiable copy of the original plan if needed."""
+        if not Path(self.path).exists() and Path(self.src_path).exists():
+            shutil.copy(self.src_path, self.path)
+            logger.info(f"Copied plan {self.src_path} -> {self.path}")
 
     def load(self) -> Plan:
+        self._ensure_working_copy()
         data = json.load(open(self.path))
         steps = [Step(**s) for s in data.get("steps", [])]
         plan = Plan(objective=data.get("objective", ""), steps=steps)
@@ -120,6 +133,24 @@ class PlanManager:
         commit_file(
             self.path, f"Update plan after changes at {datetime.now().isoformat()}"
         )
+
+    def reset(self) -> None:
+        """Remove the working plan and all generated artifacts."""
+        artifacts = [self.path, "execution_log.json", "memory.json"]
+        for art in artifacts:
+            try:
+                if Path(art).exists():
+                    Path(art).unlink()
+            except Exception as exc:
+                logger.warning(f"Failed to delete {art}: {exc}")
+        for html in glob.glob("dom_step_*.html"):
+            try:
+                Path(html).unlink()
+            except Exception as exc:
+                logger.warning(f"Failed to delete DOM snapshot {html}: {exc}")
+        if Path(self.backup_dir).is_dir():
+            shutil.rmtree(self.backup_dir, ignore_errors=True)
+        logger.info("Reset plan state and removed artifacts")
 
     def backup(self):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -288,6 +319,10 @@ class StepExecutor:
 def main():
     plan_file = "plan.json"
     manager = PlanManager(plan_file)
+
+    if len(sys.argv) > 1 and sys.argv[1] == "reset":
+        manager.reset()
+        return
     exec_logger = ExecutionLogger()
     memory = MemoryModule()
 

@@ -134,9 +134,10 @@ python -c 'from auto.plan.parser import parse_plan; parse_plan("PLAN.md")'
 
 ## Plan executor
 
-The step executor automates small browser tasks using Selenium. A plan is stored
-in `plan.json` and updated after each step. Generate a new plan automatically if
-the file does not exist and run it with:
+The step executor automates small browser tasks using Selenium. A plan is
+defined in `plan.json`, but a working copy `plan_work.json` is updated after
+each step. Generate a new plan automatically if the file does not exist and run
+it with:
 
 ```bash
 python -m auto.automation.plan_executor plan.json
