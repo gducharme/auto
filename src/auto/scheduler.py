@@ -15,6 +15,7 @@ from .db import SessionLocal, get_engine
 from .socials.base import SocialPlugin
 from .socials.mastodon_client import MastodonClient
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
+from .utils.periodic import PeriodicWorker
 from .config import (
     get_poll_interval,
     get_post_delay,
@@ -133,21 +134,30 @@ async def process_pending(max_attempts: Optional[int] = None):
                 session.commit()
 
 
-async def run_scheduler():
-    while True:
-        await process_pending()
-        await asyncio.sleep(get_poll_interval())
+async def _scheduler_iteration() -> None:
+    await process_pending()
+
+
+async def run_scheduler() -> None:
+    """Run the scheduler loop until cancelled."""
+    worker = PeriodicWorker(_scheduler_iteration, get_poll_interval)
+    await worker.start()
+    try:
+        if worker.task:
+            await worker.task
+    finally:
+        await worker.stop()
 
 
 class Scheduler:
-    """Manage the background scheduler task without using module-level globals."""
+    """Manage the background scheduler task without relying on globals."""
 
     def __init__(self) -> None:
-        self._task: Optional[asyncio.Task] = None
+        self._worker = PeriodicWorker(_scheduler_iteration, get_poll_interval)
 
     async def start(self) -> Optional[asyncio.Task]:
         """Start the background scheduler loop."""
-        if self._task is None or self._task.done():
+        if self._worker.task is None or self._worker.task.done():
             from sqlalchemy import inspect
 
             inspector = inspect(get_engine())
@@ -162,32 +172,13 @@ class Scheduler:
                 ingest_scheduler.ensure_initial_task(session)
                 session.commit()
 
-            self._task = asyncio.create_task(run_scheduler())
-        return self._task
+            await self._worker.start()
+        return self._worker.task
 
     async def stop(self) -> None:
         """Stop the background scheduler loop."""
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
-            self._task = None
+        await self._worker.stop()
 
-
-# provide a default scheduler instance for backwards compatibility
-default_scheduler = Scheduler()
-
-
-async def start() -> Optional[asyncio.Task]:
-    """Start the default background scheduler loop."""
-    return await default_scheduler.start()
-
-
-async def stop() -> None:
-    """Stop the default background scheduler loop."""
-    await default_scheduler.stop()
 
 
 def main():
