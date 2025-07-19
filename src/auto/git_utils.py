@@ -28,17 +28,27 @@ def cleanup_merged_branches(remote: str = "origin", main: str = "main") -> None:
     for br in to_delete:
         subprocess.run(["git", "branch", "-d", br], check=True)
 
-    merged = _run_git(["git", "branch", "-r", "--merged", f"{remote}/{main}"]).stdout.splitlines()
+    merged = _run_git(
+        ["git", "branch", "-r", "--merged", f"{remote}/{main}"]
+    ).stdout.splitlines()
     prefix = f"{remote}/"
-    remote_delete = []
+    remote_delete: List[str] = []
     for line in merged:
         line = line.strip()
         if not line.startswith(prefix):
             continue
-        br = line[len(prefix):]
-        if br not in (main, "develop", "HEAD"):
+        br = line[len(prefix) :]
+        if br.startswith("HEAD"):
+            # Skip symbolic HEAD references like "HEAD -> origin/main"
+            continue
+        if br not in (main, "develop"):
             remote_delete.append(br)
 
     for br in remote_delete:
-        subprocess.run(["git", "push", remote, "--delete", br], check=True)
+        result = subprocess.run(
+            ["git", "push", remote, "--delete", br],
+            check=False,
+        )
+        if result.returncode != 0:
+            print(f"Failed to delete remote branch {br}")
 
