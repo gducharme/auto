@@ -21,6 +21,7 @@ dependencies = [
     "pytest-cov",
     "pytest-recording",
     "ruff",
+    "mypy",
   "black",
   "pre-commit",
   "invoke",

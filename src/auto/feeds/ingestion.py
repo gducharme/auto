@@ -9,7 +9,8 @@ from alembic import command
 from dateutil import parser
 from pathlib import Path
 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
 
@@ -25,7 +26,12 @@ DB_PATH = str(BASE_DIR / "substack.db")
 ALEMBIC_INI = BASE_DIR / "alembic.ini"
 
 
-def _session_for_path(db_path: str, *, engine=None, session_factory=None):
+def _session_for_path(
+    db_path: str,
+    *,
+    engine: Engine | None = None,
+    session_factory: sessionmaker | None = None,
+) -> Session:
     """Return a SQLAlchemy session for the given database path or engine."""
     if session_factory is not None:
         return session_factory()
@@ -37,7 +43,12 @@ def _session_for_path(db_path: str, *, engine=None, session_factory=None):
     return Session()
 
 
-def init_db(db_path=DB_PATH, *, engine=None, session_factory=None):
+def init_db(
+    db_path: str = DB_PATH,
+    *,
+    engine: Engine | None = None,
+    session_factory: sessionmaker | None = None,
+) -> None:
     """Run database migrations to ensure the schema exists."""
     alembic_cfg = Config(str(ALEMBIC_INI))
 

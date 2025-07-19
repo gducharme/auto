@@ -1,14 +1,15 @@
 """Database utilities for creating engines and sessions."""
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 from .config import get_database_url
 
-_engine = None
+_engine: Engine | None = None
 
 
-def get_engine():
+def get_engine() -> Engine:
     """Return a cached SQLAlchemy engine instance."""
     global _engine
     if _engine is None:
@@ -22,7 +23,7 @@ def get_engine():
     return _engine
 
 
-def SessionLocal():
+def SessionLocal() -> Session:
     """Return a new session bound to the engine from :func:`get_engine`."""
     Session = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
     return Session()
