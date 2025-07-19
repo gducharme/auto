@@ -4,8 +4,7 @@ import asyncio
 import logging
 from typing import Dict
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+from ..automation.safari import SafariController
 
 from .base import SocialPlugin
 from .registry import register_plugin
@@ -14,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class MediumClient(SocialPlugin):
-    """SocialPlugin implementation using the Selenium automation client."""
+    """SocialPlugin implementation using the Safari automation client."""
 
     network = "medium"
 
-    def __init__(self, driver: webdriver.Firefox | None = None) -> None:
-        self.driver = driver
+    def __init__(self, safari: SafariController | None = None) -> None:
+        self.safari = safari
 
     async def post(self, text: str, visibility: str = "draft") -> None:
         """Publish ``text`` as a new Medium draft."""
@@ -29,13 +28,12 @@ class MediumClient(SocialPlugin):
     def _post_sync(self, text: str, visibility: str) -> None:
         from ..automation.medium import MediumClient as AutomationClient
 
-        driver = self.driver or webdriver.Firefox()
-        client = AutomationClient(driver=driver)
+        safari = self.safari or SafariController()
+        client = AutomationClient(safari=safari)
         try:
             client.login()
-            driver.get("https://medium.com/new-story")
-            body = driver.find_element(By.TAG_NAME, "body")
-            body.send_keys(text)
+            safari.open("https://medium.com/new-story")
+            safari.fill("body", text)
             logger.info("Created Medium draft")
         finally:
             client.close()

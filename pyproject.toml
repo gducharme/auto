@@ -9,7 +9,6 @@ dependencies = [
   "python-dotenv",
   "beautifulsoup4",
   "lxml",
-  "selenium",
   "jinja2",
   "prometheus-client",
   "typer",

@@ -1,7 +1,6 @@
 import logging
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+
+from .safari import SafariController
 
 from ..config import get_medium_email, get_medium_password
 
@@ -18,26 +17,23 @@ def _get_credentials():
 
 
 class MediumClient:
-    """Automate basic Medium interactions using Selenium."""
+    """Automate basic Medium interactions using ``SafariController``."""
 
-    def __init__(self, driver: webdriver.Firefox | None = None) -> None:
-        self.driver = driver or webdriver.Firefox()
+    def __init__(self, safari: SafariController | None = None) -> None:
+        self.safari = safari or SafariController()
 
     def login(self) -> None:
         """Sign in to Medium using credentials from the environment."""
         email, password = _get_credentials()
         try:
-            self.driver.get("https://medium.com/m/signin")
-            email_input = self.driver.find_element(By.NAME, "email")
-            email_input.send_keys(email)
-            email_input.send_keys(Keys.RETURN)
-            password_input = self.driver.find_element(By.NAME, "password")
-            password_input.send_keys(password)
-            password_input.send_keys(Keys.RETURN)
+            self.safari.open("https://medium.com/m/signin")
+            self.safari.fill("input[name='email']", email)
+            self.safari.fill("input[name='password']", password)
+            self.safari.click("button[type='submit']")
             logger.info("Submitted Medium login form")
         except Exception as exc:
             logger.error("Failed to sign in to Medium: %s", exc)
             raise
 
     def close(self) -> None:
-        self.driver.quit()
+        self.safari.close_tab()

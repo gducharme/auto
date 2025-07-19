@@ -10,3 +10,5 @@ These principles emphasize explicit initialization, safe resource handling, and 
 - Configure logging in a dedicated function invoked during startup, not at import time.
 - Encapsulate long‑lived tasks or shared state in classes instead of module-level globals to avoid race conditions.
 - When parsing feed entries, rely on the `_extract_text` helper in `feeds/ingestion.py` rather than branching on entry types.
+- Avoid using Selenium for browser automation. Use the `SafariController`
+  AppleScript from `automation/safari.py` instead.
