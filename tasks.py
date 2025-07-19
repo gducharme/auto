@@ -56,6 +56,12 @@ def edit_preview(c, post_id, network="mastodon"):
 
 
 @task
+def sync_mastodon_posts(c):
+    """Mark posts as published if they already appear on Mastodon."""
+    c.run("python -m auto.cli publish sync-mastodon-posts", pty=True)
+
+
+@task
 def update_deps(c, freeze=False):
     """Upgrade dependencies to their latest versions."""
     flag = "--freeze" if freeze else ""
