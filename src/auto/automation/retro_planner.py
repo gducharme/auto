@@ -39,7 +39,7 @@ class RetroPlanner:
             logger.warning("LLM replanning failed: %s", exc)
             return plan
 
-        lines = [l.strip() for l in response.splitlines() if l.strip()]
+        lines = [line.strip() for line in response.splitlines() if line.strip()]
         new_steps = [Step(id=i, description=line) for i, line in enumerate(lines, 1)]
         new_plan = Plan(objective=plan.objective, steps=new_steps)
         self.pm.save(new_plan)

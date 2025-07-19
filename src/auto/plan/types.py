@@ -9,7 +9,7 @@ import subprocess
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 import logging
 

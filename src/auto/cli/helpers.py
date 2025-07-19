@@ -6,7 +6,6 @@ import re
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from invoke import Exit
 import time
 
 from auto.automation.safari import SafariController
