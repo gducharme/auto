@@ -3,7 +3,6 @@
 ## High Priority
 
 ## Medium Priority
-- Integrate the Medium automation client so posts can also be published there.
 - Move plugin registration to `src/auto/socials/registry.py` and document how to write a plugin with an example `medium_client.py`.
 
 ## Low Priority
