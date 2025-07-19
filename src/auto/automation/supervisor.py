@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-import time
 from datetime import datetime, timedelta, timezone
 
 from openai import OpenAI
+from ..utils.periodic import PeriodicWorker
 
 from .plan_executor import (
     ExecutionLogger,
@@ -21,24 +22,25 @@ MAX_STALL = timedelta(minutes=2)
 MAX_FAILURES = 3
 
 
-def supervise_loop() -> None:
+class Supervisor:
     """Monitor automation progress and trigger replanning when needed."""
-    pm = PlanManager("plan.json")
-    el = ExecutionLogger("execution_log.json")
-    mm = MemoryModule("memory.json")
-    rp = RetroPlanner(llm_client=OpenAI(), log_store=el, pm=pm)
 
-    last_check = datetime.min.replace(tzinfo=timezone.utc)
+    def __init__(self) -> None:
+        self.pm = PlanManager("plan.json")
+        self.el = ExecutionLogger("execution_log.json")
+        self.mm = MemoryModule("memory.json")
+        self.rp = RetroPlanner(llm_client=OpenAI(), log_store=self.el, pm=self.pm)
+        self._last_check = datetime.min.replace(tzinfo=timezone.utc)
+        self._worker = PeriodicWorker(self._step, 1)
 
-    while True:
+    async def _step(self) -> None:
         now = datetime.now(timezone.utc)
-        if now - last_check < CHECK_INTERVAL:
-            time.sleep(30)
-            continue
-        last_check = now
+        if now - self._last_check < CHECK_INTERVAL:
+            return
+        self._last_check = now
 
-        plan = pm.load()
-        events = el.events
+        plan = self.pm.load()
+        events = self.el.events
         last_event = events[-1] if events else None
 
         # 1) Time-based stall
@@ -48,7 +50,7 @@ def supervise_loop() -> None:
             reason = "stall detected"
         # 2) Failure-based trigger
         elif (
-            mm.memory["step_stats"].get(str(plan.steps[0].id), {}).get("failed", 0)
+            self.mm.memory["step_stats"].get(str(plan.steps[0].id), {}).get("failed", 0)
             >= MAX_FAILURES
         ):
             reason = "too many failures"
@@ -57,6 +59,20 @@ def supervise_loop() -> None:
 
         if reason:
             logger.info("[Supervisor] Triggering replan: %s", reason)
-            plan = rp.replan(plan)
-        
-        time.sleep(1)
+            self.rp.replan(plan)
+
+    async def start(self) -> asyncio.Task | None:
+        return await self._worker.start()
+
+    async def stop(self) -> None:
+        await self._worker.stop()
+
+
+async def supervise_loop() -> None:
+    supervisor = Supervisor()
+    await supervisor.start()
+    try:
+        if supervisor._worker.task:
+            await supervisor._worker.task
+    finally:
+        await supervisor.stop()
