@@ -98,6 +98,25 @@ def quick_post(network: str = "mastodon") -> None:
     schedule(post_id=post.id, time="in 1m", network=network)
 
 
+@app.command("list-schedule")
+def list_schedule() -> None:
+    """List scheduled posts with their network and timestamp."""
+
+    stmt = select(
+        PostStatus.post_id,
+        PostStatus.network,
+        PostStatus.scheduled_at,
+        PostStatus.status,
+    ).order_by(PostStatus.scheduled_at)
+
+    with SessionLocal() as session:
+        rows = session.execute(stmt).all()
+
+    for post_id, network, scheduled_at, status in rows:
+        when = scheduled_at.isoformat()
+        print(f"{post_id}\t{network}\t{when}\t{status}")
+
+
 @app.command()
 def trending_tags(
     limit: int = 10, instance: Optional[str] = None, token: Optional[str] = None
@@ -206,6 +225,7 @@ def edit_preview(post_id: str, network: str = "mastodon") -> None:
         session.commit()
     print("Preview updated")
 
+
 @app.command()
 def sync_mastodon_posts() -> None:
     """Mark posts as published if they already appear on Mastodon."""
@@ -217,4 +237,3 @@ def sync_mastodon_posts() -> None:
     with SessionLocal() as session:
         task = Task(type="sync_mastodon_posts")
         asyncio.run(handle_sync_mastodon_posts(task, session))
-

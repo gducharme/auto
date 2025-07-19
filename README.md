@@ -90,6 +90,7 @@ Substack content across multiple social sites with a single workflow.
 Posts are queued with the `python -m auto.cli publish schedule` command. The time argument accepts
 absolute ISO timestamps or relative values like `"+30m"`. Timestamps without a
 timezone are interpreted in UTC and stored as timezone-aware datetimes.
+Run `python -m auto.cli publish list-schedule` to see all upcoming posts and their networks.
 
 ## Managing previews
 

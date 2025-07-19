@@ -38,6 +38,12 @@ def list_previews(c):
 
 
 @task
+def list_schedule(c):
+    """List scheduled posts across all networks."""
+    c.run("python -m auto.cli publish list-schedule", pty=True)
+
+
+@task
 def generate_preview(c, post_id, network="mastodon"):
     """Generate or update a preview for ``post_id``."""
     c.run(
