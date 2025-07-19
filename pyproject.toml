@@ -16,10 +16,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-  "pytest",
-  "pytest-cov",
-  "ruff",
+  dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-recording",
+    "ruff",
   "black",
   "pre-commit",
   "invoke",
