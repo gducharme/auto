@@ -11,8 +11,8 @@ SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(ROOT))
 
-from auto.feeds.ingestion import init_db
-from auto.db import SessionLocal
+from auto.feeds.ingestion import init_db  # noqa: E402
+from auto.db import SessionLocal  # noqa: E402
 
 
 def _check_dependencies() -> None:
