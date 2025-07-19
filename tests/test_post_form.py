@@ -16,7 +16,7 @@ def test_post_form_insert(test_db_engine):
             "summary": "",
             "published": "",
         }
-        resp = client.post("/posts", data=data, allow_redirects=False)
+        resp = client.post("/posts", data=data, follow_redirects=False)
         assert resp.status_code == 303
     with SessionLocal() as session:
         assert session.get(Post, "test1") is not None

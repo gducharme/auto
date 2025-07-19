@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 
+from typing import Optional
+
 import typer
 
 from auto.cli.helpers import (
@@ -22,7 +24,7 @@ app = typer.Typer(help="Automation commands")
 
 @app.command()
 def chat(
-    message: str | None = None,
+    message: Optional[str] = None,
     model: str = "gemma-3-27b-it-qat",
     api_base: str = "http://localhost:1234/v1",
     model_type: str = "chat",
