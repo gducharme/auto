@@ -28,4 +28,3 @@
 - Provide invoke tasks `install_hooks`, `parse_plan`, and `setup` for routine development.
 - Centralize configuration with a `Settings` class that loads environment variables at runtime.
 - Add a GitHub Actions workflow for tests, linting, and formatting.
-- Use context managers everywhere `SessionLocal()` is called.
