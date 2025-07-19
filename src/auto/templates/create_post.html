@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Create Post</title>
+</head>
+<body>
+    <h1>Create Post</h1>
+    <form action="/posts" method="post">
+        <label>ID: <input type="text" name="id" required></label><br>
+        <label>Title: <input type="text" name="title" required></label><br>
+        <label>Link: <input type="text" name="link" required></label><br>
+        <label>Summary:<br><textarea name="summary" rows="4" cols="40"></textarea></label><br>
+        <label>Published: <input type="text" name="published"></label><br>
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>
