@@ -14,7 +14,10 @@
 - AppleScript automation assumes the "Google" Mail account, which is brittle.
 
 ## DRY
-- Create a `PeriodicWorker` helper in `src/auto/utils/periodic.py` and use it in the scheduler and supervisor loops.
+- ~~Create a `PeriodicWorker` helper in `src/auto/utils/periodic.py` and use it in the scheduler and supervisor loops.~~
+- Deduplicate synchronous wrappers like `fetch_feed()` and `post_to_mastodon()` by providing a common helper for running async code.
+- Wrap CLI database access in a reusable session handler to remove repeated `SessionLocal()` blocks.
+- Share a single logging setup between the main app and plan executor.
 
 ## BUGS
 - `schedule()` stores naive datetimes when no timezone is supplied, leading to
