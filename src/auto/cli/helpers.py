@@ -31,7 +31,10 @@ def _slow_print(message: str) -> None:
 def freeze_requirements() -> None:
     """Regenerate requirements.txt without editable installs."""
     res = subprocess.run(
-        ["pip", "freeze", "--exclude-editable"], capture_output=True, text=True, check=True
+        ["pip", "freeze", "--exclude-editable"],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     Path("requirements.txt").write_text(res.stdout)
 
@@ -127,9 +130,7 @@ def update_dependencies(freeze: bool = False) -> None:
     for pkg in packages:
         result = subprocess.run(["pip", "install", "--upgrade", pkg])
         if result.returncode != 0:
-            raise RuntimeError(
-                f"Failed to upgrade {pkg}; manual intervention required"
-            )
+            raise RuntimeError(f"Failed to upgrade {pkg}; manual intervention required")
 
     check = subprocess.run(["pip", "check"])
     if check.returncode != 0:

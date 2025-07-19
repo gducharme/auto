@@ -11,7 +11,9 @@ from .db import SessionLocal
 from .models import Post
 
 
-TEMPLATES = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
+TEMPLATES = Jinja2Templates(
+    directory=str(Path(__file__).resolve().parent / "templates")
+)
 
 router = APIRouter()
 

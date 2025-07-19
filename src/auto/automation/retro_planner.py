@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 class RetroPlanner:
     """Simple planner that can regenerate a plan using an LLM."""
 
-    def __init__(self, llm_client: OpenAI, log_store: ExecutionLogger, pm: PlanManager) -> None:
+    def __init__(
+        self, llm_client: OpenAI, log_store: ExecutionLogger, pm: PlanManager
+    ) -> None:
         self.llm = llm_client
         self.log_store = log_store
         self.pm = pm
@@ -28,7 +30,7 @@ class RetroPlanner:
             f"Objective: {plan.objective}\n"
             "Current steps:\n" + step_text + "\n"
             "Recent events:\n" + recent + "\n"
-            "Provide a revised numbered list of steps."\
+            "Provide a revised numbered list of steps."
         )
 
     def replan(self, plan: Plan) -> Plan:

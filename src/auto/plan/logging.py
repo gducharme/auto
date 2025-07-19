@@ -50,11 +50,12 @@ class MemoryModule:
 
     def record_event(self, event: Dict) -> None:
         sid = str(event["step_id"])
-        stats = self.memory["step_stats"].setdefault(sid, {"success": 0, "failed": 0, "abandoned": 0})
+        stats = self.memory["step_stats"].setdefault(
+            sid, {"success": 0, "failed": 0, "abandoned": 0}
+        )
         status = event.get("status")
         if status in stats:
             stats[status] += 1
         with open(self.path, "w") as f:
             json.dump(self.memory, f, indent=2)
         logger.info("Updated memory for step %s: %s", sid, stats)
-

@@ -47,7 +47,9 @@ def test_supervisor_start_stop(monkeypatch):
     monkeypatch.setattr(supervisor, "OpenAI", lambda *a, **k: object())
 
     sup = supervisor.Supervisor()
-    sup._last_check = datetime.now(timezone.utc) - supervisor.CHECK_INTERVAL - timedelta(seconds=1)
+    sup._last_check = (
+        datetime.now(timezone.utc) - supervisor.CHECK_INTERVAL - timedelta(seconds=1)
+    )
 
     async def run():
         await sup.start()

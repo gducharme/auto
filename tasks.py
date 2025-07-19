@@ -118,9 +118,7 @@ def sync_mastodon_posts(c):
     c.run("python -m auto.cli publish sync-mastodon-posts", pty=True)
 
 
-@task(
-    help={"freeze": "Rewrite requirements.txt after upgrading"}
-)
+@task(help={"freeze": "Rewrite requirements.txt after upgrading"})
 def update_deps(c, freeze=False):
     """Upgrade dependencies to their latest versions."""
     flag = "--freeze" if freeze else ""

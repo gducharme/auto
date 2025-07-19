@@ -32,9 +32,13 @@ async def handle_sync_mastodon_posts(task: Task, session: Session) -> None:
     for post in posts:
         if any(post.link in t or post.id in t for t in texts):
             print(f"Post {post.id} already published")
-            status = session.get(PostStatus, {"post_id": post.id, "network": "mastodon"})
+            status = session.get(
+                PostStatus, {"post_id": post.id, "network": "mastodon"}
+            )
             if status is None:
-                status = PostStatus(post_id=post.id, network="mastodon", status="published")
+                status = PostStatus(
+                    post_id=post.id, network="mastodon", status="published"
+                )
                 session.add(status)
             else:
                 status.status = "published"

@@ -8,6 +8,7 @@ def test_cleanup_branches(monkeypatch):
     def fake_run(cmd, capture_output=False, text=False, check=False):
         calls.append(cmd)
         from subprocess import CompletedProcess
+
         if cmd[:3] == ["git", "branch", "--merged"]:
             return CompletedProcess(cmd, 0, stdout="  main\n  feature\n")
         if cmd[:4] == ["git", "branch", "-r", "--merged"]:
