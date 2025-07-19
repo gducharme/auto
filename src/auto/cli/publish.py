@@ -135,9 +135,16 @@ def list_previews() -> None:
 
 @app.command()
 def create_preview(
-    post_id: str, network: str = "mastodon", when: Optional[str] = None
+    post_id: str,
+    network: str = "mastodon",
+    when: Optional[str] = None,
+    dry_run: bool = False,
 ) -> None:
-    """Schedule a preview generation task."""
+    """Schedule a preview generation task.
+
+    If ``dry_run`` is true, print the scheduling info without
+    writing to the database.
+    """
 
     scheduled_at = _parse_when(when) if when else datetime.now(timezone.utc)
 
@@ -150,6 +157,12 @@ def create_preview(
             print(f"Post {post_id} is not scheduled for {network}")
             return
         payload = json.dumps({"post_id": post_id, "network": network})
+        if dry_run:
+            print(
+                "Dry run: would schedule preview task for"
+                f" {post_id} at {scheduled_at.isoformat()}"
+            )
+            return
         task = Task(type="create_preview", payload=payload, scheduled_at=scheduled_at)
         session.add(task)
         session.commit()
@@ -206,6 +219,7 @@ def edit_preview(post_id: str, network: str = "mastodon") -> None:
         session.commit()
     print("Preview updated")
 
+
 @app.command()
 def sync_mastodon_posts() -> None:
     """Mark posts as published if they already appear on Mastodon."""
@@ -217,4 +231,3 @@ def sync_mastodon_posts() -> None:
     with SessionLocal() as session:
         task = Task(type="sync_mastodon_posts")
         asyncio.run(handle_sync_mastodon_posts(task, session))
-
