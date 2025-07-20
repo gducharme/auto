@@ -6,10 +6,12 @@ from .automation.safari import SafariController
 from .html_utils import extract_links_with_green_span
 
 
-def fetch_dom(url: str = "https://chatgpt.com/codex") -> str:
-    """Return the full DOM tree for ``url`` using Safari."""
+def fetch_dom(url: str | None = None) -> str:
+    """Return the DOM tree for ``url`` or the active tab via Safari."""
+
     controller = SafariController()
-    controller.open(url)
+    if url:
+        controller.open(url)
     return controller.run_js("document.documentElement.outerHTML")
 
 
