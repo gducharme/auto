@@ -6,5 +6,13 @@
   [
     "fetch_dom",
     "tests/fixtures/facebook/1.html"
+  ],
+  [
+    "click",
+    "button[data-testid=\"menu-dashboard-button\"]"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/facebook/2.html"
   ]
 ]
