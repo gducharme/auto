@@ -81,7 +81,13 @@ TEST_CASES = [
         inv.replay,
         [],
         {"name": "facebook"},
-        "python -m auto.cli automation replay facebook",
+        "python -m auto.cli automation replay",
+    ),
+    (
+        inv.replay,
+        [],
+        {"name": "twitter"},
+        "python -m auto.cli automation replay --name twitter",
     ),
     (
         inv.parse_plan,
