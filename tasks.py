@@ -178,7 +178,10 @@ def safari_control(c):
 @task(help={"name": "Fixture name under tests/fixtures"})
 def replay(c, name="facebook"):
     """Replay recorded Safari commands."""
-    c.run(f"python -m auto.cli automation replay {name}", pty=True)
+    cmd = "python -m auto.cli automation replay"
+    if name != "facebook":
+        cmd += f" --name {name}"
+    c.run(cmd, pty=True)
 
 
 @task
