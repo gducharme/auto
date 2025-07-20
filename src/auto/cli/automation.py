@@ -23,7 +23,13 @@ from auto.automation.safari import SafariController
 
 
 def _read_key() -> str:
-    """Read a single character from stdin without requiring Enter."""
+    """Read a single character from stdin without requiring Enter.
+
+    Any extra characters left in the input buffer (for example the newline
+    from pressing ``Enter``) are discarded so that only one command is
+    processed per selection.
+    """
+
     import sys
     import termios
     import tty
@@ -33,6 +39,10 @@ def _read_key() -> str:
     try:
         tty.setraw(fd)
         ch = sys.stdin.read(1)
+        try:
+            termios.tcflush(fd, termios.TCIFLUSH)
+        except termios.error:
+            pass
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     return ch
