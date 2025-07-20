@@ -27,9 +27,15 @@ def _delay(seconds: float) -> None:
 
 
 def _slow_print(message: str) -> None:
-    """Print ``message`` then pause for a short delay."""
+    """Print ``message`` then pause for a short delay.
+
+    Set ``SKIP_SLOW_PRINT=1`` to disable the wait. ``TASKS_DELAY`` is still
+    respected when this variable is unset.
+    """
     print(message)
-    _delay(5)
+    skip = os.getenv("SKIP_SLOW_PRINT", "0").lower()
+    if skip not in {"1", "true", "yes"}:
+        _delay(5)
 
 
 def freeze_requirements() -> None:
