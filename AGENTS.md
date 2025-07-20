@@ -12,3 +12,5 @@ These principles emphasize explicit initialization, safe resource handling, and 
 - When parsing feed entries, rely on the `_extract_text` helper in `feeds/ingestion.py` rather than branching on entry types.
 - Avoid using Selenium for browser automation. Use the `SafariController`
   AppleScript from `automation/safari.py` instead.
+- Typer doesn't support the ``str | None`` syntax. Use ``Optional[str]`` for
+  command parameters.

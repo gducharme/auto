@@ -134,7 +134,7 @@ def codex_todo() -> None:
 
 
 @app.command()
-def fetch_dom(url: str | None = None) -> None:
+def fetch_dom(url: Optional[str] = None) -> None:
     """Print the DOM for the current tab or ``url``."""
 
     dom = fetch_dom_html(url)
