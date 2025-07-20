@@ -1,0 +1,10 @@
+[
+  [
+    "open",
+    "https://geoffreyducharme.substack.com"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/facebook/1.html"
+  ]
+]
