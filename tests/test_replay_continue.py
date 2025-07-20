@@ -39,6 +39,7 @@ def test_replay_continue(monkeypatch, tmp_path):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
 
     key_inputs = iter(["5", "7"])  # fetch_dom then quit
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
