@@ -32,7 +32,7 @@ class DummyController:
 def test_control_safari(monkeypatch, capsys):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
-    monkeypatch.setattr(tasks, "fetch_dom_html", lambda: "<html></html>")
+    monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
 
     key_inputs = iter(["1", "5", "7"])  # open, fetch_dom, quit
     text_inputs = iter(

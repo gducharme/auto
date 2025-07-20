@@ -124,10 +124,10 @@ def codex_todo() -> None:
 
 
 @app.command()
-def fetch_dom() -> None:
-    """Open the Codex page and print the full DOM tree."""
+def fetch_dom(url: str | None = None) -> None:
+    """Print the DOM for the current tab or ``url``."""
 
-    dom = fetch_dom_html()
+    dom = fetch_dom_html(url)
     if dom:
         print(dom)
         dest = Path("tests/fixtures/dom.html")
@@ -139,7 +139,7 @@ def fetch_dom() -> None:
 def count_links(url: str = "https://chatgpt.com/codex") -> None:
     """Download ``url`` and report merged vs active link counts."""
 
-    dom = fetch_dom_html()
+    dom = fetch_dom_html(url)
     merged, active = count_link_states(dom)
     print(f"Merged links: {merged}")
     print(f"Active tasks: {active}")
