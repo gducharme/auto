@@ -13,6 +13,7 @@ from dateutil import parser
 import anyio
 import typer
 from typing import Callable, Any
+from functools import wraps
 
 
 def _delay(seconds: float) -> None:
@@ -181,6 +182,7 @@ def add_async_command(app: typer.Typer) -> None:
         *args: Any, **kwargs: Any
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            @wraps(func)
             def wrapper(*f_args: Any, **f_kwargs: Any) -> Any:
                 return anyio.run(func, *f_args, **f_kwargs)
 
