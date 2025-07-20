@@ -27,20 +27,89 @@ from .preview import create_preview as _create_preview
 
 logger = logging.getLogger(__name__)
 
-TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 
+class Scheduler:
+    """Manage scheduled task execution."""
 
-def register_task_handler(
-    name: str,
-) -> Callable[
-    [Callable[[Task, Session], Awaitable[None]]],
-    Callable[[Task, Session], Awaitable[None]],
-]:
-    def decorator(func: Callable[[Task, Session], Awaitable[None]]):
-        TASK_HANDLERS[name] = func
-        return func
+    task_handlers: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 
-    return decorator
+    def __init__(self) -> None:
+        self._worker = PeriodicWorker(self.process_pending, get_poll_interval)
+
+    @classmethod
+    def register_task_handler(
+        cls, name: str
+    ) -> Callable[[Callable[[Task, Session], Awaitable[None]]], Callable[[Task, Session], Awaitable[None]]]:
+        def decorator(func: Callable[[Task, Session], Awaitable[None]]):
+            cls.task_handlers[name] = func
+            return func
+
+        return decorator
+
+    async def start(self) -> Optional[asyncio.Task]:
+        """Start the background scheduler loop."""
+        if self._worker.task is None or self._worker.task.done():
+            from sqlalchemy import inspect
+
+            inspector = inspect(get_engine())
+            if not inspector.has_table("tasks"):
+                logger.warning("tasks table missing; scheduler not started")
+                return None
+
+            # ensure ingest handler and other task handlers are registered
+            from . import ingest_scheduler
+
+            with SessionLocal() as session:
+                ingest_scheduler.ensure_initial_task(session)
+                session.commit()
+
+            await self._worker.start()
+        return self._worker.task
+
+    async def stop(self) -> None:
+        """Stop the background scheduler loop."""
+        await self._worker.stop()
+
+    async def process_pending(self, max_attempts: Optional[int] = None) -> None:
+        """Fetch due tasks and dispatch them to registered handlers."""
+        now = datetime.now(timezone.utc)
+        if max_attempts is None:
+            max_attempts = get_max_attempts()
+        with SessionLocal() as session:
+            tasks = (
+                session.query(Task)
+                .filter(
+                    Task.scheduled_at <= now,
+                    or_(
+                        Task.status == "pending",
+                        and_(Task.status == "error", Task.attempts < max_attempts),
+                    ),
+                )
+                .order_by(Task.scheduled_at)
+                .all()
+            )
+
+            for task in tasks:
+                handler = self.task_handlers.get(task.type)
+                if handler is None:
+                    task.status = "error"
+                    task.last_error = f"no handler for {task.type}"
+                    task.attempts += 1
+                    session.commit()
+                    continue
+                task.status = "running"
+                session.commit()
+                try:
+                    await handler(task, session)
+                    task.status = "completed"
+                    task.last_error = None
+                except Exception as exc:
+                    task.status = "error"
+                    task.last_error = str(exc)
+                    logger.error("Task %s failed: %s", task.type, exc)
+                finally:
+                    task.attempts += 1
+                    session.commit()
 
 
 async def _publish(status: PostStatus, session: Session) -> None:
@@ -81,7 +150,9 @@ async def _publish(status: PostStatus, session: Session) -> None:
         await asyncio.sleep(get_post_delay())
 
 
-@register_task_handler("publish_post")
+
+
+@Scheduler.register_task_handler("publish_post")
 async def handle_publish_post(task: Task, session: Session) -> None:
     data = json.loads(task.payload or "{}")
     post_id = data.get("post_id")
@@ -92,58 +163,12 @@ async def handle_publish_post(task: Task, session: Session) -> None:
     await _publish(status, session)
 
 
-@register_task_handler("create_preview")
+@Scheduler.register_task_handler("create_preview")
 async def handle_create_preview(task: Task, session: Session) -> None:
     data = json.loads(task.payload or "{}")
     post_id = data.get("post_id")
     network = data.get("network", "mastodon")
     _create_preview(session, post_id, network)
-
-
-async def process_pending(max_attempts: Optional[int] = None) -> None:
-    """Fetch due tasks and dispatch them to registered handlers."""
-    now = datetime.now(timezone.utc)
-    if max_attempts is None:
-        max_attempts = get_max_attempts()
-    with SessionLocal() as session:
-        tasks = (
-            session.query(Task)
-            .filter(
-                Task.scheduled_at <= now,
-                or_(
-                    Task.status == "pending",
-                    and_(Task.status == "error", Task.attempts < max_attempts),
-                ),
-            )
-            .order_by(Task.scheduled_at)
-            .all()
-        )
-
-        for task in tasks:
-            handler = TASK_HANDLERS.get(task.type)
-            if handler is None:
-                task.status = "error"
-                task.last_error = f"no handler for {task.type}"
-                task.attempts += 1
-                session.commit()
-                continue
-            task.status = "running"
-            session.commit()
-            try:
-                await handler(task, session)
-                task.status = "completed"
-                task.last_error = None
-            except Exception as exc:
-                task.status = "error"
-                task.last_error = str(exc)
-                logger.error("Task %s failed: %s", task.type, exc)
-            finally:
-                task.attempts += 1
-                session.commit()
-
-
-async def _scheduler_iteration() -> None:
-    await process_pending()
 
 
 async def run_scheduler() -> None:
@@ -164,35 +189,6 @@ async def run_scheduler() -> None:
         logger.info("Scheduler stopped")
 
 
-class Scheduler:
-    """Manage the background scheduler task without relying on globals."""
-
-    def __init__(self) -> None:
-        self._worker = PeriodicWorker(_scheduler_iteration, get_poll_interval)
-
-    async def start(self) -> Optional[asyncio.Task]:
-        """Start the background scheduler loop."""
-        if self._worker.task is None or self._worker.task.done():
-            from sqlalchemy import inspect
-
-            inspector = inspect(get_engine())
-            if not inspector.has_table("tasks"):
-                logger.warning("tasks table missing; scheduler not started")
-                return None
-
-            # ensure ingest handler and other task handlers are registered
-            from . import ingest_scheduler
-
-            with SessionLocal() as session:
-                ingest_scheduler.ensure_initial_task(session)
-                session.commit()
-
-            await self._worker.start()
-        return self._worker.task
-
-    async def stop(self) -> None:
-        """Stop the background scheduler loop."""
-        await self._worker.stop()
 
 
 def main():

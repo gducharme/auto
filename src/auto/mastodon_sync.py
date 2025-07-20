@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.orm import Session
 
 from .socials.mastodon_client import MastodonClient
-from .scheduler import register_task_handler
+from .scheduler import Scheduler
 from .models import Post, PostStatus, Task
 from .config import get_mastodon_sync_debug
 
@@ -15,7 +15,7 @@ async def _fetch_status_texts(client: MastodonClient) -> list[str]:
     return [s.get("content", "") for s in statuses]
 
 
-@register_task_handler("sync_mastodon_posts")
+@Scheduler.register_task_handler("sync_mastodon_posts")
 async def handle_sync_mastodon_posts(task: Task, session: Session) -> None:
     """Mark posts as published if they already appear on Mastodon."""
     client = MastodonClient()
