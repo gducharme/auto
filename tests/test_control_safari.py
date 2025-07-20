@@ -54,7 +54,7 @@ def test_control_safari(monkeypatch, capsys):
     assert (test_dir / "1.html").exists()
     log = json.loads((test_dir / "commands.json").read_text())
     assert log[0] == ["open", "https://example.com"]
-    assert log[1] == ["fetch_dom"]
+    assert log[1] == ["fetch_dom", str(test_dir / "1.html")]
 
     out = captured.out
     assert "Command log:" in out

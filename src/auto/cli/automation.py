@@ -308,10 +308,10 @@ def control_safari() -> None:
             if result:
                 print(result)
         elif choice == "fetch_dom":
-            collected.append(("fetch_dom",))
             dom = fetch_dom_html()
             dest = test_dir / f"{step}.html"
             dest.write_text(dom)
+            collected.append(("fetch_dom", str(dest)))
             step += 1
             print(f"Saved DOM to {dest}")
         elif choice == "close_tab":
