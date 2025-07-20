@@ -335,3 +335,48 @@ def control_safari() -> None:
         for entry in collected:
             print(" ".join(entry))
         (test_dir / "commands.json").write_text(json.dumps(collected, indent=2))
+
+
+@app.command()
+def replay(name: str = "facebook") -> None:
+    """Replay recorded Safari commands from ``tests/fixtures/<name>``."""
+
+    fixtures_root = Path("tests/fixtures")
+    commands_path = fixtures_root / name / "commands.json"
+    if not commands_path.exists():
+        typer.echo(f"commands.json not found: {commands_path}")
+        raise typer.Exit(1)
+
+    commands: list[list[str]] = json.loads(commands_path.read_text())
+
+    controller = SafariController()
+
+    for entry in commands:
+        cmd = entry[0]
+        args = entry[1:]
+        if cmd == "open" and args:
+            url = args[0]
+            _slow_print(f"Opening {url}")
+            controller.open(url)
+        elif cmd == "click" and args:
+            selector = args[0]
+            _slow_print(f"Clicking {selector}")
+            controller.click(selector)
+        elif cmd == "fill" and len(args) == 2:
+            selector, text = args
+            _slow_print(f"Filling {selector}")
+            controller.fill(selector, text)
+        elif cmd == "run_js" and args:
+            _slow_print("Running JavaScript")
+            controller.run_js(args[0])
+        elif cmd == "close_tab":
+            _slow_print("Closing tab")
+            controller.close_tab()
+        elif cmd == "fetch_dom" and args:
+            dest = Path(args[0])
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dom = fetch_dom_html()
+            dest.write_text(dom)
+            _slow_print(f"Saved DOM to {dest}")
+        else:
+            typer.echo(f"Unknown command: {cmd}")
