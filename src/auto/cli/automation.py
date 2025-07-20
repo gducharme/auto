@@ -7,7 +7,7 @@ import subprocess
 import json
 import shutil
 
-from typing import Optional
+from typing import Optional, Iterable
 
 import typer
 
@@ -46,6 +46,18 @@ def _read_key() -> str:
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     return ch
+
+
+def _next_step(commands: Iterable[list[str]]) -> int:
+    """Return the next DOM snapshot step for ``commands``."""
+
+    numbers: list[int] = []
+    for entry in commands:
+        if entry and entry[0] == "fetch_dom" and len(entry) > 1:
+            stem = Path(entry[1]).stem
+            if stem.isdigit():
+                numbers.append(int(stem))
+    return max(numbers) + 1 if numbers else 1
 
 
 app = typer.Typer(help="Automation commands")
@@ -253,18 +265,14 @@ def test_task(codex_url: str = "https://chatgpt.com/codex") -> None:
     controller.run_js(js)
 
 
-@app.command()
-def control_safari() -> None:
-    """Interactively control Safari via a menu loop."""
+def _interactive_menu(
+    controller: SafariController,
+    test_dir: Path,
+    collected: list[list[str]],
+    step: int,
+) -> tuple[list[list[str]], int]:
+    """Run the interactive Safari control menu."""
 
-    test_name = input("Test name: ")
-    fixtures_root = Path("tests/fixtures")
-    test_dir = fixtures_root / test_name
-    if test_dir.exists():
-        shutil.rmtree(test_dir)
-    test_dir.mkdir(parents=True, exist_ok=True)
-
-    controller = SafariController()
     commands = [
         ("open", "Open a URL"),
         ("click", "Click an element by CSS selector"),
@@ -274,9 +282,6 @@ def control_safari() -> None:
         ("close_tab", "Close the current tab"),
         ("quit", "Exit the menu"),
     ]
-
-    collected: list[tuple[str, ...]] = []
-    step = 1
 
     while True:
         print("\nAvailable commands:")
@@ -294,26 +299,26 @@ def control_safari() -> None:
             break
         elif choice == "open":
             url = input("URL: ")
-            collected.append(("open", url))
+            collected.append(["open", url])
             result = controller.open(url)
             if result:
                 print(result)
         elif choice == "click":
             selector = input("Selector: ")
-            collected.append(("click", selector))
+            collected.append(["click", selector])
             result = controller.click(selector)
             if result:
                 print(result)
         elif choice == "fill":
             selector = input("Selector: ")
             text = input("Text: ")
-            collected.append(("fill", selector, text))
+            collected.append(["fill", selector, text])
             result = controller.fill(selector, text)
             if result:
                 print(result)
         elif choice == "run_js":
             code = input("JavaScript: ")
-            collected.append(("run_js", code))
+            collected.append(["run_js", code])
             result = controller.run_js(code)
             if result:
                 print(result)
@@ -321,14 +326,32 @@ def control_safari() -> None:
             dom = fetch_dom_html()
             dest = test_dir / f"{step}.html"
             dest.write_text(dom)
-            collected.append(("fetch_dom", str(dest)))
+            collected.append(["fetch_dom", str(dest)])
             step += 1
             print(f"Saved DOM to {dest}")
         elif choice == "close_tab":
-            collected.append(("close_tab",))
+            collected.append(["close_tab"])
             result = controller.close_tab()
             if result:
                 print(result)
+
+    return collected, step
+
+
+@app.command()
+def control_safari() -> None:
+    """Interactively control Safari via a menu loop."""
+
+    test_name = input("Test name: ")
+    fixtures_root = Path("tests/fixtures")
+    test_dir = fixtures_root / test_name
+    if test_dir.exists():
+        shutil.rmtree(test_dir)
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    controller = SafariController()
+    collected: list[list[str]] = []
+    _, _ = _interactive_menu(controller, test_dir, collected, 1)
 
     if collected:
         print("\nCommand log:")
@@ -380,3 +403,11 @@ def replay(name: str = "facebook") -> None:
             _slow_print(f"Saved DOM to {dest}")
         else:
             typer.echo(f"Unknown command: {cmd}")
+
+    cont = input("Continue recording? [y/N]: ").strip().lower() == "y"
+    if cont:
+        step = _next_step(commands)
+        test_dir = fixtures_root / name
+        updated, _ = _interactive_menu(controller, test_dir, commands, step)
+        if updated:
+            commands_path.write_text(json.dumps(updated, indent=2))
