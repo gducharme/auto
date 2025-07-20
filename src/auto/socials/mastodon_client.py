@@ -1,4 +1,5 @@
 import asyncio
+import anyio
 import logging
 from typing import Dict
 import httpx
@@ -79,10 +80,10 @@ async def post_to_mastodon_async(status: str, visibility: str = "private") -> No
 
 def post_to_mastodon(status: str, visibility: str = "private") -> None:
     """Synchronous wrapper for :func:`post_to_mastodon_async`."""
-    asyncio.run(post_to_mastodon_async(status=status, visibility=visibility))
+    anyio.run(post_to_mastodon_async, status, visibility)
 
 
 if __name__ == "__main__":
-    asyncio.run(
-        post_to_mastodon_async("Hello world! My Substack → Socials bot is live 🚀")
+    anyio.run(
+        post_to_mastodon_async, "Hello world! My Substack → Socials bot is live 🚀"
     )

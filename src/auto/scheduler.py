@@ -1,4 +1,5 @@
 import asyncio
+import anyio
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Callable, Awaitable, Dict
@@ -195,7 +196,7 @@ class Scheduler:
 
 
 def main():
-    asyncio.run(run_scheduler())
+    anyio.run(run_scheduler)
 
 
 if __name__ == "__main__":
