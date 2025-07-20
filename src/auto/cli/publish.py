@@ -40,6 +40,45 @@ def list_posts() -> None:
         print(f"{post_id}\t{title}\t{published}")
 
 
+@app.command("list-substacks")
+def list_substacks(
+    published: bool = typer.Option(
+        False,
+        "-p",
+        "--published",
+        help="Only show posts that have been shared",
+    ),
+    unpublished: bool = typer.Option(
+        False,
+        "-u",
+        "--unpublished",
+        help="Only show posts that have not been shared",
+    ),
+) -> None:
+    """List posts, optionally filtering by publish status."""
+
+    exists_stmt = (
+        select(PostStatus.post_id)
+        .where(PostStatus.post_id == Post.id, PostStatus.status == "published")
+        .exists()
+    )
+
+    status_case = case((exists_stmt, "published"), else_="pending").label("published")
+
+    stmt = select(Post.id, Post.title, status_case).order_by(Post.published.desc())
+
+    if published and not unpublished:
+        stmt = stmt.where(exists_stmt)
+    elif unpublished and not published:
+        stmt = stmt.where(~exists_stmt)
+
+    with SessionLocal() as session:
+        rows = session.execute(stmt).all()
+
+    for post_id, title, status in rows:
+        print(f"{post_id}\t{title}\t{status}")
+
+
 @app.command()
 def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
     """Schedule a post for publishing."""
