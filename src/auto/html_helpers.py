@@ -4,9 +4,10 @@ from bs4 import BeautifulSoup
 
 from .automation.safari import SafariController
 from .html_utils import extract_links_with_green_span
+from typing import Optional
 
 
-def fetch_dom(url: str | None = None) -> str:
+def fetch_dom(url: Optional[str] = None) -> str:
     """Return the DOM tree for ``url`` or the active tab via Safari."""
 
     controller = SafariController()

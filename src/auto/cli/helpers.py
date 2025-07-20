@@ -12,7 +12,7 @@ from auto.automation.safari import SafariController
 from dateutil import parser
 import anyio
 import typer
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from functools import wraps
 
 
@@ -68,7 +68,7 @@ def _parse_when(value: str) -> datetime:
     return dt
 
 
-def _get_medium_magic_link() -> str | None:
+def _get_medium_magic_link() -> Optional[str]:
     """Return the latest Medium magic link via Apple Mail if present."""
     script = Path(__file__).resolve().parents[1] / "scripts" / "fetch_medium_link.scpt"
     result = subprocess.run(["osascript", str(script)], capture_output=True, text=True)

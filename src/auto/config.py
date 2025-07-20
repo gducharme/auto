@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv, find_dotenv
+from typing import Optional
 
 DEFAULT_FEED_URL = "https://geoffreyducharme.substack.com/feed"
 
@@ -33,7 +34,7 @@ def get_mastodon_instance() -> str:
     return os.getenv("MASTODON_INSTANCE", "https://mastodon.social")
 
 
-def get_mastodon_token() -> str | None:
+def get_mastodon_token() -> Optional[str]:
     load_env()
     return os.getenv("MASTODON_TOKEN")
 
@@ -59,12 +60,12 @@ def get_max_attempts() -> int:
     return int(os.getenv("MAX_ATTEMPTS", "3"))
 
 
-def get_medium_email() -> str | None:
+def get_medium_email() -> Optional[str]:
     load_env()
     return os.getenv("MEDIUM_EMAIL")
 
 
-def get_medium_password() -> str | None:
+def get_medium_password() -> Optional[str]:
     load_env()
     return os.getenv("MEDIUM_PASSWORD")
 
