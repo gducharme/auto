@@ -1,5 +1,6 @@
 import logging
 import anyio
+import asyncio
 from typing import Optional
 
 import httpx
@@ -193,7 +194,14 @@ def run_ingest() -> None:
     try:
         anyio.from_thread.run(run_ingest_async)
     except RuntimeError:
-        anyio.run(run_ingest_async)
+        try:
+            anyio.run(run_ingest_async)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            try:
+                loop.run_until_complete(run_ingest_async())
+            finally:
+                loop.close()
 
 
 def main():
