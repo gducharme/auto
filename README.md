@@ -199,6 +199,12 @@ DOM snapshots and backups are written alongside the plan so failures can be
 inspected or rolled back. Use the `--reset` flag to delete the working plan and
 all generated artifacts.
 
+Recorded browser sessions can be replayed with:
+
+```bash
+python -m auto.cli automation replay facebook
+```
+
 ## Running tests
 
 Before running tests, install the project dependencies. The

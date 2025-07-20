@@ -175,6 +175,12 @@ def safari_control(c):
     c.run("python -m auto.cli automation control-safari", pty=True)
 
 
+@task(help={"name": "Fixture name under tests/fixtures"})
+def replay(c, name="facebook"):
+    """Replay recorded Safari commands."""
+    c.run(f"python -m auto.cli automation replay {name}", pty=True)
+
+
 @task
 def parse_plan(c):
     """Parse PLAN.md into task files."""
