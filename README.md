@@ -92,6 +92,16 @@ absolute ISO timestamps or relative values like `"+30m"`. Timestamps without a
 timezone are interpreted in UTC and stored as timezone-aware datetimes.
 Run `python -m auto.cli publish list-schedule` to see all upcoming posts and their networks.
 
+### Listing Substack posts
+
+View stored posts from the RSS feed with:
+
+```bash
+python -m auto.cli publish list-substacks
+```
+
+Use `-p` for only shared posts or `-u` for those not yet shared.
+
 ## Managing previews
 
 Previews are small templates used when posting to other networks. They can be listed, generated or edited with CLI commands:

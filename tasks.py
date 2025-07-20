@@ -43,6 +43,22 @@ def list_previews(c):
     c.run("python -m auto.cli publish list-previews", pty=True)
 
 
+@task(
+    help={
+        "published": "Only show posts that have been shared",
+        "unpublished": "Only show posts not yet shared",
+    }
+)
+def list_substacks(c, published=False, unpublished=False):
+    """List posts from the database."""
+    pub_flag = "-p" if published else ""
+    unpub_flag = "-u" if unpublished else ""
+    c.run(
+        f"python -m auto.cli publish list-substacks {pub_flag} {unpub_flag}",
+        pty=True,
+    )
+
+
 @task
 def list_schedule(c):
     """List scheduled posts across all networks."""
