@@ -4,7 +4,8 @@ from auto.models import Post
 from fastapi.testclient import TestClient
 
 
-def test_post_form_insert(test_db_engine):
+def test_post_form_insert(test_db_engine, monkeypatch):
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
     with TestClient(main.app) as client:
         resp = client.get("/posts/new")
         assert resp.status_code == 200
