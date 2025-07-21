@@ -1,0 +1,18 @@
+[
+  [
+    "open",
+    "https://medium.com"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/medium/1.html"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/medium.js"
+  ],
+  [
+    "run_js",
+    "clickMediumWrite()"
+  ]
+]
