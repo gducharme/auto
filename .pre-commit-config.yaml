@@ -25,6 +25,11 @@ repos:
 
   - repo: local
     hooks:
+      - id: pytest
+        name: Run test suite
+        entry: pytest
+        language: system
+        pass_filenames: false
       - id: alembic-check-heads
         name: Check Alembic Heads
         entry: python scripts/check_alembic_heads.py
