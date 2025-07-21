@@ -70,10 +70,12 @@ def test_control_safari_run_js_file(monkeypatch, tmp_path):
     js_path.write_text(js_code)
 
     key_inputs = iter(["5", "8"])  # run_js_file, quit
-    text_inputs = iter([
-        "demo_js",
-        str(js_path),
-    ])
+    text_inputs = iter(
+        [
+            "demo_js",
+            str(js_path),
+        ]
+    )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 

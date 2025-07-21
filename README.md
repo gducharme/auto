@@ -200,10 +200,13 @@ DOM snapshots and backups are written alongside the plan so failures can be
 inspected or rolled back. Use the `--reset` flag to delete the working plan and
 all generated artifacts.
 
-Recorded browser sessions can be replayed with:
+Recorded browser sessions can be replayed with either the direct command or the
+``invoke`` wrapper:
 
 ```bash
 python -m auto.cli automation replay facebook
+# or simply
+invoke replay facebook
 ```
 
 For ad-hoc experimentation you can launch an interactive Safari control menu:
