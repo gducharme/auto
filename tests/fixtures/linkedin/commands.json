@@ -29,10 +29,10 @@
   ],
   [
     "run_js_file",
-    "tests/site_js/facebook.js"
+    "tests/site_js/linkedin.js"
   ],
   [
     "run_js",
-    "clickElementByText('Post');"
+    "clickPrimaryButtonByText('Post');"
   ]
 ]
