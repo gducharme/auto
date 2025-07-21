@@ -1,0 +1,38 @@
+[
+  [
+    "open",
+    "https://geoffreyducharme.substack.com"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/linkedin/1.html"
+  ],
+  [
+    "click",
+    "button[data-testid=\"menu-dashboard-button\"]"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/linkedin/2.html"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/substack.js"
+  ],
+  [
+    "run_js",
+    "clickButtonByText(\"Share post\")"
+  ],
+  [
+    "run_js",
+    "clickButtonByText(\"LinkedIn\")"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/facebook.js"
+  ],
+  [
+    "run_js",
+    "clickElementByText('Post');"
+  ]
+]
