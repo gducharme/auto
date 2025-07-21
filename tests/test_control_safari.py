@@ -34,7 +34,7 @@ def test_control_safari(monkeypatch, capsys):
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
 
-    key_inputs = iter(["1", "5", "7"])  # open, fetch_dom, quit
+    key_inputs = iter(["1", "6", "8"])  # open, fetch_dom, quit
     text_inputs = iter(
         [
             "demo_test",
@@ -60,3 +60,24 @@ def test_control_safari(monkeypatch, capsys):
     assert "Command log:" in out
 
     shutil.rmtree(test_dir)
+
+
+def test_control_safari_run_js_file(monkeypatch, tmp_path):
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    js_path = tmp_path / "helper.js"
+    js_code = "console.log('hello');"
+    js_path.write_text(js_code)
+
+    key_inputs = iter(["5", "8"])  # run_js_file, quit
+    text_inputs = iter([
+        "demo_js",
+        str(js_path),
+    ])
+    monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
+    monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
+
+    tasks.control_safari()
+
+    assert ("run_js", js_code) in controller.calls
+    shutil.rmtree(Path("tests/fixtures/demo_js"))

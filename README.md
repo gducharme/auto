@@ -206,6 +206,16 @@ Recorded browser sessions can be replayed with:
 python -m auto.cli automation replay facebook
 ```
 
+For ad-hoc experimentation you can launch an interactive Safari control menu:
+
+```bash
+python -m auto.cli automation control-safari
+```
+
+Alongside opening pages and clicking selectors, the menu now includes a
+"run_js_file" option to execute JavaScript from a file. This makes it easy to
+inject helper functions and call them later.
+
 ## Running tests
 
 Before running tests, install the project dependencies. The
