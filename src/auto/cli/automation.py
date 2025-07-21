@@ -278,6 +278,7 @@ def _interactive_menu(
         ("click", "Click an element by CSS selector"),
         ("fill", "Fill a selector with text"),
         ("run_js", "Run arbitrary JavaScript"),
+        ("run_js_file", "Run JavaScript from a file"),
         ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
         ("quit", "Exit the menu"),
@@ -319,6 +320,14 @@ def _interactive_menu(
         elif choice == "run_js":
             code = input("JavaScript: ")
             collected.append(["run_js", code])
+            result = controller.run_js(code)
+            if result:
+                print(result)
+        elif choice == "run_js_file":
+            path_str = input("JS file path: ")
+            path = Path(path_str)
+            code = path.read_text()
+            collected.append(["run_js_file", path_str])
             result = controller.run_js(code)
             if result:
                 print(result)
@@ -392,6 +401,13 @@ def replay(name: str = "facebook") -> None:
         elif cmd == "run_js" and args:
             _slow_print("Running JavaScript")
             controller.run_js(args[0])
+        elif cmd == "run_js_file" and args:
+            path = Path(args[0])
+            if path.exists():
+                _slow_print(f"Running JavaScript from {path}")
+                controller.run_js(path.read_text())
+            else:
+                typer.echo(f"JS file not found: {path}")
         elif cmd == "close_tab":
             _slow_print("Closing tab")
             controller.close_tab()
