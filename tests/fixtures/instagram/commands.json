@@ -34,5 +34,21 @@
   [
     "run_applescript_file",
     "tests/site_script/selectFileUpload.scpt"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/instagram.js"
+  ],
+  [
+    "run_js",
+    "clickNext()"
+  ],
+  [
+    "run_js",
+    "clickNext()"
+  ],
+  [
+    "run_js",
+    "clickShare()"
   ]
 ]
