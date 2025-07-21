@@ -43,6 +43,3 @@ function debugClickElementByText(text) {
   console.log(`Completed event dispatch sequence on element with text/aria-label '${text}'`);
   console.groupEnd();
 }
-
-// Invoke for debugging 'Share'
-debugClickElementByText('Share');

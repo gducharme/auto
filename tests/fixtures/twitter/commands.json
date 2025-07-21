@@ -33,18 +33,13 @@
   ],
   [
     "run_js",
-    "clickButtonByText(\"Facebook\")"
-  ],
-  [
-    "fetch_dom",
-    "tests/fixtures/facebook/3.html"
+    "clickButtonByText(\"Twitter\")"
   ],
   [
     "run_js_file",
     "tests/site_js/facebook.js"
   ],
   [
-    "run_js",
-    "clickElementByText('Share');"
+    "close_tab"
   ]
 ]
