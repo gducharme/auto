@@ -159,8 +159,9 @@ Install the pre-commit hooks so formatting and linting run automatically:
 pre-commit install
 ```
 
-The hooks mirror the CI checks, running `ruff check .` and `black --check .` on
-every commit to ensure consistent formatting and linting.
+The hooks mirror the CI checks, running `ruff check .`, `black --check .`, and
+`pytest` on every commit to ensure consistent formatting, linting, and tests
+continue to pass.
 
 Use `python -m auto.cli maintenance update-deps` to upgrade outdated dependencies. Pass `--freeze` to
 rewrite `requirements.txt` after the upgrades.
