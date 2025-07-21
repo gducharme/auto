@@ -216,9 +216,10 @@ For ad-hoc experimentation you can launch an interactive Safari control menu:
 python -m auto.cli automation control-safari
 ```
 
-Alongside opening pages and clicking selectors, the menu now includes a
-"run_js_file" option to execute JavaScript from a file. This makes it easy to
-inject helper functions and call them later.
+Alongside opening pages and clicking selectors, the menu now includes
+"run_js_file" and "run_applescript_file" options to execute code from external
+files. This makes it easy to inject helper functions or run custom AppleScript
+snippets.
 
 ## Running tests
 
