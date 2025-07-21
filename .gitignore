@@ -10,3 +10,5 @@ __pycache__/
 # Editor/IDE
 .vscode/
 .idea/
+# mac Finder Files
+**/.DS_Store

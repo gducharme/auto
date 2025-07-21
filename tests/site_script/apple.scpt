@@ -18,5 +18,3 @@ tell application "Safari"
         set resultText to do JavaScript js
     end tell
 end tell
-
-display dialog resultText buttons {"OK"} default button 1

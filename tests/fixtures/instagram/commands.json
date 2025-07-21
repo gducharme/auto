@@ -26,5 +26,13 @@
   [
     "fetch_dom",
     "tests/fixtures/instagram/2.html"
+  ],
+  [
+    "run_applescript_file",
+    "tests/site_script/apple.scpt"
+  ],
+  [
+    "run_applescript_file",
+    "tests/site_script/selectFileUpload.scpt"
   ]
 ]
