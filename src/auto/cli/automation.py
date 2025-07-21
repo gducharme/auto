@@ -279,6 +279,7 @@ def _interactive_menu(
         ("fill", "Fill a selector with text"),
         ("run_js", "Run arbitrary JavaScript"),
         ("run_js_file", "Run JavaScript from a file"),
+        ("run_applescript_file", "Run AppleScript from a file"),
         ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
         ("quit", "Exit the menu"),
@@ -331,6 +332,19 @@ def _interactive_menu(
             result = controller.run_js(code)
             if result:
                 print(result)
+        elif choice == "run_applescript_file":
+            path_str = input("AppleScript file path: ")
+            path = Path(path_str)
+            collected.append(["run_applescript_file", path_str])
+            proc = subprocess.run(
+                ["osascript", str(path)], capture_output=True, text=True
+            )
+            if proc.returncode == 0:
+                out = proc.stdout.strip()
+                if out:
+                    print(out)
+            else:
+                print(proc.stderr.strip())
         elif choice == "fetch_dom":
             dom = fetch_dom_html()
             dest = test_dir / f"{step}.html"
@@ -412,6 +426,19 @@ def replay(name: str = "facebook") -> None:
                 controller.run_js(path.read_text())
             else:
                 typer.echo(f"JS file not found: {path}")
+        elif cmd == "run_applescript_file" and args:
+            path = Path(args[0])
+            if path.exists():
+                _slow_print(f"Running AppleScript from {path}")
+                proc = subprocess.run(
+                    ["osascript", str(path)], capture_output=True, text=True
+                )
+                if proc.returncode != 0:
+                    typer.echo(proc.stderr.strip())
+                elif proc.stdout:
+                    typer.echo(proc.stdout.strip())
+            else:
+                typer.echo(f"AppleScript file not found: {path}")
         elif cmd == "close_tab":
             _slow_print("Closing tab")
             controller.close_tab()
