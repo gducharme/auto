@@ -175,7 +175,7 @@ def safari_control(c):
     c.run("python -m auto.cli automation control-safari", pty=True)
 
 
-@task(help={"name": "Fixture name under tests/fixtures"})
+@task(help={"name": "Fixture name under tests/fixtures"}, positional=["name"])
 def replay(c, name="facebook"):
     """Replay recorded Safari commands."""
     cmd = "python -m auto.cli automation replay"

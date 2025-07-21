@@ -50,5 +50,5 @@ def test_replay_continue(monkeypatch, tmp_path):
 
     commands = json.loads((dst / "commands.json").read_text())
     assert (dst / "3.html").exists()
-    assert len(commands) == 5
-    assert commands[-1] == ["fetch_dom", "tests/fixtures/facebook/3.html"]
+    assert len(commands) == 13
+    assert commands[-1] == ["fetch_dom", "tests/fixtures/facebook/4.html"]
