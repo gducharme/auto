@@ -1,0 +1,30 @@
+[
+  [
+    "open",
+    "https://instagram.com"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/facebook.js"
+  ],
+  [
+    "run_js",
+    "debugClickElementByText(\"Create\")"
+  ],
+  [
+    "run_js",
+    "debugClickElementByText(\"Post\")"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/instagram/1.html"
+  ],
+  [
+    "run_js",
+    "debugClickElementByText(\"Select from computer\")"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/instagram/2.html"
+  ]
+]
