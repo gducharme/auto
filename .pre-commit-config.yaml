@@ -6,6 +6,7 @@ repos:
       - id: trailing-whitespace
       - id: check-yaml
       - id: check-added-large-files
+        exclude: '^tests/fixtures/.*$'
 
   - repo: https://github.com/psf/black
     rev: 24.4.0

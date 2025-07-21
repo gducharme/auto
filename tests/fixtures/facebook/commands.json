@@ -14,5 +14,37 @@
   [
     "fetch_dom",
     "tests/fixtures/facebook/2.html"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/substack.js"
+  ],
+  [
+    "run_js",
+    "clickButtonByText(\"Share post\")"
+  ],
+  [
+    "run_js",
+    "clickButtonByText(\"Facebook\")"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/substack.js"
+  ],
+  [
+    "run_js",
+    "clickButtonByText(\"Facebook\")"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/facebook/3.html"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/facebook.js"
+  ],
+  [
+    "run_js",
+    "clickElementByText('Share');"
   ]
 ]
