@@ -371,7 +371,11 @@ def control_safari() -> None:
 
 @app.command()
 def replay(name: str = "facebook") -> None:
-    """Replay recorded Safari commands from ``tests/fixtures/<name>``."""
+    """Replay recorded Safari commands from ``tests/fixtures/<name>``.
+
+    DOM snapshots are written to that same directory regardless of the paths
+    stored in the ``commands.json`` file.
+    """
 
     fixtures_root = Path("tests/fixtures")
     commands_path = fixtures_root / name / "commands.json"
@@ -412,7 +416,8 @@ def replay(name: str = "facebook") -> None:
             _slow_print("Closing tab")
             controller.close_tab()
         elif cmd == "fetch_dom" and args:
-            dest = Path(args[0])
+            src_path = Path(args[0])
+            dest = fixtures_root / name / src_path.name
             dest.parent.mkdir(parents=True, exist_ok=True)
             dom = fetch_dom_html()
             dest.write_text(dom)
