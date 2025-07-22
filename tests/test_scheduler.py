@@ -84,9 +84,13 @@ def test_import_before_plugin_setup(test_db_engine, monkeypatch):
     DummyPoster.called = False
 
     with SessionLocal() as session:
-        post = Post(id="4", title="T4", link="http://example4", summary="", published="")
+        post = Post(
+            id="4", title="T4", link="http://example4", summary="", published=""
+        )
         session.add(post)
-        status = PostStatus(post_id="4", network="mastodon", scheduled_at=datetime.now(timezone.utc))
+        status = PostStatus(
+            post_id="4", network="mastodon", scheduled_at=datetime.now(timezone.utc)
+        )
         session.add(status)
         task = Task(
             type="publish_post",

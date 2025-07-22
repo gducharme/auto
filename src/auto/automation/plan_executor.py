@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import argparse
 from .safari import SafariController
-from openai import OpenAI  # pseudo-import for LLM planning
+import dspy
 
 from ..plan.types import Plan, PlanManager, Step
 from ..plan.logging import (
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Planner (retro-causal “look-ahead”) ────────────────────────────────────────
 class Planner:
-    def __init__(self, llm_client: OpenAI):
+    def __init__(self, llm_client: Any):
         self.llm = llm_client
 
     def generate_plan(self, objective: str) -> Plan:
@@ -28,7 +28,7 @@ class Planner:
             f"Decompose the following objective into a numbered list of atomic steps:\n"
             f"Objective: {objective}\n"
         )
-        response = self.llm.complete(prompt)
+        response = self.llm(messages=[{"role": "user", "content": prompt}])
         lines = response.splitlines()
         steps = [
             Step(id=i, description=line.strip())
@@ -164,7 +164,9 @@ class StepExecutor:
                             )
                             if preview_obj:
                                 post = session.get(Post, step.post_id)
-                                preview = Template(preview_obj.content).render(post=post)
+                                preview = Template(preview_obj.content).render(
+                                    post=post
+                                )
                     if preview is None:
                         raise RuntimeError("preview text not found")
 
@@ -242,8 +244,11 @@ def main():
     try:
         plan = manager.load()
     except FileNotFoundError:
-        llm = OpenAI(api_key="YOUR_KEY")
-        planner = Planner(llm)
+        lm = dspy.LM(
+            "ollama_chat/gemma3:4b", api_base="http://localhost:11434", api_key=""
+        )
+        dspy.configure(lm=lm)
+        planner = Planner(lm)
         plan = planner.generate_plan("Merge pull request")
         manager.save(plan)
 

@@ -33,4 +33,3 @@ def reset_registry() -> None:
     """Clear the global registry (for tests)."""
     global _registry
     _registry = None
-

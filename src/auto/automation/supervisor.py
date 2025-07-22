@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from openai import OpenAI
+import dspy
 from ..utils.periodic import PeriodicWorker
 
 from ..plan.logging import ExecutionLogger, MemoryModule
@@ -26,7 +26,11 @@ class Supervisor:
         self.pm = PlanManager("plan.json")
         self.el = ExecutionLogger("execution_log.json")
         self.mm = MemoryModule("memory.json")
-        self.rp = RetroPlanner(llm_client=OpenAI(), log_store=self.el, pm=self.pm)
+        lm = dspy.LM(
+            "ollama_chat/gemma3:4b", api_base="http://localhost:11434", api_key=""
+        )
+        dspy.configure(lm=lm)
+        self.rp = RetroPlanner(llm_client=lm, log_store=self.el, pm=self.pm)
         self._last_check = datetime.min.replace(tzinfo=timezone.utc)
         self._worker = PeriodicWorker(self._step, 1)
 

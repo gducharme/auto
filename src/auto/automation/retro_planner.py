@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from openai import OpenAI
+from typing import Any
 
 from ..plan.logging import ExecutionLogger
 from ..plan.types import Plan, PlanManager, Step
@@ -13,7 +13,7 @@ class RetroPlanner:
     """Simple planner that can regenerate a plan using an LLM."""
 
     def __init__(
-        self, llm_client: OpenAI, log_store: ExecutionLogger, pm: PlanManager
+        self, llm_client: Any, log_store: ExecutionLogger, pm: PlanManager
     ) -> None:
         self.llm = llm_client
         self.log_store = log_store
@@ -36,7 +36,7 @@ class RetroPlanner:
     def replan(self, plan: Plan) -> Plan:
         prompt = self._build_prompt(plan)
         try:
-            response = self.llm.complete(prompt)
+            response = self.llm(messages=[{"role": "user", "content": prompt}])
         except Exception as exc:
             logger.warning("LLM replanning failed: %s", exc)
             return plan

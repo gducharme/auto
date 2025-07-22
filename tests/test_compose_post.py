@@ -33,14 +33,23 @@ class DummySafari:
 def test_compose_post_step(session, tmp_path):
     # create post, status and preview
     post = Post(id="1", title="Title", link="http://example", summary="", published="")
-    status = PostStatus(post_id="1", network="mastodon", scheduled_at=datetime.now(timezone.utc))
+    status = PostStatus(
+        post_id="1", network="mastodon", scheduled_at=datetime.now(timezone.utc)
+    )
     preview = PostPreview(
         post_id="1", network="mastodon", content="{{ post.title }} {{ post.link }}"
     )
     session.add_all([post, status, preview])
     session.commit()
 
-    step = Step(id=1, type="compose_post", post_id="1", network="mastodon", tags_var="tags", store_as="final")
+    step = Step(
+        id=1,
+        type="compose_post",
+        post_id="1",
+        network="mastodon",
+        tags_var="tags",
+        store_as="final",
+    )
     executor = StepExecutor(controller=DummySafari(), snapshot_dir=tmp_path)
     executor.variables["tags"] = ["#python", "#coding"]
 

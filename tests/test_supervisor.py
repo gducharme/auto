@@ -1,4 +1,6 @@
 import asyncio
+import sys
+import types
 from datetime import datetime, timezone, timedelta
 
 from auto.automation import supervisor
@@ -44,7 +46,10 @@ def test_supervisor_start_stop(monkeypatch):
     monkeypatch.setattr(supervisor, "ExecutionLogger", lambda *a, **k: el)
     monkeypatch.setattr(supervisor, "MemoryModule", lambda *a, **k: mm)
     monkeypatch.setattr(supervisor, "RetroPlanner", lambda *a, **k: rp)
-    monkeypatch.setattr(supervisor, "OpenAI", lambda *a, **k: object())
+    dummy_dspy = types.ModuleType("dspy")
+    dummy_dspy.LM = lambda *a, **k: object()
+    dummy_dspy.configure = lambda *a, **k: None
+    monkeypatch.setitem(sys.modules, "dspy", dummy_dspy)
 
     sup = supervisor.Supervisor()
     sup._last_check = (

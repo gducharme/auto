@@ -12,6 +12,7 @@ sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(BASE_ROOT))
 
 from auto.utils import project_root  # noqa: E402
+
 ROOT = project_root()
 
 from auto.feeds.ingestion import init_db  # noqa: E402

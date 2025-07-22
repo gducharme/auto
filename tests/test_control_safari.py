@@ -94,12 +94,14 @@ def test_control_safari_run_js_file_with_variable(monkeypatch, tmp_path):
     js_path.write_text("console.log({{num}});")
 
     key_inputs = iter(["8", "4", "a"])  # llm_query, run_js_file, quit
-    text_inputs = iter([
-        "demo_js_var",
-        "meaning?",
-        "num",
-        str(js_path),
-    ])
+    text_inputs = iter(
+        [
+            "demo_js_var",
+            "meaning?",
+            "num",
+            str(js_path),
+        ]
+    )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 
@@ -156,17 +158,20 @@ def test_control_safari_run_applescript_file_with_variable(monkeypatch, tmp_path
         content = Path(cmd[1]).read_text()
         outputs.append(content)
         from subprocess import CompletedProcess
+
         return CompletedProcess(cmd, 0, stdout="OK", stderr="")
 
     monkeypatch.setattr(tasks.subprocess, "run", fake_run)
 
     key_inputs = iter(["8", "5", "a"])  # llm_query, run_applescript_file, quit
-    text_inputs = iter([
-        "demo_scpt_var",
-        "hello?",
-        "word",
-        str(script_path),
-    ])
+    text_inputs = iter(
+        [
+            "demo_scpt_var",
+            "hello?",
+            "word",
+            str(script_path),
+        ]
+    )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 
