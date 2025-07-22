@@ -9,7 +9,7 @@ import subprocess
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import logging
 
@@ -26,6 +26,8 @@ class Step:
     url: Optional[str] = None
     selector: Optional[str] = None
     prompt_template: Optional[str] = None
+    fixture: Optional[str] = None
+    vars: dict[str, Any] = field(default_factory=dict)
     store_as: Optional[str] = None
     status: str = "pending"  # pending | success | failed | abandoned
     result: Optional[str] = None  # log of what happened

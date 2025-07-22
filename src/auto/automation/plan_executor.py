@@ -8,6 +8,7 @@ from .safari import SafariController
 from openai import OpenAI  # pseudo-import for LLM planning
 
 from ..plan.types import Plan, PlanManager, Step
+from .fixtures import load_commands
 from ..plan.logging import (
     configure_logging,
     ExecutionLogger,
@@ -48,24 +49,31 @@ class StepExecutor:
         max_retries: int = 3,
         snapshot_dir: str | Path = ".",
         cassette_dir: Optional[str | Path] = None,
+        fixtures_root: Optional[str | Path] = None,
     ) -> None:
         self.controller = controller or SafariController()
         self.max_retries = max_retries
         self.snapshot_dir = Path(snapshot_dir)
         self.cassette_dir = Path(cassette_dir) if cassette_dir else None
+        if fixtures_root is None:
+            fixtures_root = Path(__file__).resolve().parents[3] / "tests" / "fixtures"
+        self.fixtures_root = Path(fixtures_root)
         self.snapshot_dir.mkdir(parents=True, exist_ok=True)
         if self.cassette_dir:
             self.cassette_dir.mkdir(parents=True, exist_ok=True)
         # simple in-memory variable store for discovery steps
         self.variables: Dict[str, Any] = {}
 
-    def _render(self, template: str) -> str:
-        """Render a template string using variables from previous steps."""
+    def _render(self, template: str, vars: Optional[Dict[str, Any]] = None) -> str:
+        """Render a template string using stored and step variables."""
         from jinja2 import Template
 
+        context = {**self.variables}
+        if vars:
+            context.update(vars)
         try:
             tmpl = Template(template)
-            return tmpl.render(**self.variables)
+            return tmpl.render(**context)
         except Exception as e:
             logger.error(f"Template render failed for '{template}': {e}")
             return template
@@ -131,23 +139,42 @@ class StepExecutor:
                         step.selector = desc.split("click", 1)[1].strip()
 
                 if step.type == "navigate" and step.url:
-                    url = self._render(step.url)
+                    url = self._render(step.url, step.vars)
                     self.controller.open(url)
                     step.result = f"navigated to {url}"
                 elif step.type == "click" and step.selector:
-                    selector = self._render(step.selector)
+                    selector = self._render(step.selector, step.vars)
                     self.controller.click(selector)
                     step.result = f"clicked {selector}"
                 elif step.type == "discover" and step.prompt_template:
                     # Real implementation would call an LLM with DOM and the prompt
                     dom = self.controller.run_js("document.documentElement.outerHTML")
-                    rendered = self._render(step.prompt_template)
+                    rendered = self._render(step.prompt_template, step.vars)
                     logger.debug(f"Discovery prompt: {rendered[:100]}")
                     # Placeholder: store empty list
                     selectors: List[str] = []
                     if step.store_as:
                         self.variables[step.store_as] = selectors
                     step.result = f"discovered {len(selectors)} selectors"
+                elif step.type == "run_fixture" and step.fixture:
+                    vars_combined = {**self.variables, **(step.vars or {})}
+                    commands = load_commands(
+                        step.fixture, variables=vars_combined, root=self.fixtures_root
+                    )
+                    for cmd_entry in commands:
+                        cmd = cmd_entry[0]
+                        args = cmd_entry[1:]
+                        if cmd == "open" and args:
+                            self.controller.open(args[0])
+                        elif cmd == "click" and args:
+                            self.controller.click(args[0])
+                        elif cmd == "fill" and len(args) == 2:
+                            self.controller.fill(args[0], args[1])
+                        elif cmd == "run_js" and args:
+                            self.controller.run_js(args[0])
+                        elif cmd == "close_tab":
+                            self.controller.close_tab()
+                    step.result = f"ran fixture {step.fixture}"
                 else:
                     step.status = "failed"
                     step.result = "unsupported step type"

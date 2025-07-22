@@ -226,6 +226,11 @@ prompt.
 The ``llm_query`` option uses the same dspy configuration as the ``dspy_exp``
 experiment script, connecting to an Ollama instance running locally.
 
+Recorded command files may contain Jinja2 placeholders. When used in a plan
+step of type ``run_fixture``, variables provided by the step are substituted
+before replaying the commands. This enables developing a literal flow first and
+later parameterizing values.
+
 ## Running tests
 
 Before running tests, install the project dependencies. The

@@ -1,0 +1,4 @@
+[
+  ["open", "https://example.com/{{path}}"],
+  ["click", "{{selector}}"]
+]
