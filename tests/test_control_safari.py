@@ -139,3 +139,21 @@ def test_control_safari_llm_query(monkeypatch):
     log = json.loads((test_dir / "commands.json").read_text())
     assert log == [["llm_query", "ping?", "pong"]]
     shutil.rmtree(test_dir)
+
+
+def test_control_safari_abort(monkeypatch):
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
+
+    key_inputs = iter(["a"])  # abort
+    text_inputs = iter([
+        "demo_abort",
+    ])
+    monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
+    monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
+
+    tasks.control_safari()
+
+    test_dir = Path("tests/fixtures/demo_abort")
+    assert not test_dir.exists()

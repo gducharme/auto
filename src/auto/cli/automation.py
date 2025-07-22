@@ -285,7 +285,7 @@ def _interactive_menu(
     test_dir: Path,
     collected: list[list[str]],
     step: int,
-) -> tuple[list[list[str]], int]:
+) -> tuple[list[list[str]], int, bool]:
     """Run the interactive Safari control menu."""
 
     commands = [
@@ -298,10 +298,13 @@ def _interactive_menu(
         ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
         ("llm_query", "Send a prompt to the local LLM"),
-        ("quit", "Exit the menu"),
+        ("quit", "Save and exit"),
+        ("abort", "Exit without saving"),
     ]
 
     hex_keys = "0123456789abcdef"  # menu uses hexadecimal ordering 0-9 then a-f
+
+    aborted = False
 
     while True:
         print("\nAvailable commands:")
@@ -318,6 +321,9 @@ def _interactive_menu(
 
         choice, _ = commands[int(choice_idx, 16)]
         if choice == "quit":
+            break
+        elif choice == "abort":
+            aborted = True
             break
         elif choice == "open":
             url = input("URL: ")
@@ -384,7 +390,7 @@ def _interactive_menu(
             if response:
                 print(response)
 
-    return collected, step
+    return collected, step, aborted
 
 
 @app.command()
@@ -400,7 +406,11 @@ def control_safari() -> None:
 
     controller = SafariController()
     collected: list[list[str]] = []
-    _, _ = _interactive_menu(controller, test_dir, collected, 1)
+    collected, _, aborted = _interactive_menu(controller, test_dir, collected, 1)
+
+    if aborted:
+        shutil.rmtree(test_dir)
+        return
 
     if collected:
         print("\nCommand log:")
@@ -485,6 +495,8 @@ def replay(name: str = "facebook") -> None:
     if cont:
         step = _next_step(commands)
         test_dir = fixtures_root / name
-        updated, _ = _interactive_menu(controller, test_dir, commands, step)
+        updated, _, aborted = _interactive_menu(controller, test_dir, commands, step)
+        if aborted:
+            return
         if updated:
             commands_path.write_text(json.dumps(updated, indent=2))
