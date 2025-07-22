@@ -223,6 +223,9 @@ test, or "quit" to write out the recorded steps. This makes it easy to inject
 helper functions, run custom AppleScript snippets, or save responses from an LLM
 prompt.
 
+The ``llm_query`` option uses the same dspy configuration as the ``dspy_exp``
+experiment script, connecting to an Ollama instance running locally.
+
 ## Running tests
 
 Before running tests, install the project dependencies. The
