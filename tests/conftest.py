@@ -6,17 +6,20 @@ from sqlalchemy import create_engine
 import pytest
 import time
 
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
+BASE_ROOT = Path(__file__).resolve().parents[1]
+SRC = BASE_ROOT / "src"
 sys.path.insert(0, str(SRC))
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(BASE_ROOT))
+
+from auto.utils import project_root  # noqa: E402
+ROOT = project_root()
 
 from auto.feeds.ingestion import init_db  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402
 
 
 def _check_dependencies() -> None:
-    requirements_file = Path(__file__).resolve().parents[1] / "requirements.txt"
+    requirements_file = ROOT / "requirements.txt"
     missing = []
     for line in requirements_file.read_text().splitlines():
         line = line.strip()
