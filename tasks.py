@@ -185,6 +185,13 @@ def replay(c, name="facebook"):
 
 
 @task
+def dspy_exp(c):
+    """Run the standalone dspy experiment."""
+
+    c.run("python -m auto.cli automation dspy-experiment", pty=True)
+
+
+@task
 def parse_plan(c):
     """Parse PLAN.md into task files."""
     c.run(

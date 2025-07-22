@@ -147,9 +147,11 @@ def test_control_safari_abort(monkeypatch):
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
 
     key_inputs = iter(["a"])  # abort
-    text_inputs = iter([
-        "demo_abort",
-    ])
+    text_inputs = iter(
+        [
+            "demo_abort",
+        ]
+    )
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 
