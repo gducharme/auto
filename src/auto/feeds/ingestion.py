@@ -127,6 +127,12 @@ def _parse_entry(item):
     title = get("title")
     link = get("link")
     summary = get("description") or get("summary")
+    content = (
+        get("content:encoded")
+        or get("encoded")
+        or get("content")
+        or get("content_html")
+    )
     published = get("pubDate") or get("published")
     updated = get("updated") or get("updated_at")
 
@@ -143,7 +149,16 @@ def _parse_entry(item):
         except Exception:
             pass
 
-    return guid, title, link, summary, published, created_dt, updated_dt
+    return (
+        guid,
+        title,
+        link,
+        summary,
+        content,
+        published,
+        created_dt,
+        updated_dt,
+    )
 
 
 def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
@@ -155,15 +170,23 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
     ) as session:
         with session.begin():
             for item in items_iter:
-                guid, title, link, summary, published, created_dt, updated_dt = (
-                    _parse_entry(item)
-                )
+                (
+                    guid,
+                    title,
+                    link,
+                    summary,
+                    content,
+                    published,
+                    created_dt,
+                    updated_dt,
+                ) = _parse_entry(item)
 
                 post = Post(
                     id=guid,
                     title=title,
                     link=link,
                     summary=summary,
+                    content=content,
                     published=published,
                     created_at=created_dt,
                     updated_at=updated_dt,
@@ -175,7 +198,16 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
                         session.flush()
                     logger.info("Saved post: %s", title)
                 except IntegrityError:
-                    logger.info("Skipping existing post: %s", title)
+                    existing = session.get(Post, guid)
+                    if (
+                        existing is not None
+                        and not existing.content
+                        and content
+                    ):
+                        existing.content = content
+                        logger.info("Backfilled post: %s", title)
+                    else:
+                        logger.info("Skipping existing post: %s", title)
                 except Exception as exc:
                     logger.error("Failed to save post %s: %s", title, exc)
 
