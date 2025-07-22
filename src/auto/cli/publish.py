@@ -85,6 +85,10 @@ def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
     """Schedule a post for publishing."""
 
     scheduled_at = _parse_when(time)
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+    else:
+        scheduled_at = scheduled_at.astimezone(timezone.utc)
     networks = [network] if network else ["mastodon"]
 
     with SessionLocal() as session:
