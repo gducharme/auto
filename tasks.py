@@ -74,7 +74,7 @@ def list_schedule(c):
 def generate_preview(c, post_id, network="mastodon"):
     """Generate or update a preview for ``post_id``."""
     c.run(
-        f"python -m auto.cli publish generate-preview --post-id {post_id} --network {network}",
+        f"python -m auto.cli publish generate-preview {post_id} --network {network}",
         pty=True,
     )
 
@@ -92,7 +92,7 @@ def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
     when_flag = f"--when {when}" if when else ""
     dry_flag = "--dry-run" if dry_run else ""
     c.run(
-        f"python -m auto.cli publish create-preview --post-id {post_id} --network {network} {when_flag} {dry_flag}",
+        f"python -m auto.cli publish create-preview {post_id} --network {network} {when_flag} {dry_flag}",
         pty=True,
     )
 
@@ -106,7 +106,7 @@ def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
 def edit_preview(c, post_id, network="mastodon"):
     """Interactively edit a stored preview."""
     c.run(
-        f"python -m auto.cli publish edit-preview --post-id {post_id} --network {network}",
+        f"python -m auto.cli publish edit-preview {post_id} --network {network}",
         pty=True,
     )
 
