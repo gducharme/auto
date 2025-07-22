@@ -10,6 +10,7 @@ from alembic import command
 from dateutil import parser
 from pathlib import Path
 
+from ..utils import project_root
 from contextlib import contextmanager
 from typing import Iterator
 
@@ -24,8 +25,8 @@ from ..config import get_feed_url
 logger = logging.getLogger(__name__)
 
 
-# Determine project root four directories above this file
-BASE_DIR = Path(__file__).resolve().parents[3]
+# Project root directory
+BASE_DIR = project_root()
 DB_PATH = str(BASE_DIR / "substack.db")
 ALEMBIC_INI = BASE_DIR / "alembic.ini"
 

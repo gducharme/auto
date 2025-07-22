@@ -1,15 +1,15 @@
 import subprocess
 from pathlib import Path
 
+from ..utils import project_root
+
 
 class SafariController:
     """Control Safari using AppleScript commands."""
 
     def __init__(self, script: Path | None = None) -> None:
         if script is None:
-            script = (
-                Path(__file__).resolve().parents[3] / "scripts" / "safari_control.scpt"
-            )
+            script = project_root() / "scripts" / "safari_control.scpt"
         self.script = script
 
     def _run(self, command: str, *args: str) -> str:
