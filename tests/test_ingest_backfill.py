@@ -14,7 +14,13 @@ def test_ingest_backfills_existing_posts(test_db_engine):
         for it in items:
             guid = it.find("guid").text
             session.add(
-                Post(id=guid, title=f"t{guid}", link=f"http://{guid}", summary="", published="")
+                Post(
+                    id=guid,
+                    title=f"t{guid}",
+                    link=f"http://{guid}",
+                    summary="",
+                    published="",
+                )
             )
         session.commit()
 

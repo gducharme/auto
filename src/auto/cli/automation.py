@@ -378,14 +378,20 @@ def _interactive_menu(
             collected.append(["run_applescript_file", path_str])
             code = path.read_text()
             rendered = _render(code)
-            import tempfile, os
+            import tempfile
+            import os
+
             with tempfile.NamedTemporaryFile("w", suffix=".scpt", delete=False) as tmp:
                 tmp.write(rendered)
                 temp_path = tmp.name
-            proc = subprocess.run([
-                "osascript",
-                temp_path,
-            ], capture_output=True, text=True)
+            proc = subprocess.run(
+                [
+                    "osascript",
+                    temp_path,
+                ],
+                capture_output=True,
+                text=True,
+            )
             os.unlink(temp_path)
             if proc.returncode == 0:
                 out = proc.stdout.strip()
