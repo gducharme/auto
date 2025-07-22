@@ -23,8 +23,6 @@
 - Share a single logging setup between the main app and plan executor.
 
 ## BUGS
-- `schedule()` stores naive datetimes when no timezone is supplied, leading to
-  inconsistent scheduling.
 
 ## RECS
 - Add a CLI wrapper for common tasks like listing posts or scheduling to reduce reliance on Invoke.
