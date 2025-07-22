@@ -1,30 +1,7 @@
 [
   [
-    "run_applescript_file",
-    "tests/site_script/apple.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/apple.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/apple.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/selectFileUpload.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/selectFileUpload.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/selectFileUpload.scpt"
-  ],
-  [
-    "run_applescript_file",
-    "tests/site_script/selectFileUpload.scpt"
+    "llm_query",
+    "How are you? Tell me a joke, as a fish!",
+    "Fin-tastic! I\u2019m doing great, swimming around in a sea of information! \n\nAnd here\u2019s a joke for you:\n\nWhy did the fish blush? \n\n... Because it saw the ocean\u2019s bottom! \n\n\ud83d\udc20\ud83d\ude02 \n\nHope that made you smile!"
   ]
 ]
