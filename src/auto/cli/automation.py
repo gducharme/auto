@@ -63,14 +63,9 @@ def _next_step(commands: Iterable[list[str]]) -> int:
 def query_llm(prompt: str) -> str:
     """Return the response from a local LLM via dspy."""
 
-    import os
     import dspy
 
-    model = os.getenv("DSPY_MODEL", "gemma-3-27b-it-qat")
-    api_base = os.getenv("DSPY_API_BASE", "http://localhost:1234/v1")
-    model_type = os.getenv("DSPY_MODEL_TYPE", "chat")
-
-    lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
+    lm = dspy.LM("ollama_chat/gemma3:4b", api_base="http://localhost:11434", api_key="")
     dspy.configure(lm=lm)
     return lm(messages=[{"role": "user", "content": prompt}]).strip()
 
