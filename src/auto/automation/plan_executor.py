@@ -148,6 +148,38 @@ class StepExecutor:
                     if step.store_as:
                         self.variables[step.store_as] = selectors
                     step.result = f"discovered {len(selectors)} selectors"
+                elif step.type == "compose_post":
+                    preview = None
+                    if step.preview_var:
+                        preview = self.variables.get(step.preview_var)
+                    if preview is None and step.post_id and step.network:
+                        from ..db import SessionLocal
+                        from ..models import Post, PostPreview
+                        from jinja2 import Template
+
+                        with SessionLocal() as session:
+                            preview_obj = session.get(
+                                PostPreview,
+                                {"post_id": step.post_id, "network": step.network},
+                            )
+                            if preview_obj:
+                                post = session.get(Post, step.post_id)
+                                preview = Template(preview_obj.content).render(post=post)
+                    if preview is None:
+                        raise RuntimeError("preview text not found")
+
+                    tags: List[str] = []
+                    if step.tags_var:
+                        value = self.variables.get(step.tags_var)
+                        if isinstance(value, list):
+                            tags = [str(t) for t in value]
+                        elif isinstance(value, str):
+                            tags = [value]
+
+                    text = preview if not tags else f"{preview} {' '.join(tags)}"
+                    if step.store_as:
+                        self.variables[step.store_as] = text
+                    step.result = f"composed post text ({len(text)} chars)"
                 else:
                     step.status = "failed"
                     step.result = "unsupported step type"
