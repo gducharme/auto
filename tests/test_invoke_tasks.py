@@ -37,19 +37,19 @@ TEST_CASES = [
         inv.generate_preview,
         [123],
         {},
-        "python -m auto.cli publish generate-preview --post-id 123 --network mastodon",
+        "python -m auto.cli publish generate-preview 123 --network mastodon",
     ),
     (
         inv.create_preview,
         [123],
         {"when": "now", "dry_run": True},
-        "python -m auto.cli publish create-preview --post-id 123 --network mastodon --when now --dry-run",
+        "python -m auto.cli publish create-preview 123 --network mastodon --when now --dry-run",
     ),
     (
         inv.edit_preview,
         [123],
         {"network": "twitter"},
-        "python -m auto.cli publish edit-preview --post-id 123 --network twitter",
+        "python -m auto.cli publish edit-preview 123 --network twitter",
     ),
     (
         inv.trending_tags,
