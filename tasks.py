@@ -67,6 +67,21 @@ def list_schedule(c):
 
 @task(
     help={
+        "post_id": "ID of the post to schedule",
+        "when": "Publish time (e.g. '+10m' or ISO timestamp)",
+        "network": "Target social network (default: mastodon)",
+    }
+)
+def schedule(c, post_id, when, network="mastodon"):
+    """Schedule a post for publishing."""
+    c.run(
+        f"python -m auto.cli publish schedule {post_id} {when} --network {network}",
+        pty=True,
+    )
+
+
+@task(
+    help={
         "post_id": "ID of the post to generate a preview for",
         "network": "Target social network (default: mastodon)",
     }
