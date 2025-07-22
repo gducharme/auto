@@ -301,18 +301,22 @@ def _interactive_menu(
         ("quit", "Exit the menu"),
     ]
 
+    hex_keys = "0123456789abcdef"  # menu uses hexadecimal ordering 0-9 then a-f
+
     while True:
         print("\nAvailable commands:")
-        for i, (_, desc) in enumerate(commands, 1):
-            print(f"  {i}. {desc}")
-        print("Select option [1-{}]: ".format(len(commands)), end="", flush=True)
-        choice_idx = _read_key()
+        for i, (_, desc) in enumerate(commands):
+            key = hex_keys[i]
+            print(f"  {key}. {desc}")
+        last_key = hex_keys[len(commands) - 1]
+        print(f"Select option [0-{last_key}]: ", end="", flush=True)
+        choice_idx = _read_key().lower()
         print(choice_idx)  # echo the selected key
-        if not choice_idx.isdigit() or not (1 <= int(choice_idx) <= len(commands)):
+        if choice_idx not in hex_keys[: len(commands)]:
             print("Unknown command")
             continue
 
-        choice, _ = commands[int(choice_idx) - 1]
+        choice, _ = commands[int(choice_idx, 16)]
         if choice == "quit":
             break
         elif choice == "open":
@@ -465,7 +469,7 @@ def replay(name: str = "facebook") -> None:
             _slow_print("Closing tab")
             controller.close_tab()
         elif cmd == "llm_query" and len(args) >= 2:
-            prompt, response = args[0], args[1]
+            response = args[1]
             _slow_print(f"LLM response: {response}")
         elif cmd == "fetch_dom" and args:
             src_path = Path(args[0])
