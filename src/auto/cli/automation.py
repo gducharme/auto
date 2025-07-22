@@ -310,6 +310,14 @@ def _interactive_menu(
     if variables is None:
         variables = {}
 
+    def _render(template: str) -> str:
+        from jinja2 import Template
+
+        try:
+            return Template(template).render(**variables)
+        except Exception:
+            return template
+
     aborted = False
 
     while True:
@@ -334,26 +342,26 @@ def _interactive_menu(
         elif choice == "open":
             url = input("URL: ")
             collected.append(["open", url])
-            result = controller.open(url)
+            result = controller.open(_render(url))
             if result:
                 print(result)
         elif choice == "click":
             selector = input("Selector: ")
             collected.append(["click", selector])
-            result = controller.click(selector)
+            result = controller.click(_render(selector))
             if result:
                 print(result)
         elif choice == "fill":
             selector = input("Selector: ")
             text = input("Text: ")
             collected.append(["fill", selector, text])
-            result = controller.fill(selector, text)
+            result = controller.fill(_render(selector), _render(text))
             if result:
                 print(result)
         elif choice == "run_js":
             code = input("JavaScript: ")
             collected.append(["run_js", code])
-            result = controller.run_js(code)
+            result = controller.run_js(_render(code))
             if result:
                 print(result)
         elif choice == "run_js_file":
@@ -361,16 +369,24 @@ def _interactive_menu(
             path = Path(path_str)
             code = path.read_text()
             collected.append(["run_js_file", path_str])
-            result = controller.run_js(code)
+            result = controller.run_js(_render(code))
             if result:
                 print(result)
         elif choice == "run_applescript_file":
             path_str = input("AppleScript file path: ")
             path = Path(path_str)
             collected.append(["run_applescript_file", path_str])
-            proc = subprocess.run(
-                ["osascript", str(path)], capture_output=True, text=True
-            )
+            code = path.read_text()
+            rendered = _render(code)
+            import tempfile, os
+            with tempfile.NamedTemporaryFile("w", suffix=".scpt", delete=False) as tmp:
+                tmp.write(rendered)
+                temp_path = tmp.name
+            proc = subprocess.run([
+                "osascript",
+                temp_path,
+            ], capture_output=True, text=True)
+            os.unlink(temp_path)
             if proc.returncode == 0:
                 out = proc.stdout.strip()
                 if out:
