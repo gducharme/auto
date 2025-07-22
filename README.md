@@ -217,9 +217,10 @@ python -m auto.cli automation control-safari
 ```
 
 Alongside opening pages and clicking selectors, the menu now includes
-"run_js_file" and "run_applescript_file" options to execute code from external
-files. This makes it easy to inject helper functions or run custom AppleScript
-snippets.
+"run_js_file", "run_applescript_file", and "llm_query" options to execute code
+from external files or query a local LLM. This makes it easy to inject helper
+functions, run custom AppleScript snippets, or save responses from an LLM
+prompt.
 
 ## Running tests
 

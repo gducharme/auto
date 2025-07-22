@@ -60,6 +60,21 @@ def _next_step(commands: Iterable[list[str]]) -> int:
     return max(numbers) + 1 if numbers else 1
 
 
+def query_llm(prompt: str) -> str:
+    """Return the response from a local LLM via dspy."""
+
+    import os
+    import dspy
+
+    model = os.getenv("DSPY_MODEL", "gemma-3-27b-it-qat")
+    api_base = os.getenv("DSPY_API_BASE", "http://localhost:1234/v1")
+    model_type = os.getenv("DSPY_MODEL_TYPE", "chat")
+
+    lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
+    dspy.configure(lm=lm)
+    return dspy.chat(prompt).strip()
+
+
 app = typer.Typer(help="Automation commands")
 
 
@@ -282,6 +297,7 @@ def _interactive_menu(
         ("run_applescript_file", "Run AppleScript from a file"),
         ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
+        ("llm_query", "Send a prompt to the local LLM"),
         ("quit", "Exit the menu"),
     ]
 
@@ -357,6 +373,12 @@ def _interactive_menu(
             result = controller.close_tab()
             if result:
                 print(result)
+        elif choice == "llm_query":
+            prompt = input("Prompt: ")
+            response = query_llm(prompt)
+            collected.append(["llm_query", prompt, response])
+            if response:
+                print(response)
 
     return collected, step
 
@@ -442,6 +464,9 @@ def replay(name: str = "facebook") -> None:
         elif cmd == "close_tab":
             _slow_print("Closing tab")
             controller.close_tab()
+        elif cmd == "llm_query" and len(args) >= 2:
+            prompt, response = args[0], args[1]
+            _slow_print(f"LLM response: {response}")
         elif cmd == "fetch_dom" and args:
             src_path = Path(args[0])
             dest = fixtures_root / name / src_path.name
