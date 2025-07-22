@@ -39,7 +39,7 @@ def create_preview(
                 f"Create a short template for sharing the post titled '{post.title}'. "
                 "Use { post.link } as a placeholder for the link."
             )
-            content = dspy.chat(prompt).strip()
+            content = lm(messages=[{"role": "user", "content": prompt}]).strip()
         except Exception:
             content = f"{post.title} {{ post.link }}"
     else:

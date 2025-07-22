@@ -72,7 +72,7 @@ def query_llm(prompt: str) -> str:
 
     lm = dspy.LM(model=model, api_base=api_base, api_key="", model_type=model_type)
     dspy.configure(lm=lm)
-    return dspy.chat(prompt).strip()
+    return lm(messages=[{"role": "user", "content": prompt}]).strip()
 
 
 app = typer.Typer(help="Automation commands")
@@ -94,7 +94,7 @@ def chat(
 
     default_question = "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
     prompt = message or default_question
-    response = dspy.chat(prompt)
+    response = lm(messages=[{"role": "user", "content": prompt}])
     print(response)
 
 
