@@ -8,8 +8,6 @@ from bs4 import BeautifulSoup
 from alembic.config import Config
 from alembic import command
 from dateutil import parser
-from pathlib import Path
-
 from ..utils import project_root
 from contextlib import contextmanager
 from typing import Iterator
@@ -199,11 +197,7 @@ def save_entries(items, db_path=DB_PATH, *, engine=None, session_factory=None):
                     logger.info("Saved post: %s", title)
                 except IntegrityError:
                     existing = session.get(Post, guid)
-                    if (
-                        existing is not None
-                        and not existing.content
-                        and content
-                    ):
+                    if existing is not None and not existing.content and content:
                         existing.content = content
                         logger.info("Backfilled post: %s", title)
                     else:

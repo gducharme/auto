@@ -14,7 +14,12 @@ Run the `generate-preview` command with the post ID and network:
 python -m auto.cli publish generate-preview --post-id <id> --network mastodon
 ```
 
-This fetches the post from the database and creates or updates a row in `post_previews`. When `--use-llm` is provided, a local LLM is used to craft the text; otherwise a simple template is stored.
+This fetches the post from the database and generates a preview. The text sent
+to the LLM is loaded from the file specified by the `PREVIEW_TEMPLATE_PATH`
+environment variable or `src/auto/templates/preview_prompt.txt` by default. The
+previous preview is removed before the new one is saved. When `--use-llm` is
+provided, a local LLM creates the summary; otherwise the post title or summary
+is used.
 
 ### Scheduling Generation
 

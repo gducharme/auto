@@ -1,0 +1,3 @@
+Summarize the following post in one short paragraph:
+
+{{ content }}
