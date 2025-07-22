@@ -13,7 +13,7 @@ from sqlalchemy import and_, or_
 from .models import PostStatus, Post, PostPreview, Task
 
 from .db import SessionLocal, get_engine
-from .socials import registry
+from .socials.registry import get_registry
 
 # Temporary alias for tests using the old PLUGINS mapping
 from .metrics import POSTS_PUBLISHED, POSTS_FAILED
@@ -53,9 +53,8 @@ async def _publish(status: PostStatus, session: Session) -> None:
         session.commit()
         return
     try:
-        if registry.plugins is None:
-            raise RuntimeError("Plugin registry not initialized")
-        plugin = registry.plugins.get(status.network)
+        plugin_registry = get_registry()
+        plugin = plugin_registry.get(status.network)
         if plugin is None:
             raise ValueError(f"Unsupported network {status.network}")
         preview = session.get(
