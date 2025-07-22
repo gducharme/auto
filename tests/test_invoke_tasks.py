@@ -34,6 +34,12 @@ TEST_CASES = [
     ),
     (inv.list_schedule, [], {}, "python -m auto.cli publish list-schedule"),
     (
+        inv.schedule,
+        ["123", "+5m"],
+        {"network": "medium"},
+        "python -m auto.cli publish schedule 123 +5m --network medium",
+    ),
+    (
         inv.generate_preview,
         [123],
         {},
