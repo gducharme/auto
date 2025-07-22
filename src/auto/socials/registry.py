@@ -18,6 +18,19 @@ class PluginRegistry:
         return self._plugins.get(name)
 
 
-# Global reference to the application's plugin registry. It is created during
-# application startup.
-plugins: PluginRegistry | None = None
+_registry: PluginRegistry | None = None
+
+
+def get_registry() -> PluginRegistry:
+    """Return the application's :class:`PluginRegistry` instance."""
+    global _registry
+    if _registry is None:
+        _registry = PluginRegistry()
+    return _registry
+
+
+def reset_registry() -> None:
+    """Clear the global registry (for tests)."""
+    global _registry
+    _registry = None
+

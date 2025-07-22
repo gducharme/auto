@@ -4,8 +4,7 @@ import json
 
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, Task, PostPreview
-from auto.socials import registry
-from auto.socials.registry import PluginRegistry
+from auto.socials.registry import get_registry, reset_registry
 from auto.socials.mastodon_client import MastodonClient
 import pytest
 from auto.scheduler import process_pending, Scheduler
@@ -22,10 +21,11 @@ class DummyPoster:
 
 @pytest.fixture(autouse=True)
 def setup_plugins():
-    registry.plugins = PluginRegistry()
-    registry.plugins.register(MastodonClient())
+    reset_registry()
+    reg = get_registry()
+    reg.register(MastodonClient())
     yield
-    registry.plugins = None
+    reset_registry()
 
 
 async def run_process():
@@ -58,8 +58,7 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     async def fake_post(text, visibility="unlisted"):
         DummyPoster.post(text)
 
-    assert registry.plugins is not None
-    plugin = registry.plugins.get("mastodon")
+    plugin = get_registry().get("mastodon")
     assert plugin is not None
     monkeypatch.setattr(plugin, "post", fake_post)
     monkeypatch.setenv("POST_DELAY", "0")
@@ -77,6 +76,49 @@ def test_publish_post_task(test_db_engine, monkeypatch):
     assert DummyPoster.called
     assert POSTS_PUBLISHED.labels(network="mastodon")._value.get() == start + 1
     assert POSTS_FAILED.labels(network="mastodon")._value.get() == fail_start
+
+
+def test_import_before_plugin_setup(test_db_engine, monkeypatch):
+    """Importing scheduler before registering plugins should not break."""
+    reset_registry()
+    DummyPoster.called = False
+
+    with SessionLocal() as session:
+        post = Post(id="4", title="T4", link="http://example4", summary="", published="")
+        session.add(post)
+        status = PostStatus(post_id="4", network="mastodon", scheduled_at=datetime.now(timezone.utc))
+        session.add(status)
+        task = Task(
+            type="publish_post",
+            payload=json.dumps({"post_id": "4", "network": "mastodon"}),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+        )
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    reg = get_registry()
+    reg.register(MastodonClient())
+
+    async def fake_post(text, visibility="unlisted"):
+        DummyPoster.post(text)
+
+    plugin = reg.get("mastodon")
+    assert plugin is not None
+    monkeypatch.setattr(plugin, "post", fake_post)
+    monkeypatch.setenv("POST_DELAY", "0")
+
+    start = POSTS_PUBLISHED.labels(network="mastodon")._value.get()
+
+    asyncio.run(run_process())
+
+    with SessionLocal() as session:
+        ps = session.get(PostStatus, {"post_id": "4", "network": "mastodon"})
+        assert ps.status == "published"
+        t = session.get(Task, task_id)
+        assert t.status == "completed"
+    assert DummyPoster.called
+    assert POSTS_PUBLISHED.labels(network="mastodon")._value.get() == start + 1
 
 
 def test_ingest_feed_task(test_db_engine, monkeypatch):
@@ -135,8 +177,7 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
     async def fail_post(text, visibility="unlisted"):
         raise RuntimeError("boom")
 
-    assert registry.plugins is not None
-    plugin = registry.plugins.get("mastodon")
+    plugin = get_registry().get("mastodon")
     assert plugin is not None
     monkeypatch.setattr(plugin, "post", fail_post)
     monkeypatch.setenv("POST_DELAY", "0")

@@ -7,7 +7,7 @@ from .scheduler import Scheduler
 from . import configure_logging
 from .metrics import router as metrics_router
 from .web_posts import router as posts_router
-from .socials import registry
+from .socials.registry import get_registry
 from .socials.mastodon_client import MastodonClient
 from .socials.medium_client import MediumClient
 import logging
@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     configure_logging()
     init_db()
-    registry.plugins = registry.PluginRegistry()
-    registry.plugins.register(MastodonClient())
-    registry.plugins.register(MediumClient())
+    reg = get_registry()
+    reg.register(MastodonClient())
+    reg.register(MediumClient())
     sched = Scheduler()
     await sched.start()
     try:
