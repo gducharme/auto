@@ -232,6 +232,8 @@ def create_preview(
 def generate_preview(
     post_id: str,
     network: str = "mastodon",
+    notes: Optional[str] = None,
+    tags_limit: int = 0,
     use_llm: bool = False,
     model: str = "gemma-3-27b-it-qat",
     api_base: str = "http://localhost:1234/v1",
@@ -245,6 +247,8 @@ def generate_preview(
                 session,
                 post_id,
                 network,
+                notes=notes,
+                tags_limit=tags_limit,
                 use_llm=use_llm,
                 model=model,
                 api_base=api_base,

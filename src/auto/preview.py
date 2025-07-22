@@ -5,6 +5,7 @@ import dspy
 from sqlalchemy.orm import Session
 
 from .models import Post, PostStatus, PostPreview
+from .socials.mastodon_client import fetch_trending_tags
 
 
 def create_preview(
@@ -12,6 +13,8 @@ def create_preview(
     post_id: str,
     network: str = "mastodon",
     *,
+    notes: str | None = None,
+    tags_limit: int = 0,
     use_llm: bool = False,
     model: str = "gemma-3-27b-it-qat",
     api_base: str = "http://localhost:1234/v1",
@@ -29,6 +32,14 @@ def create_preview(
 
     preview = session.get(PostPreview, {"post_id": post_id, "network": network})
 
+    extra = ""
+    if tags_limit > 0:
+        tags = fetch_trending_tags(limit=tags_limit)
+        if tags:
+            extra += "\n" + " ".join(f"#{t}" for t in tags)
+    if notes:
+        extra += f"\n{notes}"
+
     if use_llm:
         try:
             lm = dspy.LM(
@@ -37,13 +48,13 @@ def create_preview(
             dspy.configure(lm=lm)
             prompt = (
                 f"Create a short template for sharing the post titled '{post.title}'. "
-                "Use { post.link } as a placeholder for the link."
+                "Use { post.link } as a placeholder for the link." + extra
             )
             content = lm(messages=[{"role": "user", "content": prompt}]).strip()
         except Exception:
-            content = f"{post.title} {{ post.link }}"
+            content = f"{post.title} {{ post.link }}" + extra
     else:
-        content = f"{post.title} {{ post.link }}"
+        content = f"{post.title} {{ post.link }}" + extra
 
     if preview is None:
         preview = PostPreview(post_id=post_id, network=network, content=content)

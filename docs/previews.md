@@ -16,6 +16,15 @@ python -m auto.cli publish generate-preview --post-id <id> --network mastodon
 
 This fetches the post from the database and creates or updates a row in `post_previews`. When `--use-llm` is provided, a local LLM is used to craft the text; otherwise a simple template is stored.
 
+Additional context can be supplied with `--notes` and `--tags-limit` to
+include free‑form notes or the names of trending tags in the prompt. For
+example:
+
+```bash
+python -m auto.cli publish generate-preview --post-id <id> \
+    --notes "Check analytics" --tags-limit 3 --use-llm
+```
+
 ### Scheduling Generation
 
 Instead of generating the preview immediately, you can create a `create_preview` task:

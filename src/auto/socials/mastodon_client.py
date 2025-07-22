@@ -1,13 +1,33 @@
 import asyncio
 import anyio
 import logging
-from typing import Dict
+from typing import Dict, List
 import httpx
 
 from .base import SocialPlugin
 from ..config import get_mastodon_instance, get_mastodon_token
 
 logger = logging.getLogger(__name__)
+
+
+def fetch_trending_tags(limit: int = 10) -> List[str]:
+    """Return a list of trending tag names from Mastodon."""
+    from mastodon import Mastodon
+
+    instance = get_mastodon_instance()
+    token = get_mastodon_token()
+
+    try:
+        masto = Mastodon(access_token=token, api_base_url=instance)
+        tags = masto.trending_tags(limit=limit)
+        names = [
+            tag["name"] if isinstance(tag, dict) else getattr(tag, "name", str(tag))
+            for tag in tags
+        ]
+        return names
+    except Exception as exc:  # pragma: no cover - best effort
+        logger.error("Failed to fetch trending tags: %s", exc)
+        return []
 
 
 class MastodonClient(SocialPlugin):

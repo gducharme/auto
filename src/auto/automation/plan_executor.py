@@ -148,6 +148,39 @@ class StepExecutor:
                     if step.store_as:
                         self.variables[step.store_as] = selectors
                     step.result = f"discovered {len(selectors)} selectors"
+                elif step.type == "compose_post" and step.post_id:
+                    from jinja2 import Template
+                    from ..db import SessionLocal
+                    from ..models import Post, PostPreview
+                    from ..socials.mastodon_client import fetch_trending_tags
+
+                    with SessionLocal() as db:
+                        post = db.get(Post, step.post_id)
+                        if post is None:
+                            raise RuntimeError(f"post {step.post_id} not found")
+                        preview = db.get(
+                            PostPreview,
+                            {"post_id": step.post_id, "network": step.network},
+                        )
+
+                    if preview:
+                        text = Template(preview.content).render(post=post)
+                    else:
+                        text = f"{post.title} {post.link}"
+
+                    extra = ""
+                    if step.tags_limit > 0:
+                        tags = fetch_trending_tags(limit=step.tags_limit)
+                        if tags:
+                            extra += " " + " ".join(f"#{t}" for t in tags)
+                    if step.notes:
+                        extra += f"\n{step.notes}"
+
+                    text += extra
+
+                    if step.store_as:
+                        self.variables[step.store_as] = text
+                    step.result = f"composed {len(text)} chars"
                 else:
                     step.status = "failed"
                     step.result = "unsupported step type"

@@ -26,6 +26,10 @@ class Step:
     url: Optional[str] = None
     selector: Optional[str] = None
     prompt_template: Optional[str] = None
+    post_id: Optional[str] = None
+    network: str = "mastodon"
+    notes: Optional[str] = None
+    tags_limit: int = 0
     store_as: Optional[str] = None
     status: str = "pending"  # pending | success | failed | abandoned
     result: Optional[str] = None  # log of what happened
