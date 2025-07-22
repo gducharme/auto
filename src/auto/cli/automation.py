@@ -286,6 +286,7 @@ def _interactive_menu(
     test_dir: Path,
     collected: list[list[str]],
     step: int,
+    variables: dict[str, str] | None = None,
 ) -> tuple[list[list[str]], int, bool]:
     """Run the interactive Safari control menu."""
 
@@ -299,11 +300,15 @@ def _interactive_menu(
         ("fetch_dom", "Save page DOM to fixture"),
         ("close_tab", "Close the current tab"),
         ("llm_query", "Send a prompt to the local LLM"),
+        ("read_var", "Print a stored variable"),
         ("quit", "Save and exit"),
         ("abort", "Exit without saving"),
     ]
 
     hex_keys = "0123456789abcdef"  # menu uses hexadecimal ordering 0-9 then a-f
+
+    if variables is None:
+        variables = {}
 
     aborted = False
 
@@ -387,9 +392,17 @@ def _interactive_menu(
         elif choice == "llm_query":
             prompt = input("Prompt: ")
             response = query_llm(prompt)
-            collected.append(["llm_query", prompt, response])
             if response:
                 print(response)
+            name = input("store_as (optional): ").strip()
+            entry = ["llm_query", prompt, response]
+            if name:
+                variables[name] = response
+                entry.append(name)
+            collected.append(entry)
+        elif choice == "read_var":
+            name = input("Variable name: ")
+            print(variables.get(name, ""))
 
     return collected, step, aborted
 
@@ -407,7 +420,10 @@ def control_safari() -> None:
 
     controller = SafariController()
     collected: list[list[str]] = []
-    collected, _, aborted = _interactive_menu(controller, test_dir, collected, 1)
+    variables: dict[str, str] = {}
+    collected, _, aborted = _interactive_menu(
+        controller, test_dir, collected, 1, variables
+    )
 
     if aborted:
         shutil.rmtree(test_dir)
@@ -438,24 +454,37 @@ def replay(name: str = "facebook") -> None:
 
     controller = SafariController()
 
+    variables: dict[str, str] = {}
+
+    def _render(template: str) -> str:
+        from jinja2 import Template
+
+        try:
+            return Template(template).render(**variables)
+        except Exception:
+            return template
+
     for entry in commands:
         cmd = entry[0]
         args = entry[1:]
         if cmd == "open" and args:
-            url = args[0]
+            url = _render(args[0])
             _slow_print(f"Opening {url}")
             controller.open(url)
         elif cmd == "click" and args:
-            selector = args[0]
+            selector = _render(args[0])
             _slow_print(f"Clicking {selector}")
             controller.click(selector)
         elif cmd == "fill" and len(args) == 2:
             selector, text = args
+            selector = _render(selector)
+            text = _render(text)
             _slow_print(f"Filling {selector}")
             controller.fill(selector, text)
         elif cmd == "run_js" and args:
+            code = _render(args[0])
             _slow_print("Running JavaScript")
-            controller.run_js(args[0])
+            controller.run_js(code)
         elif cmd == "run_js_file" and args:
             path = Path(args[0])
             if path.exists():
@@ -481,7 +510,10 @@ def replay(name: str = "facebook") -> None:
             controller.close_tab()
         elif cmd == "llm_query" and len(args) >= 2:
             response = args[1]
+            store_as = args[2] if len(args) > 2 else None
             _slow_print(f"LLM response: {response}")
+            if store_as:
+                variables[store_as] = response
         elif cmd == "fetch_dom" and args:
             src_path = Path(args[0])
             dest = fixtures_root / name / src_path.name
@@ -496,7 +528,9 @@ def replay(name: str = "facebook") -> None:
     if cont:
         step = _next_step(commands)
         test_dir = fixtures_root / name
-        updated, _, aborted = _interactive_menu(controller, test_dir, commands, step)
+        updated, _, aborted = _interactive_menu(
+            controller, test_dir, commands, step, variables
+        )
         if aborted:
             return
         if updated:
