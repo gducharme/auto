@@ -43,6 +43,7 @@ class Post(Base):
     title = Column(String, nullable=False)
     link = Column(String, nullable=False)
     summary = Column(Text)
+    content = Column(Text)
     published = Column(String)
     created_at = Column(
         TZDateTime(),
