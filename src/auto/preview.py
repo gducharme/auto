@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
 
 import dspy
+from jinja2 import Template
 from sqlalchemy.orm import Session
 
 from .models import Post, PostStatus, PostPreview
@@ -12,6 +15,7 @@ def create_preview(
     post_id: str,
     network: str = "mastodon",
     *,
+    template_path: str | None = None,
     use_llm: bool = False,
     model: str = "gemma-3-27b-it-qat",
     api_base: str = "http://localhost:1234/v1",
@@ -27,7 +31,14 @@ def create_preview(
     if post is None:
         raise ValueError(f"Post {post_id} not found")
 
-    preview = session.get(PostPreview, {"post_id": post_id, "network": network})
+    if template_path is None:
+        template_path = os.getenv("PREVIEW_TEMPLATE_PATH")
+    if template_path is None:
+        template_path = (
+            Path(__file__).resolve().parent / "templates" / "preview_prompt.txt"
+        )
+    template_str = Path(template_path).read_text()
+    message = Template(template_str).render(content=post.content or "")
 
     if use_llm:
         try:
@@ -35,20 +46,17 @@ def create_preview(
                 model=model, api_base=api_base, api_key="", model_type=model_type
             )
             dspy.configure(lm=lm)
-            prompt = (
-                f"Create a short template for sharing the post titled '{post.title}'. "
-                "Use { post.link } as a placeholder for the link."
-            )
-            content = lm(messages=[{"role": "user", "content": prompt}]).strip()
+            content = lm(messages=[{"role": "user", "content": message}]).strip()
         except Exception:
-            content = f"{post.title} {{ post.link }}"
+            content = post.summary or post.title
     else:
-        content = f"{post.title} {{ post.link }}"
+        content = post.summary or post.title
 
-    if preview is None:
-        preview = PostPreview(post_id=post_id, network=network, content=content)
-        session.add(preview)
-    else:
-        preview.content = content
+    preview = session.get(PostPreview, {"post_id": post_id, "network": network})
+    if preview is not None:
+        session.delete(preview)
 
+    preview = PostPreview(post_id=post_id, network=network, content=content)
+    session.add(preview)
     session.commit()
+    print(content)
