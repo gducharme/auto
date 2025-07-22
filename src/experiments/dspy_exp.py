@@ -1,24 +1,31 @@
-"""Quick experiment for the dspy LLM wrapper."""
+"""Showcase Jinja templating with the dspy LLM wrapper."""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
 
 import dspy
+from jinja2 import Template
 
 
 def main() -> None:
-    """Run a simple dspy prompt."""
+    """Render the preview template and send it to a local LLM."""
+    template_path = os.getenv(
+        "PREVIEW_TEMPLATE_PATH",
+        Path(__file__).resolve().parents[1]
+        / "auto"
+        / "templates"
+        / "preview_prompt.txt",
+    )
+
+    content = "This is a demonstration post used to showcase the preview template."
+    message = Template(Path(template_path).read_text()).render(content=content)
+
     lm = dspy.LM("ollama_chat/gemma3:4b", api_base="http://localhost:11434", api_key="")
     dspy.configure(lm=lm)
 
-    task = """
-    The task is to create a prompt for an AI agent.
-
-    The main task is to act as an observer.
-    If there are no pending tasks in the existing TODO.md file, then new objective is to examine the entire project and populate the TODO sections with new priorities. Do not add new sections, instead reuse the empty sections.
-
-    If there are pending tasks, then there is nothing for you to do as an observer
-
-
-    """
-    print(lm(messages=[{"role": "user", "content": task}]))
+    print(lm(messages=[{"role": "user", "content": message}]))
 
 
 if __name__ == "__main__":
