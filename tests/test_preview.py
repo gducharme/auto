@@ -22,12 +22,12 @@ def test_create_preview_replaces(session, tmp_path):
     template = tmp_path / "tmpl.txt"
     template.write_text("Summary:\n{{ content }}")
 
-    create_preview(session, "p1", "mastodon", template_path=str(template))
+    create_preview(session, "p1", "mastodon", template_path=str(template), use_llm=False)
 
     first = session.get(PostPreview, {"post_id": "p1", "network": "mastodon"})
     assert first is not None
     template.write_text("Updated:\n{{ content }}")
-    create_preview(session, "p1", "mastodon", template_path=str(template))
+    create_preview(session, "p1", "mastodon", template_path=str(template), use_llm=False)
 
     second = session.get(PostPreview, {"post_id": "p1", "network": "mastodon"})
     assert second is not None
