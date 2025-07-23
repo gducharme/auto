@@ -98,14 +98,15 @@ def generate_preview(c, post_id, network="mastodon"):
     help={
         "post_id": "ID of the post to generate a preview for",
         "network": "Target social network (default: mastodon)",
+        "use_llm": "Generate the preview using the LLM",
     }
 )
-def create_preview(c, post_id, network="mastodon"):
+def create_preview(c, post_id, network="mastodon", use_llm=False):
     """Generate a preview template via the LLM."""
-    c.run(
-        f"python -m auto.cli publish create-preview {post_id} --network {network}",
-        pty=True,
-    )
+    cmd = f"python -m auto.cli publish create-preview {post_id} --network {network}"
+    if use_llm:
+        cmd += " --use-llm"
+    c.run(cmd, pty=True)
 
 
 @task(
