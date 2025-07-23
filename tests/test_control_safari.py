@@ -250,3 +250,28 @@ def test_control_safari_abort(monkeypatch):
 
     test_dir = Path("tests/fixtures/demo_abort")
     assert not test_dir.exists()
+
+
+def test_control_safari_initial_vars(monkeypatch):
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+
+    recorded = {}
+
+    def fake_menu(controller, test_dir, collected, step, variables):
+        recorded.update(variables)
+        return collected, step, True
+
+    monkeypatch.setattr(tasks, "_interactive_menu", fake_menu)
+
+    text_inputs = iter([
+        "demo_vars",
+    ])
+    monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
+
+    tasks.control_safari(post_id="42", network="testnet")
+
+    assert recorded["post_id"] == "42"
+    assert recorded["network"] == "testnet"
+    test_dir = Path("tests/fixtures/demo_vars")
+    assert not test_dir.exists()

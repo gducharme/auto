@@ -433,7 +433,9 @@ def _interactive_menu(
 
 
 @app.command()
-def control_safari() -> None:
+def control_safari(
+    post_id: Optional[str] = None, network: str = "mastodon"
+) -> None:
     """Interactively control Safari via a menu loop."""
 
     test_name = input("Test name: ")
@@ -446,6 +448,10 @@ def control_safari() -> None:
     controller = SafariController()
     collected: list[list[str]] = []
     variables: dict[str, str] = {}
+    if post_id is not None:
+        variables["post_id"] = post_id
+    if network:
+        variables["network"] = network
     collected, _, aborted = _interactive_menu(
         controller, test_dir, collected, 1, variables
     )
