@@ -207,13 +207,13 @@ def test_create_preview_task(test_db_engine):
         session.add(
             PostStatus(
                 post_id="3",
-                network="mastodon",
+                network="medium",
                 scheduled_at=datetime.now(timezone.utc),
             )
         )
         task = Task(
             type="create_preview",
-            payload=json.dumps({"post_id": "3", "network": "mastodon"}),
+            payload=json.dumps({"post_id": "3", "network": "medium"}),
             scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
         )
         session.add(task)
@@ -223,7 +223,7 @@ def test_create_preview_task(test_db_engine):
     asyncio.run(run_process())
 
     with SessionLocal() as session:
-        preview = session.get(PostPreview, {"post_id": "3", "network": "mastodon"})
+        preview = session.get(PostPreview, {"post_id": "3", "network": "medium"})
         assert preview is not None
         t = session.get(Task, task_id)
         assert t.status == "completed"

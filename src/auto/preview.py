@@ -17,9 +17,6 @@ def create_preview(
     *,
     template_path: str | None = None,
     use_llm: bool = False,
-    model: str = "gemma-3-27b-it-qat",
-    api_base: str = "http://localhost:1234/v1",
-    model_type: str = "chat",
 ) -> None:
     """Generate or update a preview for ``post_id`` and ``network``."""
 
@@ -35,7 +32,9 @@ def create_preview(
         template_path = os.getenv("PREVIEW_TEMPLATE_PATH")
     if template_path is None:
         template_path = (
-            Path(__file__).resolve().parent / "templates" / "preview_prompt.txt"
+            Path(__file__).resolve().parent
+            / "templates"
+            / f"{network}_preview_prompt.txt"
         )
     template_str = Path(template_path).read_text()
     message = Template(template_str).render(content=post.content or "")
@@ -43,10 +42,15 @@ def create_preview(
     if use_llm:
         try:
             lm = dspy.LM(
-                model=model, api_base=api_base, api_key="", model_type=model_type
+                "ollama_chat/gemma3:4b",
+                api_base="http://localhost:11434",
+                api_key="",
             )
             dspy.configure(lm=lm)
-            content = lm(messages=[{"role": "user", "content": message}]).strip()
+            response = lm(messages=[{"role": "user", "content": message}])
+            if isinstance(response, list):
+                response = response[0]
+            content = str(response).strip()
         except Exception:
             content = post.summary or post.title
     else:
