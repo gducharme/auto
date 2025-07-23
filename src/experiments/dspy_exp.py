@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from sqlalchemy import select
+import argparse
 
 import dspy
 from jinja2 import Template
@@ -14,7 +15,10 @@ from auto.db import SessionLocal
 from auto.models import Post
 
 
-def main() -> None:
+from typing import Optional
+
+
+def main(post_id: Optional[int] = None) -> None:
     """Render the preview template and send it to a local LLM."""
     template_path = os.getenv(
         "PREVIEW_TEMPLATE_PATH",
@@ -24,7 +28,15 @@ def main() -> None:
         / "preview_prompt.txt",
     )
 
-    stmt = select(Post).where(Post.content.is_not(None)).order_by(Post.created_at).limit(1)
+    if post_id is not None:
+        stmt = select(Post).where(Post.id == post_id)
+    else:
+        stmt = (
+            select(Post)
+            .where(Post.content.is_not(None))
+            .order_by(Post.created_at)
+            .limit(1)
+        )
 
     with SessionLocal() as session:
         post = session.execute(stmt).scalars().first()
@@ -42,4 +54,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Summarize a Post with dspy")
+    parser.add_argument("--post-id", type=int, help="ID of the Post to summarize")
+    args = parser.parse_args()
+    main(post_id=args.post_id)

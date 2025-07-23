@@ -199,11 +199,14 @@ def replay(c, name="facebook"):
     c.run(cmd, pty=True)
 
 
-@task
-def dspy_exp(c):
+@task(help={"post_id": "ID of the post to summarize"})
+def dspy_exp(c, post_id):
     """Run the standalone dspy experiment."""
 
-    c.run("python -m auto.cli automation dspy-experiment", pty=True)
+    c.run(
+        f"python -m auto.cli automation dspy-experiment --post-id {post_id}",
+        pty=True,
+    )
 
 
 @task
