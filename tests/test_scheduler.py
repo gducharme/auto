@@ -198,7 +198,14 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
     assert POSTS_FAILED.labels(network="mastodon")._value.get() == start + 1
 
 
-def test_create_preview_task(test_db_engine):
+def test_create_preview_task(test_db_engine, monkeypatch):
+    from auto import preview as preview_module
+    monkeypatch.setattr(
+        "auto.scheduler._create_preview",
+        lambda session, post_id, network: preview_module.create_preview(
+            session, post_id, network, use_llm=False
+        ),
+    )
     with SessionLocal() as session:
         post = Post(
             id="3", title="T3", link="http://example3", summary="", published=""
