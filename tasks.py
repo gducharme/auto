@@ -201,12 +201,23 @@ def safari_control(c):
     c.run("python -m auto.cli automation control-safari", pty=True)
 
 
-@task(help={"name": "Fixture name under tests/fixtures"}, positional=["name"])
-def replay(c, name="facebook"):
+@task(
+    help={
+        "name": "Fixture name under tests/fixtures",
+        "network": "Target social network (default: mastodon)",
+        "post_id": "Post ID for template variables",
+    },
+    positional=["name"],
+)
+def replay(c, name="facebook", network="mastodon", post_id=None):
     """Replay recorded Safari commands."""
     cmd = "python -m auto.cli automation replay"
     if name != "facebook":
         cmd += f" --name {name}"
+    if network != "mastodon":
+        cmd += f" --network {network}"
+    if post_id:
+        cmd += f" --post-id {post_id}"
     c.run(cmd, pty=True)
 
 

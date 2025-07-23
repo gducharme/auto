@@ -207,9 +207,9 @@ Recorded browser sessions can be replayed with either the direct command or the
 ``invoke`` wrapper:
 
 ```bash
-python -m auto.cli automation replay facebook
+python -m auto.cli automation replay facebook --post-id 42 --network mastodon
 # or simply
-invoke replay facebook
+invoke replay facebook --post-id 42 --network mastodon
 ```
 
 For ad-hoc experimentation you can launch an interactive Safari control menu:
