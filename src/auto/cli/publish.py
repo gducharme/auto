@@ -262,6 +262,20 @@ def edit_preview(post_id: str, network: str = "mastodon") -> None:
     print("Preview updated")
 
 
+@app.command()
+def delete_preview(post_id: str, network: str = "mastodon") -> None:
+    """Delete a stored post preview."""
+
+    with SessionLocal() as session:
+        preview = session.get(PostPreview, {"post_id": post_id, "network": network})
+        if preview is None:
+            print("Preview not found")
+            return
+        session.delete(preview)
+        session.commit()
+    print("Preview deleted")
+
+
 @app.async_command()
 async def sync_mastodon_posts() -> None:
     """Mark posts as published if they already appear on Mastodon."""

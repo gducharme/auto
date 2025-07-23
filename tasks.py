@@ -124,6 +124,20 @@ def edit_preview(c, post_id, network="mastodon"):
 
 @task(
     help={
+        "post_id": "ID of the post to delete",
+        "network": "Target social network (default: mastodon)",
+    }
+)
+def delete_preview(c, post_id, network="mastodon"):
+    """Remove a stored preview."""
+    c.run(
+        f"python -m auto.cli publish delete-preview {post_id} --network {network}",
+        pty=True,
+    )
+
+
+@task(
+    help={
         "limit": "Number of tags to display",
         "instance": "Mastodon instance URL",
         "token": "Access token for the instance",

@@ -58,6 +58,12 @@ TEST_CASES = [
         "python -m auto.cli publish edit-preview 123 --network twitter",
     ),
     (
+        inv.delete_preview,
+        ["abc"],
+        {"network": "mastodon"},
+        "python -m auto.cli publish delete-preview abc --network mastodon",
+    ),
+    (
         inv.trending_tags,
         [],
         {"limit": 3, "instance": "mastodon.social", "token": "tok"},
