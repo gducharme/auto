@@ -40,6 +40,11 @@
     "tests/site_js/facebook.js"
   ],
   [
+    "fill",
+    "div[aria-label='Tweet text']",
+    "{{ tweet }}"
+  ],
+  [
     "close_tab"
   ]
 ]
