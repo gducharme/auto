@@ -52,3 +52,30 @@ def test_replay_continue(monkeypatch, tmp_path):
     assert (dst / "3.html").exists()
     assert len(commands) == 13
     assert commands[-1] == ["fetch_dom", "tests/fixtures/facebook/4.html"]
+
+
+def test_replay_initial_vars(monkeypatch, tmp_path):
+    src = Path("tests/fixtures/facebook")
+    dst = tmp_path / "tests" / "fixtures" / "facebook"
+    shutil.copytree(src, dst)
+    monkeypatch.chdir(tmp_path)
+
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
+
+    recorded = {}
+
+    def fake_menu(controller, test_dir, commands, step, variables):
+        recorded.update(variables)
+        return commands, step, True
+
+    monkeypatch.setattr(tasks, "_interactive_menu", fake_menu)
+
+    inputs = iter(["y"])  # continue recording
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    tasks.replay("facebook", post_id="42", network="testnet")
+
+    assert recorded["post_id"] == "42"
+    assert recorded["network"] == "testnet"

@@ -486,7 +486,11 @@ def control_safari(post_id: Optional[str] = None, network: str = "mastodon") -> 
 
 
 @app.command()
-def replay(name: str = "facebook") -> None:
+def replay(
+    name: str = "facebook",
+    post_id: Optional[str] = None,
+    network: str = "mastodon",
+) -> None:
     """Replay recorded Safari commands from ``tests/fixtures/<name>``.
 
     DOM snapshots are written to that same directory regardless of the paths
@@ -504,6 +508,10 @@ def replay(name: str = "facebook") -> None:
     controller = SafariController()
 
     variables: dict[str, str] = {}
+    if post_id is not None:
+        variables["post_id"] = post_id
+    if network:
+        variables["network"] = network
 
     def _render(template: str) -> str:
         from jinja2 import Template
