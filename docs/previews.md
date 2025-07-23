@@ -41,6 +41,14 @@ python -m auto.cli publish edit-preview --post-id <id> --network mastodon
 
 Your editor opens with the current template. Saving the file updates the `post_previews` entry for that network.
 
+## Deleting a Preview
+
+Remove an existing preview if you no longer want to keep it:
+
+```bash
+python -m auto.cli publish delete-preview --post-id <id> --network mastodon
+```
+
 ## Scheduler Pickup
 
 The background scheduler looks for due tasks in the `tasks` table. When it encounters a `create_preview` task it calls `auto.preview.create_preview` to generate the preview. When a `publish_post` task runs, the scheduler loads the corresponding preview, renders it with Jinja, and posts the result via the appropriate plugin.

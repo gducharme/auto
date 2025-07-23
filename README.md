@@ -111,6 +111,7 @@ Previews are small templates used when posting to other networks. They can be li
 python -m auto.cli publish list-previews
 python -m auto.cli publish generate-preview --post-id <id> --network mastodon
 python -m auto.cli publish edit-preview --post-id <id> --network mastodon
+python -m auto.cli publish delete-preview --post-id <id> --network mastodon
 ```
 
 `generate-preview` uses a local LLM when available and falls back to a simple template. Previews are only created when the post has been scheduled.
