@@ -199,7 +199,7 @@ def replay(c, name="facebook"):
     c.run(cmd, pty=True)
 
 
-@task(help={"post_id": "ID of the post to summarize"})
+@task(help={"post_id": "ID or URL of the post to summarize"})
 def dspy_exp(c, post_id):
     """Run the standalone dspy experiment."""
 

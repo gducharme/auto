@@ -18,7 +18,7 @@ from auto.models import Post
 from typing import Optional
 
 
-def main(post_id: Optional[int] = None) -> None:
+def main(post_id: Optional[str] = None) -> None:
     """Render the preview template and send it to a local LLM."""
     template_path = os.getenv(
         "PREVIEW_TEMPLATE_PATH",
@@ -55,6 +55,10 @@ def main(post_id: Optional[int] = None) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Summarize a Post with dspy")
-    parser.add_argument("--post-id", type=int, help="ID of the Post to summarize")
+    parser.add_argument(
+        "--post-id",
+        type=str,
+        help="ID or URL of the Post to summarize",
+    )
     args = parser.parse_args()
     main(post_id=args.post_id)
