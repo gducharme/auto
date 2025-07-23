@@ -52,6 +52,12 @@ TEST_CASES = [
         "python -m auto.cli publish create-preview 123 --network mastodon",
     ),
     (
+        inv.create_preview,
+        [123],
+        {"use_llm": True},
+        "python -m auto.cli publish create-preview 123 --network mastodon --use-llm",
+    ),
+    (
         inv.edit_preview,
         [123],
         {"network": "twitter"},
