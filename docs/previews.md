@@ -17,7 +17,8 @@ python -m auto.cli publish generate-preview --post-id <id> --network mastodon
 This fetches the post from the database and generates a preview. The text sent
 to the LLM is loaded from the file specified by the `PREVIEW_TEMPLATE_PATH`
 environment variable or `src/auto/templates/medium_preview_prompt.txt` by default. The
-previous preview is removed before the new one is saved. When `--use-llm` is
+template receives the post content via `{{ content }}` and the original URL as
+`{{ post_id }}`. The previous preview is removed before the new one is saved. When `--use-llm` is
 provided, a local LLM creates the summary using the same configuration as the
 `dspy-exp` experiment (`ollama_chat/gemma3:4b` on `http://localhost:11434`).
 Otherwise the post title or summary is used.

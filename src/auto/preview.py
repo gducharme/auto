@@ -37,7 +37,7 @@ def create_preview(
             / f"{network}_preview_prompt.txt"
         )
     template_str = Path(template_path).read_text()
-    message = Template(template_str).render(content=post.content or "")
+    message = Template(template_str).render(content=post.content or "", post_id=post_id)
 
     if use_llm:
         try:
