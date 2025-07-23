@@ -1,12 +1,15 @@
-import auto.main as main
 from auto.db import SessionLocal
 from auto.models import Post
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
+from auto.web_posts import router as posts_router
 
 
 def test_post_form_insert(test_db_engine, monkeypatch):
     monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
-    with TestClient(main.app) as client:
+    app = FastAPI()
+    app.include_router(posts_router)
+    with TestClient(app) as client:
         resp = client.get("/posts/new")
         assert resp.status_code == 200
         assert "<form" in resp.text
