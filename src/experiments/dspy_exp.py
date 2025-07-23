@@ -25,7 +25,7 @@ def main(post_id: Optional[str] = None) -> None:
         Path(__file__).resolve().parents[1]
         / "auto"
         / "templates"
-        / "preview_prompt.txt",
+        / "medium_preview_prompt.txt",
     )
 
     if post_id is not None:

@@ -98,16 +98,12 @@ def generate_preview(c, post_id, network="mastodon"):
     help={
         "post_id": "ID of the post to generate a preview for",
         "network": "Target social network (default: mastodon)",
-        "when": "Schedule time (e.g. '+10m' or ISO timestamp)",
-        "dry_run": "Print actions without writing to the database",
     }
 )
-def create_preview(c, post_id, network="mastodon", when=None, dry_run=False):
-    """Schedule preview generation."""
-    when_flag = f"--when {when}" if when else ""
-    dry_flag = "--dry-run" if dry_run else ""
+def create_preview(c, post_id, network="mastodon"):
+    """Generate a preview template via the LLM."""
     c.run(
-        f"python -m auto.cli publish create-preview {post_id} --network {network} {when_flag} {dry_flag}",
+        f"python -m auto.cli publish create-preview {post_id} --network {network}",
         pty=True,
     )
 

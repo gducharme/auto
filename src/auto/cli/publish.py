@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import Optional
-import json
 from datetime import datetime, timezone
 
 import typer
@@ -200,36 +199,22 @@ def list_previews() -> None:
 def create_preview(
     post_id: str,
     network: str = "mastodon",
-    when: Optional[str] = None,
-    dry_run: bool = False,
+    use_llm: bool = False,
 ) -> None:
-    """Schedule a preview generation task.
-
-    If ``dry_run`` is true, print the scheduling info without
-    writing to the database.
-    """
-
-    scheduled_at = _parse_when(when) if when else datetime.now(timezone.utc)
+    """Generate or update a preview for a scheduled post."""
 
     with SessionLocal() as session:
-        if session.get(Post, post_id) is None:
-            print(f"Post {post_id} not found")
-            return
-        status = session.get(PostStatus, {"post_id": post_id, "network": network})
-        if status is None:
-            print(f"Post {post_id} is not scheduled for {network}")
-            return
-        payload = json.dumps({"post_id": post_id, "network": network})
-        if dry_run:
-            print(
-                "Dry run: would schedule preview task for"
-                f" {post_id} at {scheduled_at.isoformat()}"
+        try:
+            _create_preview(
+                session,
+                post_id,
+                network,
+                use_llm=use_llm,
             )
+        except ValueError as exc:
+            print(str(exc))
             return
-        task = Task(type="create_preview", payload=payload, scheduled_at=scheduled_at)
-        session.add(task)
-        session.commit()
-    print(f"Preview task scheduled for {post_id} at {scheduled_at.isoformat()}")
+    print("Preview saved")
 
 
 @app.command()
@@ -237,9 +222,6 @@ def generate_preview(
     post_id: str,
     network: str = "mastodon",
     use_llm: bool = False,
-    model: str = "gemma-3-27b-it-qat",
-    api_base: str = "http://localhost:1234/v1",
-    model_type: str = "chat",
 ) -> None:
     """Generate or update a preview template for a scheduled post."""
 
@@ -250,9 +232,6 @@ def generate_preview(
                 post_id,
                 network,
                 use_llm=use_llm,
-                model=model,
-                api_base=api_base,
-                model_type=model_type,
             )
         except ValueError as exc:
             print(str(exc))

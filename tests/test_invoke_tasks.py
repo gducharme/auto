@@ -48,8 +48,8 @@ TEST_CASES = [
     (
         inv.create_preview,
         [123],
-        {"when": "now", "dry_run": True},
-        "python -m auto.cli publish create-preview 123 --network mastodon --when now --dry-run",
+        {},
+        "python -m auto.cli publish create-preview 123 --network mastodon",
     ),
     (
         inv.edit_preview,
