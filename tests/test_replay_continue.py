@@ -41,7 +41,7 @@ def test_replay_continue(monkeypatch, tmp_path):
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
     monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
 
-    key_inputs = iter(["6", "a"])  # fetch_dom then quit
+    key_inputs = iter(["6", "b"])  # fetch_dom then quit
     monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
     inputs = iter(["y"])  # continue recording
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))

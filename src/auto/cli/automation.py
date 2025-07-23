@@ -304,6 +304,7 @@ def _interactive_menu(
         ("close_tab", "Close the current tab"),
         ("llm_query", "Send a prompt to the local LLM"),
         ("read_var", "Print a stored variable"),
+        ("load_post", "Load a post preview"),
         ("quit", "Save and exit"),
         ("abort", "Exit without saving"),
     ]
@@ -428,14 +429,31 @@ def _interactive_menu(
         elif choice == "read_var":
             name = input("Variable name: ")
             print(variables.get(name, ""))
+        elif choice == "load_post":
+            post_id = input("Post ID: ")
+            network = input("Network [mastodon]: ").strip() or "mastodon"
+            from auto.db import SessionLocal
+            from auto.models import PostPreview, Post
+            from jinja2 import Template
+
+            with SessionLocal() as session:
+                preview = session.get(
+                    PostPreview, {"post_id": post_id, "network": network}
+                )
+                post = session.get(Post, post_id)
+
+            if preview and post:
+                variables["tweet"] = Template(preview.content).render(post=post)
+                print("Preview loaded into variables['tweet']")
+                collected.append(["load_post", post_id, network])
+            else:
+                print("Post or preview not found")
 
     return collected, step, aborted
 
 
 @app.command()
-def control_safari(
-    post_id: Optional[str] = None, network: str = "mastodon"
-) -> None:
+def control_safari(post_id: Optional[str] = None, network: str = "mastodon") -> None:
     """Interactively control Safari via a menu loop."""
 
     test_name = input("Test name: ")
