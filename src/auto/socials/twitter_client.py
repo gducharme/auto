@@ -47,4 +47,6 @@ class TwitterClient(SocialPlugin):
             # ignore unsupported commands like fetch_dom
 
     async def fetch_metrics(self, post_id: str) -> Dict[str, int]:
+        """Return dummy engagement metrics for ``post_id``."""
+        logger.info("Fetching metrics for tweet %s", post_id)
         return {}

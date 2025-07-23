@@ -34,7 +34,7 @@ def test_control_safari(monkeypatch, capsys):
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
 
-    key_inputs = iter(["0", "6", "a"])  # open, fetch_dom, quit
+    key_inputs = iter(["0", "6", "b"])  # open, fetch_dom, quit
     text_inputs = iter(
         [
             "demo_test",
@@ -69,7 +69,7 @@ def test_control_safari_run_js_file(monkeypatch, tmp_path):
     js_code = "console.log('hello');"
     js_path.write_text(js_code)
 
-    key_inputs = iter(["4", "a"])  # run_js_file, quit
+    key_inputs = iter(["4", "b"])  # run_js_file, quit
     text_inputs = iter(
         [
             "demo_js",
@@ -93,7 +93,7 @@ def test_control_safari_run_js_file_with_variable(monkeypatch, tmp_path):
     js_path = tmp_path / "helper.js"
     js_path.write_text("console.log({{num}});")
 
-    key_inputs = iter(["8", "4", "a"])  # llm_query, run_js_file, quit
+    key_inputs = iter(["8", "4", "b"])  # llm_query, run_js_file, quit
     text_inputs = iter(
         [
             "demo_js_var",
@@ -128,7 +128,7 @@ def test_control_safari_run_applescript_file(monkeypatch, tmp_path):
 
     monkeypatch.setattr(tasks.subprocess, "run", fake_run)
 
-    key_inputs = iter(["5", "a"])  # run_applescript_file, quit
+    key_inputs = iter(["5", "b"])  # run_applescript_file, quit
     text_inputs = iter(
         [
             "demo_scpt",
@@ -163,7 +163,7 @@ def test_control_safari_run_applescript_file_with_variable(monkeypatch, tmp_path
 
     monkeypatch.setattr(tasks.subprocess, "run", fake_run)
 
-    key_inputs = iter(["8", "5", "a"])  # llm_query, run_applescript_file, quit
+    key_inputs = iter(["8", "5", "b"])  # llm_query, run_applescript_file, quit
     text_inputs = iter(
         [
             "demo_scpt_var",
@@ -186,7 +186,7 @@ def test_control_safari_llm_query(monkeypatch):
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "query_llm", lambda prompt: "pong")
 
-    key_inputs = iter(["8", "a"])  # llm_query, quit
+    key_inputs = iter(["8", "b"])  # llm_query, quit
     text_inputs = iter(
         [
             "demo_llm",
@@ -210,7 +210,7 @@ def test_control_safari_fill_with_variable(monkeypatch):
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "query_llm", lambda prompt: "hello")
 
-    key_inputs = iter(["8", "2", "a"])  # llm_query, fill, quit
+    key_inputs = iter(["8", "2", "b"])  # llm_query, fill, quit
     text_inputs = iter(
         [
             "demo_fill_var",
@@ -237,7 +237,7 @@ def test_control_safari_abort(monkeypatch):
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
 
-    key_inputs = iter(["b"])  # abort
+    key_inputs = iter(["c"])  # abort
     text_inputs = iter(
         [
             "demo_abort",
@@ -264,9 +264,11 @@ def test_control_safari_initial_vars(monkeypatch):
 
     monkeypatch.setattr(tasks, "_interactive_menu", fake_menu)
 
-    text_inputs = iter([
-        "demo_vars",
-    ])
+    text_inputs = iter(
+        [
+            "demo_vars",
+        ]
+    )
     monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
 
     tasks.control_safari(post_id="42", network="testnet")
@@ -275,3 +277,38 @@ def test_control_safari_initial_vars(monkeypatch):
     assert recorded["network"] == "testnet"
     test_dir = Path("tests/fixtures/demo_vars")
     assert not test_dir.exists()
+
+
+def test_interactive_menu_load_post(monkeypatch, test_db_engine, tmp_path):
+    from auto.db import SessionLocal
+    from auto.models import Post, PostPreview
+
+    with SessionLocal() as session:
+        post = Post(id="1", title="T", link="http://ex", summary="", published="")
+        preview = PostPreview(
+            post_id="1", network="mastodon", content="Hello {{post.title}}"
+        )
+        session.add_all([post, preview])
+        session.commit()
+
+    controller = DummyController()
+    variables = {}
+
+    key_inputs = iter(["a", "b"])  # load_post, quit
+    text_inputs = iter(
+        [
+            "1",
+            "mastodon",
+        ]
+    )
+    monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
+    monkeypatch.setattr("builtins.input", lambda _: next(text_inputs))
+
+    collected, step, aborted = tasks._interactive_menu(
+        controller, tmp_path, [], 1, variables
+    )
+
+    assert not aborted
+    assert step == 1
+    assert collected == [["load_post", "1", "mastodon"]]
+    assert variables["tweet"] == "Hello T"

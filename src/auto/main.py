@@ -10,6 +10,7 @@ from .web_posts import router as posts_router
 from .socials.registry import get_registry
 from .socials.mastodon_client import MastodonClient
 from .socials.medium_client import MediumClient
+from .socials.twitter_client import TwitterClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
     reg = get_registry()
     reg.register(MastodonClient())
     reg.register(MediumClient())
+    reg.register(TwitterClient())
     sched = Scheduler()
     await sched.start()
     try:
