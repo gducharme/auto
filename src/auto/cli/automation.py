@@ -100,10 +100,13 @@ def chat(
 
 
 @app.command()
-def dspy_experiment() -> None:
+def dspy_experiment(post_id: Optional[int] = None) -> None:
     """Run the standalone dspy experiment script."""
 
-    subprocess.run(["python", "src/experiments/dspy_exp.py"], check=True)
+    cmd = ["python", "src/experiments/dspy_exp.py"]
+    if post_id is not None:
+        cmd += ["--post-id", str(post_id)]
+    subprocess.run(cmd, check=True)
 
 
 @app.command()

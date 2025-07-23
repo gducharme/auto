@@ -95,7 +95,12 @@ TEST_CASES = [
         {"name": "twitter"},
         "python -m auto.cli automation replay --name twitter",
     ),
-    (inv.dspy_exp, [], {}, "python -m auto.cli automation dspy-experiment"),
+    (
+        inv.dspy_exp,
+        [123],
+        {},
+        "python -m auto.cli automation dspy-experiment --post-id 123",
+    ),
     (
         inv.parse_plan,
         [],
