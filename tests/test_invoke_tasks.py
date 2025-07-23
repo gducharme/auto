@@ -97,9 +97,9 @@ TEST_CASES = [
     ),
     (
         inv.dspy_exp,
-        [123],
+        ["abc"],
         {},
-        "python -m auto.cli automation dspy-experiment --post-id 123",
+        "python -m auto.cli automation dspy-experiment --post-id abc",
     ),
     (
         inv.parse_plan,

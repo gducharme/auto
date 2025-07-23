@@ -100,7 +100,7 @@ def chat(
 
 
 @app.command()
-def dspy_experiment(post_id: Optional[int] = None) -> None:
+def dspy_experiment(post_id: Optional[str] = None) -> None:
     """Run the standalone dspy experiment script."""
 
     cmd = ["python", "src/experiments/dspy_exp.py"]
