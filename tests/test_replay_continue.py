@@ -63,6 +63,7 @@ def test_replay_initial_vars(monkeypatch, tmp_path):
     controller = DummyController()
     monkeypatch.setattr(tasks, "SafariController", lambda: controller)
     monkeypatch.setattr(tasks, "fetch_dom_html", lambda url=None: "<html></html>")
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
 
     recorded = {}
 
