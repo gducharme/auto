@@ -16,7 +16,7 @@ def create_preview(
     network: str = "mastodon",
     *,
     template_path: str | None = None,
-    use_llm: bool = False,
+    use_llm: bool = True,
 ) -> None:
     """Generate or update a preview for ``post_id`` and ``network``."""
 
@@ -42,7 +42,7 @@ def create_preview(
     if use_llm:
         try:
             lm = dspy.LM(
-                "ollama_chat/gemma3:4b",
+                "ollama_chat/gemma3:12b",
                 api_base="http://localhost:11434",
                 api_key="",
             )

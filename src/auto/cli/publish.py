@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import timezone
 
 import typer
 from sqlalchemy import select, case
@@ -280,7 +280,6 @@ def delete_preview(post_id: str, network: str = "mastodon") -> None:
 async def sync_mastodon_posts() -> None:
     """Mark posts as published if they already appear on Mastodon."""
     from auto.db import SessionLocal
-    from auto.models import Task
     from auto.mastodon_sync import handle_sync_mastodon_posts
 
     with SessionLocal() as session:
