@@ -80,3 +80,4 @@ def test_replay_initial_vars(monkeypatch, tmp_path):
 
     assert recorded["post_id"] == "42"
     assert recorded["network"] == "testnet"
+    assert recorded["name"] == "facebook"
