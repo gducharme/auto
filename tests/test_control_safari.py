@@ -286,7 +286,9 @@ def test_interactive_menu_load_post(monkeypatch, test_db_engine, tmp_path):
     with SessionLocal() as session:
         post = Post(id="1", title="T", link="http://ex", summary="", published="")
         preview = PostPreview(
-            post_id="1", network="mastodon", content="Hello {{post.title}}"
+            post_id="1",
+            network="mastodon",
+            content='{"tweet": "Hello {{post.title}}"}',
         )
         session.add_all([post, preview])
         session.commit()

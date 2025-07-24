@@ -443,8 +443,20 @@ def _interactive_menu(
                 post = session.get(Post, post_id)
 
             if preview and post:
-                variables["tweet"] = Template(preview.content).render(post=post)
-                print("Preview loaded into variables['tweet']")
+                try:
+                    data = json.loads(preview.content)
+                except Exception:
+                    data = None
+
+                if isinstance(data, dict):
+                    for key, value in data.items():
+                        if isinstance(value, str):
+                            variables[key] = Template(value).render(post=post)
+                    loaded = ", ".join(data.keys()) if data else ""
+                    print(f"Preview loaded into variables: {loaded}")
+                else:
+                    variables["tweet"] = Template(preview.content).render(post=post)
+                    print("Preview loaded into variables['tweet']")
                 collected.append(["load_post", post_id, network])
             else:
                 print("Post or preview not found")
