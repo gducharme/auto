@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import Dict
 
 from jinja2 import Template
@@ -9,6 +10,8 @@ from jinja2 import Template
 from ..automation.safari import SafariController
 from ..utils import project_root
 from .base import SocialPlugin
+
+logger = logging.getLogger(__name__)
 
 
 class TwitterClient(SocialPlugin):
