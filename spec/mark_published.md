@@ -1,5 +1,7 @@
 # Mark Published
 Record that a post was successfully published on a network.
+The interactive `mark_published` command uses stored `post_id` and `network`
+variables to update both the `PostPreview` and `PostStatus` tables.
 
 ```json
 {

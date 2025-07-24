@@ -307,6 +307,7 @@ def _interactive_menu(
         ("load_post", "Load a post preview"),
         ("quit", "Save and exit"),
         ("abort", "Exit without saving"),
+        ("mark_published", "Mark current post as published"),
     ]
 
     hex_keys = "0123456789abcdef"  # menu uses hexadecimal ordering 0-9 then a-f
@@ -460,6 +461,43 @@ def _interactive_menu(
                 collected.append(["load_post", post_id, network])
             else:
                 print("Post or preview not found")
+        elif choice == "mark_published":
+            post_id = variables.get("post_id")
+            network = variables.get("network", "mastodon")
+            tweet = variables.get("tweet")
+            if not post_id:
+                print("post_id variable not set")
+                continue
+
+            from auto.db import SessionLocal
+            from auto.models import PostPreview, PostStatus
+
+            with SessionLocal() as session:
+                if tweet is not None:
+                    preview = session.get(
+                        PostPreview, {"post_id": post_id, "network": network}
+                    )
+                    if preview is None:
+                        preview = PostPreview(
+                            post_id=post_id, network=network, content=tweet
+                        )
+                        session.add(preview)
+                    else:
+                        preview.content = tweet
+                status = session.get(
+                    PostStatus, {"post_id": post_id, "network": network}
+                )
+                if status is None:
+                    status = PostStatus(
+                        post_id=post_id, network=network, status="published"
+                    )
+                    session.add(status)
+                else:
+                    status.status = "published"
+                session.commit()
+
+            collected.append(["mark_published", post_id, network])
+            print(f"Marked {post_id} on {network} as published")
 
     return collected, step, aborted
 
@@ -621,6 +659,39 @@ def replay(
                     _slow_print("Preview loaded into variables['tweet']")
             else:
                 typer.echo("Post or preview not found")
+        elif cmd == "mark_published" and len(args) >= 2:
+            from auto.db import SessionLocal
+            from auto.models import PostPreview, PostStatus
+
+            post_id = _render(args[0])
+            network = _render(args[1])
+            tweet = variables.get("tweet")
+
+            with SessionLocal() as session:
+                if tweet is not None:
+                    preview = session.get(
+                        PostPreview, {"post_id": post_id, "network": network}
+                    )
+                    if preview is None:
+                        preview = PostPreview(
+                            post_id=post_id, network=network, content=tweet
+                        )
+                        session.add(preview)
+                    else:
+                        preview.content = tweet
+
+                status = session.get(
+                    PostStatus, {"post_id": post_id, "network": network}
+                )
+                if status is None:
+                    status = PostStatus(
+                        post_id=post_id, network=network, status="published"
+                    )
+                    session.add(status)
+                else:
+                    status.status = "published"
+                session.commit()
+            _slow_print(f"Marked {post_id} on {network} as published")
         else:
             typer.echo(f"Unknown command: {cmd}")
 

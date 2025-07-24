@@ -1,0 +1,4 @@
+[
+  ["llm_query", "unused", "Posted text", "tweet"],
+  ["mark_published", "{{post_id}}", "{{network}}"]
+]

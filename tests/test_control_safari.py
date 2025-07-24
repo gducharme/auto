@@ -1,5 +1,6 @@
 from auto.cli import automation as tasks
 from pathlib import Path
+from datetime import datetime, timezone
 import json
 import shutil
 
@@ -314,3 +315,38 @@ def test_interactive_menu_load_post(monkeypatch, test_db_engine, tmp_path):
     assert step == 1
     assert collected == [["load_post", "1", "mastodon"]]
     assert variables["tweet"] == "Hello T"
+
+
+def test_interactive_menu_mark_published(monkeypatch, test_db_engine, tmp_path):
+    from auto.db import SessionLocal
+    from auto.models import Post, PostPreview, PostStatus
+
+    with SessionLocal() as session:
+        post = Post(id="1", title="T", link="http://ex", summary="", published="")
+        status = PostStatus(
+            post_id="1", network="mastodon", scheduled_at=datetime.now(timezone.utc)
+        )
+        preview = PostPreview(post_id="1", network="mastodon", content="old")
+        session.add_all([post, status, preview])
+        session.commit()
+
+    controller = DummyController()
+    variables = {"post_id": "1", "network": "mastodon", "tweet": "new text"}
+
+    key_inputs = iter(["d", "b"])  # mark_published, quit
+    monkeypatch.setattr(tasks, "_read_key", lambda: next(key_inputs))
+    monkeypatch.setattr("builtins.input", lambda _: "")
+
+    collected, step, aborted = tasks._interactive_menu(
+        controller, tmp_path, [], 1, variables
+    )
+
+    assert not aborted
+    assert step == 1
+    assert collected == [["mark_published", "1", "mastodon"]]
+
+    with SessionLocal() as session:
+        status = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
+        preview = session.get(PostPreview, {"post_id": "1", "network": "mastodon"})
+        assert status.status == "published"
+        assert preview.content == "new text"
