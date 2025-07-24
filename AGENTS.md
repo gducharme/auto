@@ -14,3 +14,4 @@ These principles emphasize explicit initialization, safe resource handling, and 
   AppleScript from `automation/safari.py` instead.
 - Typer doesn't support the ``str | None`` syntax. Use ``Optional[str]`` for
   command parameters.
+- When implementing new features, also write the spec in the `spec` folder.
