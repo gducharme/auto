@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import json
 import shutil
+import re
 
 from typing import Optional, Iterable
 
@@ -444,10 +445,21 @@ def _interactive_menu(
                 post = session.get(Post, post_id)
 
             if preview and post:
-                try:
-                    data = json.loads(preview.content)
-                except json.JSONDecodeError:
-                    data = None
+                raw = preview.content
+                m = re.search(r"```(?:json)?\s*(.*?)```", raw, flags=re.DOTALL)
+                if m:
+                    inner = m.group(1)
+                    try:
+                        data = json.loads(inner)
+                    except json.JSONDecodeError as e:
+                        print("JSON parse error:", e)
+                        data = None
+                else:
+                    print("No code-block found; using raw string")
+                    try:
+                        data = json.loads(raw)
+                    except json.JSONDecodeError:
+                        data = None
 
                 if isinstance(data, dict):
                     for key, value in data.items():
@@ -456,7 +468,7 @@ def _interactive_menu(
                     loaded = ", ".join(data.keys()) if data else ""
                     print(f"Preview loaded into variables: {loaded}")
                 else:
-                    variables["tweet"] = Template(preview.content).render(post=post)
+                    variables["tweet"] = Template(raw).render(post=post)
                     print("Preview loaded into variables['tweet']")
                 collected.append(["load_post", post_id, network])
             else:
@@ -643,10 +655,21 @@ def replay(
                 post = session.get(Post, post_id)
 
             if preview and post:
-                try:
-                    data = json.loads(preview.content)
-                except json.JSONDecodeError:
-                    data = None
+                raw = preview.content
+                m = re.search(r"```(?:json)?\s*(.*?)```", raw, flags=re.DOTALL)
+                if m:
+                    inner = m.group(1)
+                    try:
+                        data = json.loads(inner)
+                    except json.JSONDecodeError as e:
+                        print("JSON parse error:", e)
+                        data = None
+                else:
+                    print("No code-block found; using raw string")
+                    try:
+                        data = json.loads(raw)
+                    except json.JSONDecodeError:
+                        data = None
 
                 if isinstance(data, dict):
                     for key, value in data.items():
@@ -655,7 +678,7 @@ def replay(
                     loaded = ", ".join(data.keys()) if data else ""
                     _slow_print(f"Preview loaded into variables: {loaded}")
                 else:
-                    variables["tweet"] = Template(preview.content).render(post=post)
+                    variables["tweet"] = Template(raw).render(post=post)
                     _slow_print("Preview loaded into variables['tweet']")
             else:
                 typer.echo("Post or preview not found")
