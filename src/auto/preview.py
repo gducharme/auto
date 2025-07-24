@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 from pathlib import Path
 
 import dspy
@@ -51,13 +52,25 @@ def create_preview(
             response = lm(messages=[{"role": "user", "content": message}])
             if isinstance(response, list):
                 response = response[0]
-            content = str(response).strip()
-            try:
-                data = json.loads(content)
-                if not isinstance(data, dict):
-                    data = {"tweet": content}
-            except json.JSONDecodeError:
-                data = {"tweet": content}
+            raw = str(response).strip()
+
+            m = re.search(r"```(?:json)?\s*(.*?)```", raw, flags=re.DOTALL)
+            if m:
+                inner = m.group(1)
+                try:
+                    data = json.loads(inner)
+                except json.JSONDecodeError as e:
+                    print("JSON parse error:", e)
+                    data = None
+            else:
+                print("No code-block found; using raw string")
+                try:
+                    data = json.loads(raw)
+                except json.JSONDecodeError:
+                    data = None
+
+            if not isinstance(data, dict):
+                data = {"tweet": raw}
         except Exception:
             data = {"tweet": post.summary or post.title}
     else:
