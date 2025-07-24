@@ -28,9 +28,7 @@ def test_mark_published_creates_status(test_db_engine):
 
 def test_mark_published_updates_existing(test_db_engine):
     with SessionLocal() as session:
-        session.add(
-            PostStatus(post_id="1", network="mastodon", status="pending")
-        )
+        session.add(PostStatus(post_id="1", network="mastodon", status="pending"))
         task = Task(
             type="mark_published",
             payload=json.dumps({"post_id": "1", "network": "mastodon"}),

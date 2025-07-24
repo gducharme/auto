@@ -200,6 +200,7 @@ def test_publish_failure_metrics(test_db_engine, monkeypatch):
 
 def test_create_preview_task(test_db_engine, monkeypatch):
     from auto import preview as preview_module
+
     monkeypatch.setattr(
         "auto.scheduler._create_preview",
         lambda session, post_id, network: preview_module.create_preview(
