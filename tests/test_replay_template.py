@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from datetime import datetime, timezone
 
 from auto.cli import automation as tasks
 
@@ -76,3 +77,37 @@ def test_replay_load_post(monkeypatch, tmp_path, test_db_engine):
     tasks.replay("load_post", post_id="1", network="mastodon")
 
     assert ("open", "Hello T") in controller.calls
+
+
+def test_replay_mark_published(monkeypatch, tmp_path, test_db_engine):
+    src = Path("tests/fixtures/mark_published")
+    dst = tmp_path / "tests" / "fixtures" / "mark_published"
+    shutil.copytree(src, dst)
+    monkeypatch.chdir(tmp_path)
+
+    from auto.db import SessionLocal
+    from auto.models import Post, PostPreview, PostStatus
+
+    with SessionLocal() as session:
+        post = Post(id="1", title="T", link="http://ex", summary="", published="")
+        preview = PostPreview(post_id="1", network="mastodon", content="old")
+        status = PostStatus(
+            post_id="1", network="mastodon", scheduled_at=datetime.now(timezone.utc)
+        )
+        session.add_all([post, preview, status])
+        session.commit()
+
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
+
+    inputs = iter(["n"])  # do not continue recording
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    tasks.replay("mark_published", post_id="1", network="mastodon")
+
+    with SessionLocal() as session:
+        status = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
+        preview = session.get(PostPreview, {"post_id": "1", "network": "mastodon"})
+        assert status.status == "published"
+        assert preview.content == "Posted text"
