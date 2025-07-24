@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import dspy
+import json
 from jinja2 import Template
 from sqlalchemy.orm import Session
 
@@ -51,8 +52,14 @@ def create_preview(
             if isinstance(response, list):
                 response = response[0]
             content = str(response).strip()
-        except Exception:
-            content = post.summary or post.title
+        except Exception as exc:
+            raise ValueError(f"LLM failed: {exc}") from exc
+        try:
+            parsed = json.loads(content)
+            if not isinstance(parsed, dict):
+                raise ValueError("preview JSON must be an object")
+        except Exception as exc:
+            raise ValueError(f"Invalid JSON preview: {exc}") from exc
     else:
         content = post.summary or post.title
 
