@@ -507,7 +507,7 @@ def replay(
 
     controller = SafariController()
 
-    variables: dict[str, str] = {}
+    variables: dict[str, str] = {"name": name}
     if post_id is not None:
         variables["post_id"] = post_id
     if network:
