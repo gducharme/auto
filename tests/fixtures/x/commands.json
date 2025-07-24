@@ -1,0 +1,26 @@
+[
+  [
+    "open",
+    "{{post_id}}"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/substack.js"
+  ],
+  [
+    "run_js",
+    "clickShareButton()"
+  ],
+  [
+    "run_js",
+    "clickShareTo(\"X\")"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/twitter.js"
+  ],
+  [
+    "run_js",
+    "collapseSpansToText({{post_id}})"
+  ]
+]
