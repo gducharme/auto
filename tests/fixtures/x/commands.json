@@ -1,5 +1,10 @@
 [
   [
+    "load_post",
+    "{{post_id}}",
+    "{{network}}"
+  ],
+  [
     "open",
     "{{post_id}}"
   ],
@@ -21,6 +26,18 @@
   ],
   [
     "run_js",
-    "collapseSpansToText({{post_id}})"
+    "collapseSpansToText('{{post_id}}')"
+  ],
+  [
+    "run_js",
+    "collapseSpansToText('{{tweet}}')"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/facebook.js"
+  ],
+  [
+    "run_js",
+    "debugClickElementByText('Post')"
   ]
 ]
