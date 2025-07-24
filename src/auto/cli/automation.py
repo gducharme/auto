@@ -446,7 +446,7 @@ def _interactive_menu(
             if preview and post:
                 try:
                     data = json.loads(preview.content)
-                except Exception:
+                except json.JSONDecodeError:
                     data = None
 
                 if isinstance(data, dict):
@@ -645,7 +645,7 @@ def replay(
             if preview and post:
                 try:
                     data = json.loads(preview.content)
-                except Exception:
+                except json.JSONDecodeError:
                     data = None
 
                 if isinstance(data, dict):

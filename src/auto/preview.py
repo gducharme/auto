@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 
 import dspy
@@ -51,16 +52,26 @@ def create_preview(
             if isinstance(response, list):
                 response = response[0]
             content = str(response).strip()
+            try:
+                data = json.loads(content)
+                if not isinstance(data, dict):
+                    data = {"tweet": content}
+            except json.JSONDecodeError:
+                data = {"tweet": content}
         except Exception:
-            content = post.summary or post.title
+            data = {"tweet": post.summary or post.title}
     else:
-        content = post.summary or post.title
+        data = {"tweet": post.summary or post.title}
 
     preview = session.get(PostPreview, {"post_id": post_id, "network": network})
     if preview is not None:
         session.delete(preview)
 
-    preview = PostPreview(post_id=post_id, network=network, content=content)
+    preview = PostPreview(
+        post_id=post_id,
+        network=network,
+        content=json.dumps(data),
+    )
     session.add(preview)
     session.commit()
-    print(content)
+    print(json.dumps(data))
