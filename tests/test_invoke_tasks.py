@@ -94,6 +94,18 @@ TEST_CASES = [
         {"host": "0.0.0.0", "port": 9000},
         "python -m auto.cli maintenance metrics --host 0.0.0.0 --port 9000",
     ),
+    (
+        inv.dump_fixtures,
+        [],
+        {"path": "out.sql"},
+        "python -m auto.cli maintenance dump-fixtures --path out.sql",
+    ),
+    (
+        inv.load_fixtures,
+        [],
+        {"path": "out.sql"},
+        "python -m auto.cli maintenance load-fixtures --path out.sql",
+    ),
     (inv.safari_control, [], {}, "python -m auto.cli automation control-safari"),
     (
         inv.replay,

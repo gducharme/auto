@@ -195,6 +195,26 @@ def metrics(c, host="localhost", port=8000):
     )
 
 
+@task(help={"path": "Destination SQL file"})
+def dump_fixtures(c, path="tests/fixtures/db.sql"):
+    """Dump the SQLite database to ``path``."""
+
+    c.run(
+        f"python -m auto.cli maintenance dump-fixtures --path {path}",
+        pty=True,
+    )
+
+
+@task(help={"path": "SQL file to load"})
+def load_fixtures(c, path="tests/fixtures/db.sql"):
+    """Load database content from ``path``."""
+
+    c.run(
+        f"python -m auto.cli maintenance load-fixtures --path {path}",
+        pty=True,
+    )
+
+
 @task
 def safari_control(c):
     """Open the interactive Safari controller menu."""

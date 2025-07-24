@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import subprocess
+import os
+import sqlite3
 
 import typer
 
@@ -65,3 +67,42 @@ def metrics(host: str = "localhost", port: int = 8000) -> None:
 
     url = f"http://{host}:{port}/metrics"
     subprocess.run(["curl", "-s", url], check=True)
+
+
+@app.command("dump-fixtures")
+def dump_fixtures(path: str = "tests/fixtures/db.sql") -> None:
+    """Dump the SQLite schema and data to ``path``."""
+
+    from auto.db import get_engine
+
+    engine = get_engine()
+    if engine.dialect.name != "sqlite":
+        typer.echo("only SQLite databases are supported", err=True)
+        raise typer.Exit(1)
+
+    conn = engine.raw_connection()
+    try:
+        with open(path, "w") as fh:
+            for line in conn.iterdump():  # type: ignore[attr-defined]
+                fh.write(f"{line}\n")
+    finally:
+        conn.close()
+
+
+@app.command("load-fixtures")
+def load_fixtures(path: str = "tests/fixtures/db.sql") -> None:
+    """Load schema and data from ``path`` into the database."""
+
+    from auto.db import get_engine
+
+    engine = get_engine()
+    if engine.dialect.name != "sqlite":
+        typer.echo("only SQLite databases are supported", err=True)
+        raise typer.Exit(1)
+
+    db_path = engine.url.database
+    engine.dispose()
+    if db_path and os.path.exists(db_path):
+        os.remove(db_path)
+    with sqlite3.connect(db_path) as conn, open(path) as fh:
+        conn.executescript(fh.read())
