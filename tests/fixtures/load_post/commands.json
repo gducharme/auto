@@ -1,0 +1,4 @@
+[
+  ["load_post", "{{post_id}}", "{{network}}"],
+  ["open", "{{tweet}}"]
+]
