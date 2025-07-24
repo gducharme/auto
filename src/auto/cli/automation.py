@@ -590,6 +590,37 @@ def replay(
             dom = fetch_dom_html()
             dest.write_text(dom)
             _slow_print(f"Saved DOM to {dest}")
+        elif cmd == "load_post" and len(args) >= 2:
+            from auto.db import SessionLocal
+            from auto.models import PostPreview, Post
+            from jinja2 import Template
+
+            post_id = _render(args[0])
+            network = _render(args[1])
+
+            with SessionLocal() as session:
+                preview = session.get(
+                    PostPreview, {"post_id": post_id, "network": network}
+                )
+                post = session.get(Post, post_id)
+
+            if preview and post:
+                try:
+                    data = json.loads(preview.content)
+                except Exception:
+                    data = None
+
+                if isinstance(data, dict):
+                    for key, value in data.items():
+                        if isinstance(value, str):
+                            variables[key] = Template(value).render(post=post)
+                    loaded = ", ".join(data.keys()) if data else ""
+                    _slow_print(f"Preview loaded into variables: {loaded}")
+                else:
+                    variables["tweet"] = Template(preview.content).render(post=post)
+                    _slow_print("Preview loaded into variables['tweet']")
+            else:
+                typer.echo("Post or preview not found")
         else:
             typer.echo(f"Unknown command: {cmd}")
 
