@@ -9,6 +9,26 @@ The API itself is implemented with **FastAPI** and database migrations are
 handled via **Alembic**.  The project is intentionally tiny but demonstrates the
 basics needed for a multi‑publish workflow.
 
+## Quick Start
+
+Clone the repository and install its dependencies:
+
+```bash
+git clone <repo-url>
+cd auto
+pip install -r requirements.txt
+```
+
+Copy the provided environment template and start the server and scheduler:
+
+```bash
+cp .env.sample .env
+python -m auto.cli maintenance uv        # run the FastAPI server
+python -m auto.scheduler                 # run the background scheduler
+```
+
+For development details see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Environment variables
 
 Copy `.env.sample` to `.env` and adjust the values or export them manually.
