@@ -1,0 +1,27 @@
+[
+  [
+    "load_post",
+    "{{post_id}}",
+    "{{network}}"
+  ],
+  [
+    "open",
+    "{{post_id}}"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/substack.js"
+  ],
+  [
+    "run_js",
+    "clickShareButton()"
+  ],
+  [
+    "run_js",
+    "clickShareTo(\"Facebook\")"
+  ],
+  [
+    "run_js_file",
+    "tests/site_js/facebook.js"
+  ]
+]

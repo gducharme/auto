@@ -43,3 +43,26 @@ function debugClickElementByText(text) {
   console.log(`Completed event dispatch sequence on element with text/aria-label '${text}'`);
   console.groupEnd();
 }
+
+function simulatePaste(text) {
+  const editable = document.querySelector('[contenteditable="true"][role="textbox"]');
+
+  if (!editable) {
+    console.error("❌ No editable element found.");
+    return;
+  }
+
+  editable.focus();
+
+  const data = new DataTransfer();
+  data.setData('text/plain', text);
+
+  const pasteEvent = new ClipboardEvent('paste', {
+    clipboardData: data,
+    bubbles: true,
+    cancelable: true
+  });
+
+  const result = editable.dispatchEvent(pasteEvent);
+  console.log(`📋 Paste event dispatched: ${result ? "success" : "failure"}`);
+}

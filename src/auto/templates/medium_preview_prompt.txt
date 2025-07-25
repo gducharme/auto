@@ -18,6 +18,7 @@ Task:
 4. Generate meta-instructions for the editor:
    - Tag with up to five relevant hashtags (no more).
 5. Do NOT include the full article text—only the hook, bullets, CTA, and question.
+6. Use HTML elements of the Medium editor.
 
 Original post URL: {{ post_id }}
 
