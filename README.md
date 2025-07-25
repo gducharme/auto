@@ -1,5 +1,7 @@
 # Auto
 
+![Auto Logo](docs/logo.png)
+
 Auto is a small proof-of-concept for automatically reposting Substack articles
 to other platforms.  It periodically ingests a Substack RSS feed and stores the
 entries in a local SQLite database.  Those stored posts can then be published to
