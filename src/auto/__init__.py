@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 from .config import load_env
 
@@ -13,13 +14,9 @@ def configure_logging() -> None:
 
     load_env()
     level = os.getenv("LOG_LEVEL", "INFO")
-    root_logger = logging.getLogger()
-    if root_logger.handlers:
-        root_logger.setLevel(level)
-        for handler in root_logger.handlers:
-            handler.setLevel(level)
-    else:
-        logging.basicConfig(
-            level=level,
-            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        )
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        stream=sys.stdout,
+        force=True,
+    )
