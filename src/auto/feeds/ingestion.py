@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from ..db import SessionLocal
+from .. import configure_logging
 
 from ..models import Post
 from ..config import get_feed_url
@@ -232,6 +233,7 @@ def run_ingest() -> None:
 
 
 def main():
+    configure_logging()
     init_db()
     anyio.run(run_ingest_async)
 

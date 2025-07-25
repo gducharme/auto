@@ -7,6 +7,7 @@ import subprocess
 import json
 import shutil
 import re
+import logging
 
 from typing import Optional, Iterable
 
@@ -21,6 +22,9 @@ from auto.cli.helpers import (
 from auto.html_helpers import fetch_dom as fetch_dom_html, count_link_states
 from auto.html_utils import extract_links_with_green_span, parse_codex_tasks
 from auto.automation.safari import SafariController
+
+
+logger = logging.getLogger(__name__)
 
 
 def _read_key() -> str:
@@ -97,7 +101,7 @@ def chat(
     default_question = "What is the typical silica (SiO₂) content in standard soda-lime glass, and how is it manufactured?"
     prompt = message or default_question
     response = lm(messages=[{"role": "user", "content": prompt}])
-    print(response)
+    logger.info(response)
 
 
 @app.command()
@@ -116,9 +120,9 @@ def medium_magic_link() -> None:
 
     link = _get_medium_magic_link()
     if link:
-        print(f"Found magic link: {link}")
+        logger.info("Found magic link: %s", link)
     else:
-        print("Magic link not found")
+        logger.info("Magic link not found")
 
 
 @app.command()
@@ -129,7 +133,7 @@ def safari_fill(url: str, selector: str, text: str) -> None:
     controller.open(url)
     result = controller.fill(selector, text)
     if result:
-        print(result)
+        logger.info(result)
 
 
 @app.command()
@@ -143,7 +147,7 @@ def codex_todo() -> None:
         "Tackle the top item in the TODO.md file. When the PR is complete, remove that item",
     )
     if fill_result:
-        print(fill_result)
+        logger.info(fill_result)
 
     js_click_code = (
         "const candidates=document.querySelectorAll('div.flex.items-center.justify-center');"
@@ -162,7 +166,7 @@ def codex_todo() -> None:
 
     js_result = controller.run_js(js_click_code)
     if js_result:
-        print(js_result)
+        logger.info(js_result)
 
 
 @app.command()
@@ -171,7 +175,7 @@ def fetch_dom(url: Optional[str] = None) -> None:
 
     dom = fetch_dom_html(url)
     if dom:
-        print(dom)
+        logger.info(dom)
         dest = Path("tests/fixtures/dom.html")
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(dom)
@@ -183,8 +187,8 @@ def count_links(url: str = "https://chatgpt.com/codex") -> None:
 
     dom = fetch_dom_html(url)
     merged, active = count_link_states(dom)
-    print(f"Merged links: {merged}")
-    print(f"Active tasks: {active}")
+    logger.info("Merged links: %s", merged)
+    logger.info("Active tasks: %s", active)
 
 
 @app.command()
@@ -327,16 +331,16 @@ def _interactive_menu(
     aborted = False
 
     while True:
-        print("\nAvailable commands:")
+        logger.info("\nAvailable commands:")
         for i, (_, desc) in enumerate(commands):
             key = hex_keys[i]
-            print(f"  {key}. {desc}")
+            logger.info("  %s. %s", key, desc)
         last_key = hex_keys[len(commands) - 1]
-        print(f"Select option [0-{last_key}]: ", end="", flush=True)
+        logger.info("Select option [0-%s]: ", last_key)
         choice_idx = _read_key().lower()
-        print(choice_idx)  # echo the selected key
+        logger.info(choice_idx)
         if choice_idx not in hex_keys[: len(commands)]:
-            print("Unknown command")
+            logger.warning("Unknown command")
             continue
 
         choice, _ = commands[int(choice_idx, 16)]
@@ -350,26 +354,26 @@ def _interactive_menu(
             collected.append(["open", url])
             result = controller.open(_render(url))
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "click":
             selector = input("Selector: ")
             collected.append(["click", selector])
             result = controller.click(_render(selector))
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "fill":
             selector = input("Selector: ")
             text = input("Text: ")
             collected.append(["fill", selector, text])
             result = controller.fill(_render(selector), _render(text))
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "run_js":
             code = input("JavaScript: ")
             collected.append(["run_js", code])
             result = controller.run_js(_render(code))
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "run_js_file":
             path_str = input("JS file path: ")
             path = Path(path_str)
@@ -377,7 +381,7 @@ def _interactive_menu(
             collected.append(["run_js_file", path_str])
             result = controller.run_js(_render(code))
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "run_applescript_file":
             path_str = input("AppleScript file path: ")
             path = Path(path_str)
@@ -402,26 +406,26 @@ def _interactive_menu(
             if proc.returncode == 0:
                 out = proc.stdout.strip()
                 if out:
-                    print(out)
+                    logger.info(out)
             else:
-                print(proc.stderr.strip())
+                logger.error(proc.stderr.strip())
         elif choice == "fetch_dom":
             dom = fetch_dom_html()
             dest = test_dir / f"{step}.html"
             dest.write_text(dom)
             collected.append(["fetch_dom", str(dest)])
             step += 1
-            print(f"Saved DOM to {dest}")
+            logger.info("Saved DOM to %s", dest)
         elif choice == "close_tab":
             collected.append(["close_tab"])
             result = controller.close_tab()
             if result:
-                print(result)
+                logger.info(result)
         elif choice == "llm_query":
             prompt = input("Prompt: ")
             response = query_llm(prompt)
             if response:
-                print(response)
+                logger.info(response)
             name = input("store_as (optional): ").strip()
             entry = ["llm_query", prompt, response]
             if name:
@@ -430,7 +434,7 @@ def _interactive_menu(
             collected.append(entry)
         elif choice == "read_var":
             name = input("Variable name: ")
-            print(variables.get(name, ""))
+            logger.info(variables.get(name, ""))
         elif choice == "load_post":
             post_id = input("Post ID: ")
             network = input("Network [mastodon]: ").strip() or "mastodon"
@@ -452,10 +456,10 @@ def _interactive_menu(
                     try:
                         data = json.loads(inner)
                     except json.JSONDecodeError as e:
-                        print("JSON parse error:", e)
+                        logger.error("JSON parse error: %s", e)
                         data = None
                 else:
-                    print("No code-block found; using raw string")
+                    logger.warning("No code-block found; using raw string")
                     try:
                         data = json.loads(raw)
                     except json.JSONDecodeError:
@@ -466,19 +470,19 @@ def _interactive_menu(
                         if isinstance(value, str):
                             variables[key] = Template(value).render(post=post)
                     loaded = ", ".join(data.keys()) if data else ""
-                    print(f"Preview loaded into variables: {loaded}")
+                    logger.info("Preview loaded into variables: %s", loaded)
                 else:
                     variables["tweet"] = Template(raw).render(post=post)
-                    print("Preview loaded into variables['tweet']")
+                    logger.info("Preview loaded into variables['tweet']")
                 collected.append(["load_post", post_id, network])
             else:
-                print("Post or preview not found")
+                logger.warning("Post or preview not found")
         elif choice == "mark_published":
             post_id = variables.get("post_id")
             network = variables.get("network", "mastodon")
             tweet = variables.get("tweet")
             if not post_id:
-                print("post_id variable not set")
+                logger.warning("post_id variable not set")
                 continue
 
             from auto.db import SessionLocal
@@ -509,7 +513,7 @@ def _interactive_menu(
                 session.commit()
 
             collected.append(["mark_published", post_id, network])
-            print(f"Marked {post_id} on {network} as published")
+            logger.info("Marked %s on %s as published", post_id, network)
 
     return collected, step, aborted
 
@@ -517,6 +521,10 @@ def _interactive_menu(
 @app.command()
 def control_safari(post_id: Optional[str] = None, network: str = "mastodon") -> None:
     """Interactively control Safari via a menu loop."""
+
+    from auto import configure_logging
+
+    configure_logging()
 
     test_name = input("Test name: ")
     fixtures_root = Path("tests/fixtures")
@@ -541,9 +549,11 @@ def control_safari(post_id: Optional[str] = None, network: str = "mastodon") -> 
         return
 
     if collected:
-        print("\nCommand log:")
+        typer.echo("\nCommand log:")
+        logger.info("\nCommand log:")
         for entry in collected:
-            print(" ".join(entry))
+            typer.echo(" ".join(entry))
+            logger.info(" ".join(entry))
         (test_dir / "commands.json").write_text(json.dumps(collected, indent=2))
 
 
@@ -662,10 +672,10 @@ def replay(
                     try:
                         data = json.loads(inner)
                     except json.JSONDecodeError as e:
-                        print("JSON parse error:", e)
+                        logger.error("JSON parse error: %s", e)
                         data = None
                 else:
-                    print("No code-block found; using raw string")
+                    logger.warning("No code-block found; using raw string")
                     try:
                         data = json.loads(raw)
                     except json.JSONDecodeError:

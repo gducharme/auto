@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 from .helpers import add_async_command
+from auto import configure_logging
 
 from . import publish, automation, maintenance
 
@@ -17,6 +18,7 @@ app.add_typer(maintenance.app, name="maintenance")
 def main() -> None:
     """Run the CLI application."""
 
+    configure_logging()
     app()
 
 
