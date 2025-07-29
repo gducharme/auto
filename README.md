@@ -234,6 +234,14 @@ python -m auto.cli automation replay facebook --post-id 42 --network mastodon
 invoke replay facebook --post-id 42 --network mastodon
 ```
 
+You can also queue a fixture for the scheduler to run later:
+
+```bash
+python -m auto.cli automation queue-replay facebook --post-id 42 --network mastodon
+```
+
+This creates a `replay_fixture` task that loads `tests/fixtures/facebook/commands.json` and executes it.
+
 For ad-hoc experimentation you can launch an interactive Safari control menu:
 
 ```bash
