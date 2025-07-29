@@ -50,6 +50,12 @@ def get_ingest_interval() -> int:
     return int(os.getenv("INGEST_INTERVAL", "600"))
 
 
+def get_replay_check_interval() -> int:
+    """Return the delay in seconds between replay status scans."""
+    load_env()
+    return int(os.getenv("REPLAY_CHECK_INTERVAL", "3600"))
+
+
 def get_post_delay() -> float:
     load_env()
     return float(os.getenv("POST_DELAY", "1"))
