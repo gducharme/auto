@@ -241,6 +241,21 @@ def replay(c, name="facebook", network="mastodon", post_id=None):
     c.run(cmd, pty=True)
 
 
+@task(
+    help={
+        "name": "Fixture name under tests/fixtures",
+        "post_id": "ID of the post to replay",
+        "network": "Target social network (default: mastodon)",
+    },
+    positional=["name", "post_id"],
+)
+def queue_replay(c, name, post_id, network="mastodon"):
+    """Queue a replay_fixture task for the scheduler."""
+
+    cmd = f"python -m auto.cli automation queue-replay {name} {post_id} --network {network}"
+    c.run(cmd, pty=True)
+
+
 @task(help={"post_id": "ID or URL of the post to summarize"})
 def dspy_exp(c, post_id):
     """Run the standalone dspy experiment."""
