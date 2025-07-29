@@ -105,6 +105,7 @@ async def process_pending(max_attempts: Optional[int] = None) -> None:
     if max_attempts is None:
         max_attempts = get_max_attempts()
     with SessionLocal() as session:
+        logger.debug("Searching for tasks due before %s", now.isoformat())
         tasks = (
             session.query(Task)
             .filter(
@@ -117,6 +118,7 @@ async def process_pending(max_attempts: Optional[int] = None) -> None:
             .order_by(Task.scheduled_at)
             .all()
         )
+        logger.debug("Found %d task(s)", len(tasks))
 
         for task in tasks:
             handler = TASK_HANDLERS.get(task.type)
