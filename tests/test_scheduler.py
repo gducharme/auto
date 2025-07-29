@@ -237,6 +237,55 @@ def test_create_preview_task(test_db_engine, monkeypatch):
         assert t.status == "completed"
 
 
+def test_replay_fixture_task(test_db_engine, monkeypatch, tmp_path):
+    fixture_dir = tmp_path / "tests" / "fixtures" / "demo"
+    fixture_dir.mkdir(parents=True)
+    (fixture_dir / "commands.json").write_text(json.dumps([["open", "http://ex"]]))
+
+    monkeypatch.chdir(tmp_path)
+
+    class DummyController:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, str]] = []
+
+        def open(self, url: str) -> None:
+            self.calls.append(("open", url))
+
+        def click(self, selector: str) -> None:
+            pass
+
+        def fill(self, selector: str, text: str) -> None:
+            pass
+
+        def run_js(self, code: str) -> None:
+            pass
+
+        def close_tab(self) -> None:
+            pass
+
+    controller = DummyController()
+    monkeypatch.setattr("auto.automation.replay.SafariController", lambda: controller)
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
+
+    with SessionLocal() as session:
+        task = Task(
+            type="replay_fixture",
+            payload=json.dumps({"name": "demo", "post_id": "1", "network": "mastodon"}),
+            scheduled_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+        )
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    asyncio.run(run_process())
+
+    assert ("open", "http://ex") in controller.calls
+
+    with SessionLocal() as session:
+        t = session.get(Task, task_id)
+        assert t.status == "completed"
+
+
 def test_scheduler_start_stop(test_db_engine, monkeypatch):
     monkeypatch.setattr("auto.ingest_scheduler.ensure_initial_task", lambda s: None)
     monkeypatch.setenv("SCHEDULER_POLL_INTERVAL", "0")

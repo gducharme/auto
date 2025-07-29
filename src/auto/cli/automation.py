@@ -739,3 +739,17 @@ def replay(
             return
         if updated:
             commands_path.write_text(json.dumps(updated, indent=2))
+
+
+@app.command("queue-replay")
+def queue_replay_fixture(name: str, post_id: str, network: str = "mastodon") -> None:
+    """Queue a replay_fixture task for the scheduler."""
+
+    from auto.db import SessionLocal
+    from auto.models import Task
+
+    payload = json.dumps({"name": name, "post_id": post_id, "network": network})
+    with SessionLocal() as session:
+        session.add(Task(type="replay_fixture", payload=payload))
+        session.commit()
+    typer.echo(f"Queued replay_fixture for {name}")

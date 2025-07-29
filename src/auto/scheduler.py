@@ -180,7 +180,7 @@ class Scheduler:
                 return None
 
             # ensure ingest handler and other task handlers are registered
-            from . import ingest_scheduler
+            from . import ingest_scheduler, replay_fixture  # noqa: F401
 
             with SessionLocal() as session:
                 ingest_scheduler.ensure_initial_task(session)
