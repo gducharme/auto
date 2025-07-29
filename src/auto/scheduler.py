@@ -33,7 +33,7 @@ TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 def _load_default_handlers() -> None:
     """Import modules that register built-in task handlers."""
     # Imported for side effects of register_task_handler
-    from . import ingest_scheduler, replay_fixture  # noqa: F401
+    from . import ingest_scheduler, replay_fixture, replay_scanner  # noqa: F401
 
 
 def register_task_handler(
@@ -189,10 +189,11 @@ class Scheduler:
                 return None
 
             # ensure ingest handler and other task handlers are registered
-            from . import ingest_scheduler, replay_fixture  # noqa: F401
+            from . import ingest_scheduler, replay_fixture, replay_scanner  # noqa: F401
 
             with SessionLocal() as session:
                 ingest_scheduler.ensure_initial_task(session)
+                replay_scanner.ensure_initial_task(session)
                 session.commit()
 
             await self._worker.start()
