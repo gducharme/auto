@@ -30,6 +30,12 @@ logger = logging.getLogger(__name__)
 TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 
 
+def _load_default_handlers() -> None:
+    """Import modules that register built-in task handlers."""
+    # Imported for side effects of register_task_handler
+    from . import ingest_scheduler, replay_fixture  # noqa: F401
+
+
 def register_task_handler(
     name: str,
 ) -> Callable[
@@ -101,6 +107,7 @@ async def handle_create_preview(task: Task, session: Session) -> None:
 
 async def process_pending(max_attempts: Optional[int] = None) -> None:
     """Fetch due tasks and dispatch them to registered handlers."""
+    _load_default_handlers()
     now = datetime.now(timezone.utc)
     if max_attempts is None:
         max_attempts = get_max_attempts()
