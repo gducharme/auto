@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 from datetime import timezone
+import json
 
 import typer
 from sqlalchemy import select, case
@@ -102,6 +103,14 @@ def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
             else:
                 ps.scheduled_at = scheduled_at
                 ps.status = "pending"
+
+            payload = json.dumps({"post_id": post_id, "network": net})
+            task = Task(
+                type="publish_post",
+                payload=payload,
+                scheduled_at=scheduled_at,
+            )
+            session.add(task)
             session.commit()
     print(
         f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}"
