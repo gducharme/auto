@@ -110,3 +110,27 @@ def test_list_schedule_outputs(test_db_engine, capsys):
 
     captured = capsys.readouterr()
     assert "1\tmastodon" in captured.out
+
+
+def test_schedule_creates_task(test_db_engine):
+    from datetime import datetime, timezone
+    from auto.models import Post, Task
+    import json
+
+    ts = "2023-02-03T04:05:06Z"
+
+    with SessionLocal() as session:
+        session.add(
+            Post(
+                id="99", title="Title", link="http://example", summary="", published=""
+            )
+        )
+        session.commit()
+
+    tasks.schedule(post_id="99", time=ts, network="mastodon")
+
+    with SessionLocal() as session:
+        task = session.query(Task).filter(Task.type == "publish_post").one()
+        assert json.loads(task.payload) == {"post_id": "99", "network": "mastodon"}
+        expected = datetime(2023, 2, 3, 4, 5, 6, tzinfo=timezone.utc)
+        assert task.scheduled_at.replace(tzinfo=timezone.utc) == expected
