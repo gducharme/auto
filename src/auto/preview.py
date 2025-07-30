@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import re
+import logging
 from pathlib import Path
 
 import dspy
@@ -10,6 +11,8 @@ from jinja2 import Template
 from sqlalchemy.orm import Session
 
 from .models import Post, PostStatus, PostPreview
+
+logger = logging.getLogger(__name__)
 
 
 def create_preview(
@@ -60,10 +63,10 @@ def create_preview(
                 try:
                     data = json.loads(inner)
                 except json.JSONDecodeError as e:
-                    print("JSON parse error:", e)
+                    logger.debug("JSON parse error: %s", e)
                     data = None
             else:
-                print("No code-block found; using raw string")
+                logger.debug("No code-block found; using raw string")
                 try:
                     data = json.loads(raw)
                 except json.JSONDecodeError:
@@ -72,6 +75,7 @@ def create_preview(
             if not isinstance(data, dict):
                 data = {"tweet": raw}
         except Exception:
+            logger.debug("LLM preview generation failed", exc_info=True)
             data = {"tweet": post.summary or post.title}
     else:
         data = {"tweet": post.summary or post.title}
@@ -87,4 +91,4 @@ def create_preview(
     )
     session.add(preview)
     session.commit()
-    print(json.dumps(data))
+    logger.debug(json.dumps(data))
