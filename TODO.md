@@ -2,7 +2,11 @@
 
 ## High Priority
 
+- Ensure Alembic migrations use the configured `DATABASE_URL` by wiring the active SQLAlchemy engine into `init_db()`.
+
 ## Medium Priority
+
+- Support reloading `.env` configuration at runtime so long-lived processes pick up changes without restarts.
 
 ## Low Priority
 - Expand social network support beyond Mastodon.
@@ -24,8 +28,11 @@
 
 ## BUGS
 
+- Degrade gracefully when Safari automation or `osascript` is unavailable so the API can start on non-macOS deployments.
+
 ## RECS
 - Add a CLI wrapper for common tasks like listing posts or scheduling to reduce reliance on Invoke.
 - Package the project so tests no longer modify `sys.path` directly.
 - Provide invoke tasks `install_hooks`, `parse_plan`, and `setup` for routine development.
 - Centralize configuration with a `Settings` class that loads environment variables at runtime.
+- Replace the implicit singleton in `get_registry()` with registry state stored on the application instance to avoid hidden globals.
