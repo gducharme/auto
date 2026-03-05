@@ -68,3 +68,39 @@ function clickShareTo(platformName) {
 
   console.warn(`No "Share to ${platformName}" button found.`);
 }
+
+/**
+ * Clicks a Substack “post‑ufi‑button” by index.
+ * @param {number} index — zero‑based index of which button to click (default: 0)
+ */
+function clickPostUfiButton(index = 0) {
+  const buttons = document.querySelectorAll('a.post-ufi-button.style-button');
+  if (buttons.length === 0) {
+    console.error('No post-ufi-button elements found!');
+    return;
+  }
+  if (index < 0 || index >= buttons.length) {
+    console.error(`Index ${index} out of bounds (found ${buttons.length} buttons).`);
+    return;
+  }
+  buttons[index].click();
+}
+
+/**
+ * Click the first visible <button> or <a> whose textContent matches `label`.
+ * @param {string} label – the exact menu text to click
+ */
+function clickMenuItem(label) {
+  // grab all buttons and links on the page
+  const els = Array.from(document.querySelectorAll('button, a'));
+  // find the first one with exactly matching text, and that is visible
+  const match = els.find(el => {
+    return el.textContent.trim() === label
+        && el.offsetParent !== null; // only visible elements
+  });
+  if (match) {
+    match.click();
+  } else {
+    console.error(`Menu item "${label}" not found or not visible.`);
+  }
+}

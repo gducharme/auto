@@ -73,6 +73,7 @@ def create_preview(
                     data = None
 
             if not isinstance(data, dict):
+                logger.debug("not instance error: %s", data)
                 data = {"tweet": raw}
         except Exception:
             logger.debug("LLM preview generation failed", exc_info=True)

@@ -14,26 +14,18 @@
   ],
   [
     "run_js",
-    "clickShareButton()"
+    "clickPostUfiButton(4)"
   ],
   [
     "run_js",
-    "clickShareTo(\"Facebook\")"
+    "clickMenuItem('Get share images')"
   ],
   [
     "run_js_file",
-    "tests/site_js/facebook.js"
+    "tests/site_js/substack.js"
   ],
   [
     "run_js",
-    "simulatePaste(\"{{body}}\")"
-  ],
-  [
-    "run_js",
-    "simulatePaste(\"{{title}}\")"
-  ],
-  [
-    "run_js",
-    "debugClickElementByText(\"Share\")"
+    "clickButtonByText('Instagram')"
   ]
 ]
