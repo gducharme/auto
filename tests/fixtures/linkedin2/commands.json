@@ -18,22 +18,22 @@
   ],
   [
     "run_js",
-    "clickShareTo(\"Facebook\")"
+    "clickShareTo(\"Linkedin\")"
   ],
   [
     "run_js_file",
-    "tests/site_js/facebook.js"
+    "tests/site_js/linkedin.js"
   ],
   [
     "run_js",
-    "simulatePaste(\"{{body}}\")"
+    "typeTextInEditor('{{ title }}')"
   ],
   [
     "run_js",
-    "simulatePaste(\"{{title}}\")"
+    "typeTextInEditor('{{ body }}')"
   ],
   [
     "run_js",
-    "debugClickElementByText(\"Share\")"
+    "typeTextInEditor('{{ tags }}')"
   ]
 ]

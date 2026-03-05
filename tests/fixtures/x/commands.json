@@ -39,5 +39,10 @@
   [
     "run_js",
     "debugClickElementByText('Post')"
+  ],
+  [
+    "mark_published",
+    "https://geoffreyducharme.substack.com/p/sorry-no-beautiful-females-allowed",
+    "twitter"
   ]
 ]

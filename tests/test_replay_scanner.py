@@ -48,5 +48,3 @@ def test_publish_completed_replays_task(test_db_engine, monkeypatch):
         )
         assert next_task is not None
         assert next_task.id != task_id
-
-

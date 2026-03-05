@@ -68,6 +68,7 @@ def replay_fixture(
         elif cmd == "run_js" and args:
             code = _render(args[0])
             _slow_print("Running JavaScript")
+            logger.debug(code)
             controller.run_js(code)
         elif cmd == "run_js_file" and args:
             path = Path(args[0])

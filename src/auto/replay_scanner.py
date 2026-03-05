@@ -37,15 +37,17 @@ async def handle_publish_completed_replays(task: Task, session: Session) -> None
             status.status = "published"
     session.commit()
 
-    next_run = datetime.now(timezone.utc) + timedelta(seconds=get_replay_check_interval())
+    next_run = datetime.now(timezone.utc) + timedelta(
+        seconds=get_replay_check_interval()
+    )
     session.add(Task(type="publish_completed_replays", scheduled_at=next_run))
     session.commit()
 
 
-
 def ensure_initial_task(session: Session) -> None:
     """Ensure at least one publish_completed_replays task exists."""
-    exists = session.query(Task).filter(Task.type == "publish_completed_replays").first()
+    exists = (
+        session.query(Task).filter(Task.type == "publish_completed_replays").first()
+    )
     if not exists:
         session.add(Task(type="publish_completed_replays"))
-

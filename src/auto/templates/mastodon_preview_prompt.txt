@@ -1,0 +1,24 @@
+{{ content }}
+
+### ✅ Mastodon Post Requirements:
+1. **Structure**:
+   - Opening hook (1–2 sentences, no clickbait).
+   - 3 short takeaways (bullets or newline-separated).
+   - Open-ended question for engagement.
+   - CTA with canonical URL.
+2. **Tone**: Sincere, reflective, slightly informal. No hype.
+3. **Length**: Target **under 500 characters**, max 800.
+4. **Hashtags**: Use 2–3 niche or community tags (e.g., #TechEthics, #DecentralizedSocial).
+5. **Optional metadata**:
+   - `"contentWarning"`: If emotionally heavy or political.
+   - `"altText"`: For preview image.
+6. **Output as JSON**:
+   ```json
+   {
+     "title": "A Mastodon-ready microessay",
+     "body": "Post content...",
+     "canonicalUrl": "{{ post_id }}",
+     "tags": ["#ExampleTag1", "#ExampleTag2"],
+     "altText": "Short alt description",
+     "contentWarning": "Optional CW if needed"
+   }

@@ -11,12 +11,14 @@ Task:
    d. Call-to-action (CTA) to link back to the full Substack post:
       - Example: "Read the full post here: [Substack URL]".
 3. Make sure to:
+   - You are sharing this as the author, so tone should feel intimate.
    - Keep the post under 300 words (concise but informative).
    - Use a friendly, conversational tone with an invitation to comment and share. Should feel personable, and using "I" or "We" language.
    - Include 2-3 hashtags relevant to the content (e.g. #GlobalPolitics, #Philosophy, #AI).
 4. Generate metadata for the editor:
    - Add appropriate hashtags.
    - Include link preview customization instructions (if applicable).
+5. Do NOT use Unicode.
 
 Original post URL: {{ post_id }}
 
