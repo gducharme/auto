@@ -76,6 +76,8 @@ Implement a dedicated Instagram-native pipeline task that:
 ## Related
 
 - `docs/features/FEATURE_INDEX.md`
+- `docs/features/archive/FD-002_INSTAGRAM_PIPELINE_DATA_MODEL_AND_MIGRATIONS.md`
+- `docs/features/archive/FD-003_INSTAGRAM_INTELLIGENT_PAYLOAD_ADAPTER_AND_PREVIEW_SURFACE.md`
 - Existing replay fixture/scheduler pipeline work
 - `spec/auto_publish_pipeline_integration.md`
 - `spec/safari_js_integration.md`

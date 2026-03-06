@@ -47,5 +47,5 @@ Implement a dedicated adapter stage between planning and publish execution:
 ## Related
 
 - `docs/features/FD-001_INSTAGRAM_NATIVE_AUTO_PUBLISH_PIPELINE.md`
-- `docs/features/FD-002_INSTAGRAM_PIPELINE_DATA_MODEL_AND_MIGRATIONS.md`
+- `docs/features/archive/FD-002_INSTAGRAM_PIPELINE_DATA_MODEL_AND_MIGRATIONS.md`
 - `spec/instagram_pipeline_phase1.md`

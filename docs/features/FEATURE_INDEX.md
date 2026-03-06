@@ -14,8 +14,8 @@ See `AGENTS.md` for FD lifecycle stages and management guidelines.
 
 | FD | Title | Completed | Notes |
 |----|-------|-----------|-------|
-| FD-002 | Instagram Pipeline Data Model and Migrations | 2026-03-06 | Models, migration, tests, and schema spec landed. |
-| FD-003 | Instagram Intelligent Payload Adapter and Preview Surface | 2026-03-06 | Adapter contract, preview export, and integration coverage landed. |
+| FD-002 | Instagram Pipeline Data Model and Migrations | 2026-03-06 | Models, migration, tests, and schema spec landed. Archived in `docs/features/archive/`. |
+| FD-003 | Instagram Intelligent Payload Adapter and Preview Surface | 2026-03-06 | Adapter contract, preview export, and integration coverage landed. Archived in `docs/features/archive/`. |
 
 ## Deferred / Closed
 
