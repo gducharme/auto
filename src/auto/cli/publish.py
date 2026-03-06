@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Optional
 from datetime import timezone
 
@@ -11,7 +12,6 @@ from sqlalchemy import select, case
 from auto.cli.helpers import _parse_when, add_async_command
 from auto.db import SessionLocal
 from auto.models import Post, PostStatus, PostPreview, Task
-from auto.preview import create_preview as _create_preview
 
 app = typer.Typer(help="Publishing commands")
 add_async_command(app)
@@ -102,9 +102,73 @@ def schedule(post_id: str, time: str, network: Optional[str] = None) -> None:
             else:
                 ps.scheduled_at = scheduled_at
                 ps.status = "pending"
-            session.commit()
+            payload = {"post_id": post_id, "network": net}
+            task = (
+                session.query(Task)
+                .filter(
+                    Task.type == "publish_post",
+                    Task.payload.contains(f'"post_id": "{post_id}"'),
+                    Task.payload.contains(f'"network": "{net}"'),
+                    Task.status.in_(("pending", "error")),
+                )
+                .order_by(Task.id.desc())
+                .first()
+            )
+            if task is None:
+                task = Task(type="publish_post")
+                session.add(task)
+            task.payload = json.dumps(payload)
+            task.scheduled_at = scheduled_at
+            task.status = "pending"
+            task.last_error = None
+            task.attempts = 0
+        session.commit()
     print(
         f"Scheduled {post_id} for {', '.join(networks)} at {scheduled_at.isoformat()}"
+    )
+
+
+@app.command("schedule-instagram-pipeline")
+def schedule_instagram_pipeline(
+    post_id: str,
+    time: str = "in 0s",
+    pipeline_version: str = "v1",
+    auto_publish: bool = False,
+) -> None:
+    """Schedule an Instagram-native pipeline run task."""
+
+    scheduled_at = _parse_when(time)
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+    else:
+        scheduled_at = scheduled_at.astimezone(timezone.utc)
+
+    payload = {
+        "post_id": post_id,
+        "network": "instagram",
+        "pipeline_version": pipeline_version,
+        "auto_publish": auto_publish,
+    }
+
+    with SessionLocal() as session:
+        if session.get(Post, post_id) is None:
+            print(f"Post {post_id} not found")
+            return
+
+        task = Task(
+            type="instagram_pipeline_run",
+            payload=json.dumps(payload),
+            scheduled_at=scheduled_at,
+            status="pending",
+            attempts=0,
+            last_error=None,
+        )
+        session.add(task)
+        session.commit()
+
+    print(
+        "Scheduled instagram pipeline for "
+        f"{post_id} at {scheduled_at.isoformat()} (version={pipeline_version}, auto_publish={auto_publish})"
     )
 
 
@@ -204,6 +268,8 @@ def create_preview(
     """Generate or update a preview for a scheduled post."""
 
     with SessionLocal() as session:
+        from auto.preview import create_preview as _create_preview
+
         try:
             _create_preview(
                 session,
@@ -226,6 +292,8 @@ def generate_preview(
     """Generate or update a preview template for a scheduled post."""
 
     with SessionLocal() as session:
+        from auto.preview import create_preview as _create_preview
+
         try:
             _create_preview(
                 session,

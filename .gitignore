@@ -12,3 +12,8 @@ __pycache__/
 .idea/
 # mac Finder Files
 **/.DS_Store
+# Local image assets for Instagram/Safari tests
+pics/
+# Generated local artifacts
+artifacts/
+tmp/

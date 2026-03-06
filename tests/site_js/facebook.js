@@ -1,4 +1,4 @@
-function debugClickElementByText2(text, index) {
+function clickExactInteractiveElementByText(text, index) {
   const SELECTOR = '[role="button"], button, a, div, span';
 
   // Gather candidates
@@ -82,6 +82,19 @@ function debugClickElementByText2(text, index) {
 
   console.groupEnd();
   return el;
+}
+
+function clickExactInteractiveElementByTextFirst(text) {
+  return clickExactInteractiveElementByText(text, 0);
+}
+
+// Backward-compatible aliases for older fixtures.
+function debugClickElementByText(text, index) {
+  return clickExactInteractiveElementByText(text, index);
+}
+
+function clickElementByText(text) {
+  return clickExactInteractiveElementByTextFirst(text);
 }
 
 

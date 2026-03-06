@@ -10,7 +10,6 @@ from fastapi.templating import Jinja2Templates
 from .db import SessionLocal
 from .models import Post
 
-
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parent / "templates")
 )

@@ -1,7 +1,7 @@
 from auto.cli import publish as tasks
 from auto.cli.helpers import _parse_when  # noqa: E402
 from auto.db import SessionLocal  # noqa: E402
-from auto.models import PostStatus
+from auto.models import PostStatus, Task
 
 
 def test_schedule_missing_post(monkeypatch, test_db_engine, capsys):
@@ -36,7 +36,15 @@ def test_schedule_naive_timestamp(test_db_engine):
 
     with SessionLocal() as session:
         ps = session.get(PostStatus, {"post_id": "1", "network": "mastodon"})
+        publish_task = (
+            session.query(Task)
+            .filter(
+                Task.type == "publish_post", Task.payload.contains('"post_id": "1"')
+            )
+            .first()
+        )
         assert ps is not None
+        assert publish_task is not None
         assert ps.scheduled_at == datetime(2023, 1, 2, 12, 34, 56, tzinfo=timezone.utc)
         assert ps.scheduled_at.tzinfo is timezone.utc
 
@@ -62,7 +70,15 @@ def test_schedule_aware_timestamp(test_db_engine):
 
     with SessionLocal() as session:
         ps = session.get(PostStatus, {"post_id": "2", "network": "mastodon"})
+        publish_task = (
+            session.query(Task)
+            .filter(
+                Task.type == "publish_post", Task.payload.contains('"post_id": "2"')
+            )
+            .first()
+        )
         assert ps is not None
+        assert publish_task is not None
         assert ps.scheduled_at == datetime(2023, 1, 2, 17, 34, 56, tzinfo=timezone.utc)
         assert ps.scheduled_at.tzinfo is timezone.utc
 

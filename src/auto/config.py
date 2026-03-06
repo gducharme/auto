@@ -81,3 +81,37 @@ def get_mastodon_sync_debug() -> bool:
     load_env()
     val = os.getenv("MASTODON_SYNC_DEBUG", "0").lower()
     return val not in {"0", "false", "no", "off", ""}
+
+
+def _env_flag(name: str, default: str = "0") -> bool:
+    load_env()
+    value = os.getenv(name, default).strip().lower()
+    return value not in {"0", "false", "no", "off", ""}
+
+
+def get_instagram_pipeline_enabled() -> bool:
+    return _env_flag("INSTAGRAM_PIPELINE_ENABLED", "1")
+
+
+def get_instagram_pipeline_auto_publish() -> bool:
+    return _env_flag("INSTAGRAM_PIPELINE_AUTO_PUBLISH", "0")
+
+
+def get_instagram_pipeline_quality_threshold() -> float:
+    load_env()
+    return float(os.getenv("INSTAGRAM_PIPELINE_QUALITY_THRESHOLD", "0.75"))
+
+
+def get_instagram_pipeline_banned_terms() -> set[str]:
+    load_env()
+    raw = os.getenv("INSTAGRAM_PIPELINE_BANNED_TERMS", "")
+    return {item.strip() for item in raw.split(",") if item.strip()}
+
+
+def get_instagram_pipeline_export_enabled() -> bool:
+    return _env_flag("INSTAGRAM_PIPELINE_EXPORT_ENABLED", "1")
+
+
+def get_instagram_pipeline_export_dir() -> str:
+    load_env()
+    return os.getenv("INSTAGRAM_PIPELINE_EXPORT_DIR", "artifacts/instagram_pipeline")

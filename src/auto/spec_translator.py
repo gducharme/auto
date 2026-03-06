@@ -8,7 +8,6 @@ from typing import Any, Dict
 
 from jsonschema import Draft7Validator, exceptions
 
-
 SCHEMA_RE = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
 
 

@@ -3,7 +3,6 @@ import pytest
 
 from auto.spec_translator import translate
 
-
 VALID_SPEC = textwrap.dedent(
     """
     # Get Post Details

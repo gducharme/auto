@@ -5,19 +5,79 @@ from __future__ import annotations
 import json
 import logging
 import re
+import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import Optional
 
 from jinja2 import Template
 
 from ..db import SessionLocal
-from ..models import PostPreview, Post, PostStatus
+from ..models import InstagramPipelineRun, PostPreview, Post, PostStatus
 from ..cli.helpers import _slow_print
 from ..html_helpers import fetch_dom as fetch_dom_html
+from ..utils import project_root
 from .safari import SafariController
 
 logger = logging.getLogger(__name__)
+
+
+def _upload_local_instagram_carousel_from_pics() -> None:
+    pics_dir = project_root() / "pics"
+    files = sorted(
+        path
+        for path in pics_dir.iterdir()
+        if path.is_file() and not path.name.startswith(".")
+    )
+    if not files:
+        raise FileNotFoundError(f"no images found in {pics_dir}")
+
+    staging_dir = project_root() / "tmp" / "ig_carousel_upload"
+    if staging_dir.exists():
+        shutil.rmtree(staging_dir)
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    for path in files:
+        shutil.copy2(path, staging_dir / path.name)
+
+    script = f"""
+set picsFolder to "{staging_dir}"
+tell application "System Events"
+    delay 2
+    tell process "Safari"
+        set frontmost to true
+    end tell
+    delay 1
+    keystroke "G" using {{shift down, command down}}
+    delay 0.3
+    keystroke picsFolder
+    delay 0.2
+    keystroke return
+    delay 1
+    keystroke "3" using {{command down}}
+    delay 0.5
+    tell process "Safari"
+        tell front window
+            click scroll area 1 of browser 1 of splitter group 1 of splitter group 1 of sheet 1
+        end tell
+    end tell
+    delay 0.5
+    key code 124
+    delay 0.5
+    keystroke "a" using {{command down}}
+    delay 0.5
+    tell process "Safari"
+        tell front window
+            click button "Upload" of sheet 1
+        end tell
+    end tell
+end tell
+"""
+    proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            proc.stderr.strip() or "failed to upload local carousel pics"
+        )
 
 
 def replay_fixture(
@@ -70,6 +130,10 @@ def replay_fixture(
             _slow_print("Running JavaScript")
             logger.debug(code)
             controller.run_js(code)
+        elif cmd == "fill_instagram_caption" and args:
+            text = _render(args[0])
+            _slow_print("Filling Instagram caption")
+            controller.run_js(f"fillCaption({json.dumps(text)})")
         elif cmd == "run_js_file" and args:
             path = Path(args[0])
             if path.exists():
@@ -90,6 +154,9 @@ def replay_fixture(
                     logger.info(proc.stdout.strip())
             else:
                 logger.error("AppleScript file not found: %s", path)
+        elif cmd == "upload_local_instagram_carousel":
+            _slow_print("Uploading local Instagram carousel images from pics/")
+            _upload_local_instagram_carousel_from_pics()
         elif cmd == "close_tab":
             _slow_print("Closing tab")
             controller.close_tab()
@@ -106,6 +173,47 @@ def replay_fixture(
             dom = fetch_dom_html()
             dest.write_text(dom)
             _slow_print(f"Saved DOM to {dest}")
+        elif cmd == "sleep" and args:
+            seconds = float(_render(args[0]))
+            _slow_print(f"Sleeping for {seconds:.1f}s")
+            time.sleep(seconds)
+        elif cmd == "load_instagram_pipeline" and len(args) >= 2:
+            post_id = _render(args[0])
+            network = _render(args[1])
+            pipeline_version = _render(args[2]) if len(args) >= 3 else "v1"
+            with SessionLocal() as session:
+                run = (
+                    session.query(InstagramPipelineRun)
+                    .filter(
+                        InstagramPipelineRun.post_id == post_id,
+                        InstagramPipelineRun.network == network,
+                        InstagramPipelineRun.pipeline_version == pipeline_version,
+                    )
+                    .order_by(InstagramPipelineRun.id.desc())
+                    .first()
+                )
+            if run is None or not run.publish_payload:
+                logger.error(
+                    "Instagram pipeline payload not found for %s/%s/%s",
+                    post_id,
+                    network,
+                    pipeline_version,
+                )
+                continue
+            try:
+                payload = json.loads(run.publish_payload)
+            except json.JSONDecodeError as exc:
+                logger.error("Invalid Instagram pipeline payload JSON: %s", exc)
+                continue
+            for key, value in payload.items():
+                if isinstance(value, str):
+                    variables[key] = value
+            variables["pipeline_post_id"] = post_id
+            variables["pipeline_network"] = network
+            variables["pipeline_version"] = pipeline_version
+            if "caption_final" in payload:
+                variables["instagram_caption"] = str(payload["caption_final"])
+            _slow_print("Instagram pipeline payload loaded into variables")
         elif cmd == "load_post" and len(args) >= 2:
             post_id = _render(args[0])
             network = _render(args[1])

@@ -38,11 +38,11 @@
   ],
   [
     "run_js",
-    "debugClickElementByText('Post')"
+    "clickExactInteractiveElementByTextFirst('Post')"
   ],
   [
     "mark_published",
-    "https://geoffreyducharme.substack.com/p/sorry-no-beautiful-females-allowed",
+    "{{post_id}}",
     "twitter"
   ]
 ]
