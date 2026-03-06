@@ -3,8 +3,7 @@ import pytest
 
 from auto.spec_translator import translate
 
-VALID_SPEC = textwrap.dedent(
-    """
+VALID_SPEC = textwrap.dedent("""
     # Get Post Details
 
     Return details for a post.
@@ -20,8 +19,7 @@ VALID_SPEC = textwrap.dedent(
       "required": ["id"]
     }
     ```
-    """
-)
+    """)
 
 
 def test_translate_valid_spec():
