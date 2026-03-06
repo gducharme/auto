@@ -1,5 +1,11 @@
 [
   [
+    "load_instagram_pipeline",
+    "{{post_id}}",
+    "instagram",
+    "v1"
+  ],
+  [
     "open",
     "https://instagram.com"
   ],
@@ -17,38 +23,53 @@
   ],
   [
     "fetch_dom",
-    "tests/fixtures/instagram/1.html"
+    "tests/fixtures/ig_carousel/1.html"
   ],
   [
     "run_js",
     "clickExactInteractiveElementByTextFirst(\"Select from computer\")"
   ],
   [
-    "fetch_dom",
-    "tests/fixtures/instagram/2.html"
-  ],
-  [
     "run_applescript_file",
     "tests/site_script/apple.scpt"
   ],
   [
-    "run_applescript_file",
-    "tests/site_script/selectFileUpload.scpt"
+    "upload_local_instagram_carousel"
   ],
   [
     "run_js_file",
     "tests/site_js/instagram.js"
   ],
   [
-    "run_js",
-    "clickNext()"
+    "sleep",
+    "8"
+  ],
+  [
+    "fetch_dom",
+    "tests/fixtures/ig_carousel/2.html"
   ],
   [
     "run_js",
     "clickNext()"
   ],
   [
+    "sleep",
+    "4"
+  ],
+  [
     "run_js",
-    "clickShare()"
+    "clickNext()"
+  ],
+  [
+    "sleep",
+    "4"
+  ],
+  [
+    "fill_instagram_caption",
+    "{{instagram_caption}}"
+  ],
+  [
+    "sleep",
+    "20"
   ]
 ]

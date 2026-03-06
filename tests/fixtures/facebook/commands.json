@@ -45,6 +45,6 @@
   ],
   [
     "run_js",
-    "clickElementByText('Share');"
+    "clickExactInteractiveElementByTextFirst('Share');"
   ]
 ]

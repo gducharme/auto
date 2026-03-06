@@ -3,8 +3,7 @@ from auto.plan.parser import parse_plan
 
 
 def test_parse_plan_basic(tmp_path):
-    sample = textwrap.dedent(
-        """
+    sample = textwrap.dedent("""
         # Roadmap
 
         ## Setup
@@ -14,8 +13,7 @@ def test_parse_plan_basic(tmp_path):
         ## Deploy
         1. Build image
         2. Push to registry
-        """
-    )
+        """)
     plan = tmp_path / "plan.md"
     plan.write_text(sample)
 

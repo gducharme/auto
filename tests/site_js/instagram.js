@@ -32,3 +32,36 @@ function clickShare() {
   console.log('🚀 Clicked Share!');
   return true;
 }
+
+function fillCaption(text) {
+  console.log('🔍 Looking for caption editor…');
+  const editable = Array.from(
+    document.querySelectorAll('div[contenteditable="true"], textarea')
+  ).find(e => {
+    const label = (e.getAttribute('aria-label') || '').toLowerCase();
+    return (
+      e.tagName === 'TEXTAREA' ||
+      label.includes('caption') ||
+      label.includes('write a caption')
+    );
+  });
+  if (!editable) {
+    console.warn('❌ No caption editor found.');
+    return false;
+  }
+
+  if (editable.tagName === 'TEXTAREA') {
+    editable.focus();
+    editable.value = text;
+    editable.dispatchEvent(new Event('input', { bubbles: true }));
+    editable.dispatchEvent(new Event('change', { bubbles: true }));
+    console.log('🚀 Filled textarea caption.');
+    return true;
+  }
+
+  editable.focus();
+  editable.textContent = text;
+  editable.dispatchEvent(new InputEvent('input', { bubbles: true, data: text }));
+  console.log('🚀 Filled contenteditable caption.');
+  return true;
+}

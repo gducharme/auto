@@ -2,6 +2,7 @@ from auto.automation.safari import SafariController
 import pytest
 import sys
 import shutil
+import os
 
 
 def _fake_run(calls):
@@ -65,10 +66,13 @@ def test_close_tab(monkeypatch):
 
 
 @pytest.mark.integration
+@pytest.mark.applescript
 def test_startpage_search():
     """Open Startpage and submit a search via Safari."""
-    if sys.platform != "darwin" or shutil.which("osascript") is None:
-        pytest.skip("Safari integration requires macOS and osascript")
+    if not _supports_applescript():
+        pytest.skip(
+            "AppleScript tests require macOS + osascript + RUN_APPLESCRIPT_TESTS=1"
+        )
 
     controller = SafariController()
     assert controller.open("https://www.startpage.com") == "OK"
@@ -80,3 +84,11 @@ def test_startpage_search():
         == "OK"
     )
     assert controller.close_tab() == "OK"
+
+
+def _supports_applescript() -> bool:
+    return (
+        sys.platform == "darwin"
+        and shutil.which("osascript") is not None
+        and os.getenv("RUN_APPLESCRIPT_TESTS") == "1"
+    )

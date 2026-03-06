@@ -21,7 +21,7 @@ dependencies = [
     "pytest-recording",
     "ruff",
     "mypy",
-  "black",
+  "black==26.1.0",
   "pre-commit",
   "invoke",
   "dspy",

@@ -11,7 +11,6 @@ from datetime import timezone
 from alembic import op
 import sqlalchemy as sa
 
-
 revision: str = "0004"
 down_revision: Union[str, Sequence[str], None] = "0003"
 branch_labels: Union[str, Sequence[str], None] = None

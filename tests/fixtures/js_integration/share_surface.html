@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Safari JS Integration Fixture</title>
+  </head>
+  <body>
+    <main>
+      <button id="share-btn" aria-label="Share" onclick="window.__shareClicked = true">
+        Share
+      </button>
+      <button id="create-btn" onclick="window.__createClicked = true">Create</button>
+      <button id="post-btn" onclick="window.__postClicked = true">Post</button>
+      <button id="select-btn" onclick="window.__selectClicked = true">
+        Select from computer
+      </button>
+
+      <a class="post-ufi-button style-button" href="#" onclick="window.__ufi0 = true">
+        UFI0
+      </a>
+      <a class="post-ufi-button style-button" href="#" onclick="window.__ufi1 = true">
+        UFI1
+      </a>
+
+      <button id="menu-get" onclick="window.__menuClicked = true">Get share images</button>
+
+      <div contenteditable="true" role="textbox" id="editor"></div>
+    </main>
+  </body>
+</html>

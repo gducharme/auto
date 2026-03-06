@@ -22,8 +22,14 @@ from .config import (
     get_poll_interval,
     get_post_delay,
     get_max_attempts,
+    get_instagram_pipeline_enabled,
+    get_instagram_pipeline_auto_publish,
+    get_instagram_pipeline_quality_threshold,
+    get_instagram_pipeline_banned_terms,
+    get_instagram_pipeline_export_enabled,
+    get_instagram_pipeline_export_dir,
 )
-from .preview import create_preview as _create_preview
+from .instagram_pipeline import execute_instagram_pipeline_run
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +39,13 @@ TASK_HANDLERS: Dict[str, Callable[[Task, Session], Awaitable[None]]] = {}
 def _load_default_handlers() -> None:
     """Import modules that register built-in task handlers."""
     # Imported for side effects of register_task_handler
-    from . import ingest_scheduler, replay_fixture, replay_scanner  # noqa: F401
+    from . import (  # noqa: F401
+        ingest_scheduler,
+        mark_published,
+        mastodon_sync,
+        replay_fixture,
+        replay_scanner,
+    )
 
 
 def register_task_handler(
@@ -47,6 +59,12 @@ def register_task_handler(
         return func
 
     return decorator
+
+
+def _create_preview_for_task(session: Session, post_id: str, network: str) -> None:
+    from .preview import create_preview as _create_preview
+
+    _create_preview(session, post_id, network)
 
 
 async def _publish(status: PostStatus, session: Session) -> None:
@@ -102,7 +120,36 @@ async def handle_create_preview(task: Task, session: Session) -> None:
     data = json.loads(task.payload or "{}")
     post_id = data.get("post_id")
     network = data.get("network", "mastodon")
-    _create_preview(session, post_id, network)
+    _create_preview_for_task(session, post_id, network)
+
+
+@register_task_handler("instagram_pipeline_run")
+async def handle_instagram_pipeline_run(task: Task, session: Session) -> None:
+    data = json.loads(task.payload or "{}")
+    post_id = data.get("post_id")
+    if not post_id:
+        raise ValueError("instagram_pipeline_run requires post_id")
+
+    network = data.get("network") or "instagram"
+    pipeline_version = data.get("pipeline_version") or "v1"
+    payload_auto_publish = data.get("auto_publish")
+    if payload_auto_publish is None:
+        auto_publish = get_instagram_pipeline_auto_publish()
+    else:
+        auto_publish = bool(payload_auto_publish)
+
+    await execute_instagram_pipeline_run(
+        session,
+        post_id=post_id,
+        network=network,
+        pipeline_version=pipeline_version,
+        auto_publish=auto_publish,
+        quality_threshold=get_instagram_pipeline_quality_threshold(),
+        banned_terms=get_instagram_pipeline_banned_terms(),
+        pipeline_enabled=get_instagram_pipeline_enabled(),
+        export_enabled=get_instagram_pipeline_export_enabled(),
+        export_dir=get_instagram_pipeline_export_dir(),
+    )
 
 
 async def process_pending(max_attempts: Optional[int] = None) -> None:
@@ -188,8 +235,8 @@ class Scheduler:
                 logger.warning("tasks table missing; scheduler not started")
                 return None
 
-            # ensure ingest handler and other task handlers are registered
-            from . import ingest_scheduler, replay_fixture, replay_scanner  # noqa: F401
+            # ensure built-in task handlers are registered
+            from . import ingest_scheduler, replay_scanner  # noqa: F401
 
             with SessionLocal() as session:
                 ingest_scheduler.ensure_initial_task(session)

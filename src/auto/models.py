@@ -8,7 +8,9 @@ from sqlalchemy import (
     Text,
     Integer,
     DateTime,
+    Float,
     ForeignKey,
+    UniqueConstraint,
     text,
 )
 
@@ -114,6 +116,113 @@ class Task(Base):
     )
     updated_at = Column(
         DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class InstagramPipelineRun(Base):
+    __tablename__ = "instagram_pipeline_runs"
+    __table_args__ = (
+        UniqueConstraint(
+            "post_id",
+            "network",
+            "pipeline_version",
+            name="uq_instagram_pipeline_run_key",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(String, ForeignKey("posts.id"), nullable=False)
+    network = Column(String, nullable=False, server_default="instagram")
+    pipeline_version = Column(String, nullable=False)
+    status = Column(String, nullable=False, server_default="pending")
+    selected_concept_id = Column(Integer, nullable=True)
+    score_summary = Column(Text)
+    publish_payload = Column(Text)
+    published_at = Column(TZDateTime(), nullable=True)
+    last_error = Column(Text)
+    created_at = Column(
+        TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class InstagramPipelineConcept(Base):
+    __tablename__ = "instagram_pipeline_concepts"
+    __table_args__ = (
+        UniqueConstraint(
+            "run_id",
+            "concept_key",
+            name="uq_instagram_pipeline_concept_key",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(
+        Integer,
+        ForeignKey("instagram_pipeline_runs.id"),
+        nullable=False,
+    )
+    concept_key = Column(String, nullable=False)
+    concept_payload = Column(Text, nullable=False)
+    score_total = Column(Float, nullable=True)
+    score_breakdown = Column(Text)
+    rank = Column(Integer, nullable=True)
+    created_at = Column(
+        TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class InstagramPipelineAsset(Base):
+    __tablename__ = "instagram_pipeline_assets"
+    __table_args__ = (
+        UniqueConstraint(
+            "run_id",
+            "asset_key",
+            name="uq_instagram_pipeline_asset_key",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(
+        Integer,
+        ForeignKey("instagram_pipeline_runs.id"),
+        nullable=False,
+    )
+    concept_id = Column(
+        Integer,
+        ForeignKey("instagram_pipeline_concepts.id"),
+        nullable=True,
+    )
+    asset_key = Column(String, nullable=False)
+    asset_type = Column(String, nullable=False)
+    asset_uri = Column(Text, nullable=True)
+    asset_metadata = Column(Text)
+    status = Column(String, nullable=False, server_default="pending")
+    created_at = Column(
+        TZDateTime(),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at = Column(
+        TZDateTime(),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=lambda: datetime.now(timezone.utc),

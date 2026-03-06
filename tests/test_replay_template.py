@@ -1,4 +1,5 @@
 import shutil
+import json
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -111,3 +112,95 @@ def test_replay_mark_published(monkeypatch, tmp_path, test_db_engine):
         preview = session.get(PostPreview, {"post_id": "1", "network": "mastodon"})
         assert status.status == "published"
         assert preview.content == "Posted text"
+
+
+def test_replay_load_instagram_pipeline_and_sleep(
+    monkeypatch, tmp_path, test_db_engine
+):
+    fixture_dir = tmp_path / "tests" / "fixtures" / "ig_carousel_demo"
+    fixture_dir.mkdir(parents=True)
+    (fixture_dir / "commands.json").write_text(
+        json.dumps(
+            [
+                ["load_instagram_pipeline", "{{post_id}}", "instagram", "v1"],
+                ["sleep", "0"],
+                ["run_js_file", "tests/site_js/instagram.js"],
+                ["fill_instagram_caption", "{{instagram_caption}}"],
+            ]
+        )
+    )
+    monkeypatch.chdir(tmp_path)
+
+    src_js = Path(__file__).resolve().parent / "site_js" / "instagram.js"
+    dst_js = tmp_path / "tests" / "site_js" / "instagram.js"
+    dst_js.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src_js, dst_js)
+
+    from auto.db import SessionLocal
+    from auto.models import InstagramPipelineRun, Post
+
+    with SessionLocal() as session:
+        session.add(
+            Post(
+                id="ig-1",
+                title="Fasting",
+                link="http://ex",
+                summary="",
+                published="",
+            )
+        )
+        session.add(
+            InstagramPipelineRun(
+                post_id="ig-1",
+                network="instagram",
+                pipeline_version="v1",
+                status="ready",
+                publish_payload=json.dumps(
+                    {
+                        "caption_final": "Line 1\n\nLine 2",
+                        "adapter_version": "ig-adapter-v1",
+                    }
+                ),
+            )
+        )
+        session.commit()
+
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
+    inputs = iter(["n"])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    tasks.replay("ig_carousel_demo", post_id="ig-1", network="instagram")
+
+    assert any(
+        call[0] == "run_js" and "fillCaption(" in call[1] for call in controller.calls
+    )
+
+
+def test_replay_upload_local_instagram_carousel(monkeypatch, tmp_path):
+    fixture_dir = tmp_path / "tests" / "fixtures" / "ig_upload_demo"
+    fixture_dir.mkdir(parents=True)
+    (fixture_dir / "commands.json").write_text(
+        json.dumps([["upload_local_instagram_carousel"]])
+    )
+    monkeypatch.chdir(tmp_path)
+
+    pics_dir = tmp_path / "pics"
+    pics_dir.mkdir()
+    (pics_dir / "one.jpg").write_text("x")
+
+    controller = DummyController()
+    monkeypatch.setattr(tasks, "SafariController", lambda: controller)
+    monkeypatch.setattr(
+        tasks,
+        "_upload_local_instagram_carousel_from_pics",
+        lambda: controller.calls.append(("upload_local_instagram_carousel",)),
+    )
+    monkeypatch.setenv("SKIP_SLOW_PRINT", "1")
+    inputs = iter(["n"])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    tasks.replay("ig_upload_demo")
+
+    assert ("upload_local_instagram_carousel",) in controller.calls
